@@ -14,6 +14,7 @@ mkShell {
     clippy
     rustfmt
     rust-analyzer
+    cargo-audit
     just
     # sequoia-openpgp (nettle backend)
     clang
