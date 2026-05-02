@@ -123,7 +123,7 @@ pub fn export_public_key_armored(fingerprint: &str) -> Result<String> {
   String::from_utf8(output.stdout).context("invalid UTF-8 in key")
 }
 
-pub fn upload_public_key(fingerprint: &str, _short_id: &str) -> Result<String> {
+pub fn upload_public_key(fingerprint: &str) -> Result<String> {
   let armored = export_public_key_armored(fingerprint)?;
   let resp = ureq::post("https://paste.rs/")
     .set("Content-Type", "text/plain")
@@ -161,7 +161,7 @@ pub fn export_public_key(fingerprint: &str, path: &std::path::Path) -> Result<()
   std::fs::write(path, &output.stdout).context("failed to write key file")
 }
 
-pub fn export_secret_key(fingerprint: &str, path: &std::path::Path) -> Result<()> {
+fn export_secret_key(fingerprint: &str, path: &std::path::Path) -> Result<()> {
   let output = Command::new("gpg")
     .args(["--export-secret-keys", "--armor", fingerprint])
     .output()
@@ -361,6 +361,11 @@ pub fn delete_key(fingerprint: &str, has_secret: bool) -> Result<()> {
 }
 
 pub fn import_key_from_text(content: &str) -> Result<()> {
+  if !content.contains("-----BEGIN PGP") {
+    return Err(anyhow::anyhow!(
+      "Le contenu ne ressemble pas à une clef PGP (en-tête -----BEGIN PGP introuvable)"
+    ));
+  }
   let mut child = Command::new("gpg")
     .args(["--import"])
     .stdin(Stdio::piped())

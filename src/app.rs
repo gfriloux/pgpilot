@@ -203,6 +203,15 @@ impl App {
     Task::perform(blocking_task(crate::gpg::list_keys), Message::KeysLoaded)
   }
 
+  fn reset_pending_ops(&mut self) {
+    self.status = None;
+    self.pending_migration = None;
+    self.pending_delete = None;
+    self.pending_renewal = None;
+    self.pending_export_pub = None;
+    self.pending_publish = None;
+  }
+
   fn auto_republish_task(&self, key_idx: usize) -> Option<Task<Message>> {
     let fp = self.keys[key_idx].fingerprint.clone();
     if self.keyserver_statuses.get(&fp) == Some(&KeyserverStatus::Published) {
@@ -249,12 +258,7 @@ impl App {
         let is_health = view == View::Health;
         self.view = view;
         self.selected = None;
-        self.status = None;
-        self.pending_migration = None;
-        self.pending_delete = None;
-        self.pending_renewal = None;
-        self.pending_export_pub = None;
-        self.pending_publish = None;
+        self.reset_pending_ops();
         if is_health {
           self.health_loading = true;
           let keys = self.keys.clone();
@@ -266,12 +270,7 @@ impl App {
       }
       Message::KeySelected(i) => {
         self.selected = Some(i);
-        self.status = None;
-        self.pending_migration = None;
-        self.pending_delete = None;
-        self.pending_renewal = None;
-        self.pending_export_pub = None;
-        self.pending_publish = None;
+        self.reset_pending_ops();
         let fp = self.keys[i].fingerprint.clone();
         let unknown = matches!(
           self.keyserver_statuses.get(&fp),
@@ -325,9 +324,8 @@ impl App {
       Message::ExportPublicKeyUpload(i) => {
         self.pending_export_pub = None;
         let fp = self.keys[i].fingerprint.clone();
-        let short_id = self.keys[i].short_id.clone();
         return Task::perform(
-          blocking_task(move || crate::gpg::upload_public_key(&fp, &short_id)),
+          blocking_task(move || crate::gpg::upload_public_key(&fp)),
           Message::ExportPublicKeyUploadDone,
         );
       }
@@ -691,7 +689,7 @@ impl App {
         }
       }
       Message::AutoRepublishDone(Err(e)) => {
-        self.status = Some(format!("Republication automatique échouée : {e}"));
+        self.status = Some(format!("Erreur republication : {e}"));
       }
       Message::RotateSubkeyExecute(key_idx, subkey_idx) => {
         let expiry = self
