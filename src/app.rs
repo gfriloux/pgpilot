@@ -55,16 +55,43 @@ pub enum Message {
   MoveToCardDone(Result<(), String>),
 }
 
+async fn blocking_task<T, F>(f: F) -> Result<T, String>
+where
+  T: Send + 'static,
+  F: FnOnce() -> anyhow::Result<T> + Send + 'static,
+{
+  tokio::task::spawn_blocking(f)
+    .await
+    .unwrap_or_else(|e| Err(anyhow::anyhow!(e)))
+    .map_err(|e| e.to_string())
+}
+
+fn export_key_to_file(fp: String, name: String, secret: bool) -> anyhow::Result<Option<String>> {
+  let suffix = if secret { "sec" } else { "pub" };
+  let path = match rfd::FileDialog::new()
+    .set_file_name(format!("{name}.{suffix}.asc"))
+    .add_filter("PGP Key", &["asc"])
+    .save_file()
+  {
+    None => return Ok(None),
+    Some(p) => p,
+  };
+  let filename = path
+    .file_name()
+    .and_then(|n| n.to_str())
+    .unwrap_or("key.asc")
+    .to_string();
+  if secret {
+    crate::gpg::export_secret_key(&fp, &path)?;
+  } else {
+    crate::gpg::export_public_key(&fp, &path)?;
+  }
+  Ok(Some(filename))
+}
+
 impl App {
   pub fn new() -> (Self, Task<Message>) {
-    let task = Task::perform(
-      async {
-        tokio::task::spawn_blocking(crate::gpg::list_keys)
-          .await
-          .unwrap_or_else(|e| Err(anyhow::anyhow!(e)))
-      },
-      |result| Message::KeysLoaded(result.map_err(|e| e.to_string())),
-    );
+    let task = Task::perform(blocking_task(crate::gpg::list_keys), Message::KeysLoaded);
     (
       Self {
         loading: true,
@@ -75,14 +102,7 @@ impl App {
   }
 
   fn reload_keys() -> Task<Message> {
-    Task::perform(
-      async {
-        tokio::task::spawn_blocking(crate::gpg::list_keys)
-          .await
-          .unwrap_or_else(|e| Err(anyhow::anyhow!(e)))
-      },
-      |result| Message::KeysLoaded(result.map_err(|e| e.to_string())),
-    )
+    Task::perform(blocking_task(crate::gpg::list_keys), Message::KeysLoaded)
   }
 
   pub fn update(&mut self, message: Message) -> Task<Message> {
@@ -111,28 +131,7 @@ impl App {
         let fp = self.keys[i].fingerprint.clone();
         let name = self.keys[i].name.replace(' ', "_");
         return Task::perform(
-          async move {
-            tokio::task::spawn_blocking(move || -> anyhow::Result<Option<String>> {
-              let path = match rfd::FileDialog::new()
-                .set_file_name(format!("{name}.pub.asc"))
-                .add_filter("PGP Key", &["asc"])
-                .save_file()
-              {
-                None => return Ok(None),
-                Some(p) => p,
-              };
-              let filename = path
-                .file_name()
-                .and_then(|n| n.to_str())
-                .unwrap_or("key.asc")
-                .to_string();
-              crate::gpg::export_public_key(&fp, &path)?;
-              Ok(Some(filename))
-            })
-            .await
-            .unwrap_or_else(|e| Err(anyhow::anyhow!(e)))
-            .map_err(|e| e.to_string())
-          },
+          blocking_task(move || export_key_to_file(fp, name, false)),
           Message::ExportDone,
         );
       }
@@ -140,28 +139,7 @@ impl App {
         let fp = self.keys[i].fingerprint.clone();
         let name = self.keys[i].name.replace(' ', "_");
         return Task::perform(
-          async move {
-            tokio::task::spawn_blocking(move || -> anyhow::Result<Option<String>> {
-              let path = match rfd::FileDialog::new()
-                .set_file_name(format!("{name}.sec.asc"))
-                .add_filter("PGP Key", &["asc"])
-                .save_file()
-              {
-                None => return Ok(None),
-                Some(p) => p,
-              };
-              let filename = path
-                .file_name()
-                .and_then(|n| n.to_str())
-                .unwrap_or("key.asc")
-                .to_string();
-              crate::gpg::export_secret_key(&fp, &path)?;
-              Ok(Some(filename))
-            })
-            .await
-            .unwrap_or_else(|e| Err(anyhow::anyhow!(e)))
-            .map_err(|e| e.to_string())
-          },
+          blocking_task(move || export_key_to_file(fp, name, true)),
           Message::ExportDone,
         );
       }
@@ -183,14 +161,8 @@ impl App {
         let expiry = self.create_form.expiry.clone();
         self.create_form.submitting = true;
         return Task::perform(
-          async move {
-            tokio::task::spawn_blocking(move || {
-              crate::gpg::create_key(&name, &email, &algo, &expiry)
-            })
-            .await
-            .unwrap_or_else(|e| Err(anyhow::anyhow!(e)))
-          },
-          |result| Message::CreateKeyDone(result.map_err(|e| e.to_string())),
+          blocking_task(move || crate::gpg::create_key(&name, &email, &algo, &expiry)),
+          Message::CreateKeyDone,
         );
       }
       Message::CreateKeyDone(Ok(())) => {
@@ -206,27 +178,22 @@ impl App {
       }
       Message::ImportKey => {
         return Task::perform(
-          async move {
-            tokio::task::spawn_blocking(|| -> anyhow::Result<Option<String>> {
-              let path = match rfd::FileDialog::new()
-                .add_filter("PGP Key", &["asc", "gpg", "key"])
-                .pick_file()
-              {
-                None => return Ok(None),
-                Some(p) => p,
-              };
-              let filename = path
-                .file_name()
-                .and_then(|n| n.to_str())
-                .unwrap_or("fichier")
-                .to_string();
-              crate::gpg::import_key(&path)?;
-              Ok(Some(filename))
-            })
-            .await
-            .unwrap_or_else(|e| Err(anyhow::anyhow!(e)))
-            .map_err(|e| e.to_string())
-          },
+          blocking_task(|| {
+            let path = match rfd::FileDialog::new()
+              .add_filter("PGP Key", &["asc", "gpg", "key"])
+              .pick_file()
+            {
+              None => return Ok(None),
+              Some(p) => p,
+            };
+            let filename = path
+              .file_name()
+              .and_then(|n| n.to_str())
+              .unwrap_or("fichier")
+              .to_string();
+            crate::gpg::import_key(&path)?;
+            Ok(Some(filename))
+          }),
           Message::ImportKeyDone,
         );
       }
@@ -251,12 +218,8 @@ impl App {
         self.pending_migration = None;
         let fp = self.keys[i].fingerprint.clone();
         return Task::perform(
-          async move {
-            tokio::task::spawn_blocking(move || crate::gpg::move_key_to_card(&fp))
-              .await
-              .unwrap_or_else(|e| Err(anyhow::anyhow!(e)))
-          },
-          |result| Message::MoveToCardDone(result.map_err(|e| e.to_string())),
+          blocking_task(move || crate::gpg::move_key_to_card(&fp)),
+          Message::MoveToCardDone,
         );
       }
       Message::MoveToCardDone(Ok(())) => {

@@ -57,7 +57,7 @@ pub fn view(
       })
       .into()];
 
-  if key.has_secret && !key.on_card {
+  if key.has_secret {
     action_buttons.push(
       button(icon_row("\u{f023}", "Exporter privée"))
         .on_press(Message::ExportSecretKey(idx))
@@ -77,52 +77,33 @@ pub fn view(
         .into(),
     );
 
-    let migrate_btn = button(icon_row("\u{f287}", "Migrer vers YubiKey")).style(
-      |_: &iced::Theme, status: button::Status| button::Style {
-        background: Some(Background::Color(match status {
-          button::Status::Hovered | button::Status::Pressed => theme::ACCENT_HOVER,
-          button::Status::Disabled => theme::DISABLED_BG,
-          _ => theme::ACCENT,
-        })),
-        text_color: match status {
-          button::Status::Disabled => theme::TEXT_MUTED,
-          _ => Color::WHITE,
-        },
-        border: Border {
-          color: Color::TRANSPARENT,
-          width: 0.0,
-          radius: 6.0.into(),
-        },
-        shadow: Default::default(),
-      },
-    );
-    let migrate_btn = if card_connected {
-      migrate_btn.on_press(Message::MoveToCard(idx))
-    } else {
-      migrate_btn
-    };
-    action_buttons.push(migrate_btn.into());
-  }
-
-  if key.has_secret && key.on_card {
-    action_buttons.push(
-      button(icon_row("\u{f023}", "Exporter privée"))
-        .on_press(Message::ExportSecretKey(idx))
-        .style(|_: &iced::Theme, status: button::Status| button::Style {
+    if !key.on_card {
+      let migrate_btn = button(icon_row("\u{f287}", "Migrer vers YubiKey")).style(
+        |_: &iced::Theme, status: button::Status| button::Style {
           background: Some(Background::Color(match status {
-            button::Status::Hovered | button::Status::Pressed => theme::DESTRUCTIVE_HOVER_BG,
-            _ => Color::TRANSPARENT,
+            button::Status::Hovered | button::Status::Pressed => theme::ACCENT_HOVER,
+            button::Status::Disabled => theme::DISABLED_BG,
+            _ => theme::ACCENT,
           })),
-          text_color: theme::DESTRUCTIVE,
+          text_color: match status {
+            button::Status::Disabled => theme::TEXT_MUTED,
+            _ => Color::WHITE,
+          },
           border: Border {
-            color: theme::DESTRUCTIVE,
-            width: 1.0,
+            color: Color::TRANSPARENT,
+            width: 0.0,
             radius: 6.0.into(),
           },
           shadow: Default::default(),
-        })
-        .into(),
-    );
+        },
+      );
+      let migrate_btn = if card_connected {
+        migrate_btn.on_press(Message::MoveToCard(idx))
+      } else {
+        migrate_btn
+      };
+      action_buttons.push(migrate_btn.into());
+    }
   }
 
   let mut items: Vec<Element<Message>> = vec![
