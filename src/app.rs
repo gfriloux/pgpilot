@@ -45,6 +45,8 @@ pub enum Message {
   CreateKeyExpiryChanged(KeyExpiry),
   CreateKeySubmit,
   CreateKeyDone(Result<(), String>),
+  ImportKey,
+  ImportKeyDone(Result<Option<String>, String>),
 }
 
 impl App {
@@ -192,6 +194,42 @@ impl App {
       Message::CreateKeyDone(Err(e)) => {
         self.create_form.submitting = false;
         self.status = Some(format!("Erreur : {e}"));
+      }
+      Message::ImportKey => {
+        return Task::perform(
+          async move {
+            tokio::task::spawn_blocking(|| -> anyhow::Result<Option<String>> {
+              let path = match rfd::FileDialog::new()
+                .add_filter("PGP Key", &["asc", "gpg", "key"])
+                .pick_file()
+              {
+                None => return Ok(None),
+                Some(p) => p,
+              };
+              let filename = path
+                .file_name()
+                .and_then(|n| n.to_str())
+                .unwrap_or("fichier")
+                .to_string();
+              crate::gpg::import_key(&path)?;
+              Ok(Some(filename))
+            })
+            .await
+            .unwrap_or_else(|e| Err(anyhow::anyhow!(e)))
+            .map_err(|e| e.to_string())
+          },
+          Message::ImportKeyDone,
+        );
+      }
+      Message::ImportKeyDone(Ok(None)) => {}
+      Message::ImportKeyDone(Ok(Some(filename))) => {
+        self.status = Some(format!("Clef importée depuis {filename}"));
+        self.loading = true;
+        self.selected = None;
+        return Self::reload_keys();
+      }
+      Message::ImportKeyDone(Err(e)) => {
+        self.status = Some(format!("Erreur import : {e}"));
       }
     }
     Task::none()

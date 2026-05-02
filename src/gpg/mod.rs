@@ -119,6 +119,19 @@ pub fn export_secret_key(fingerprint: &str, path: &std::path::Path) -> Result<()
   std::fs::write(path, &output.stdout).context("failed to write key file")
 }
 
+pub fn import_key(path: &std::path::Path) -> Result<()> {
+  let output = Command::new("gpg")
+    .args(["--import", &path.to_string_lossy()])
+    .output()
+    .context("failed to run gpg --import")?;
+
+  if !output.status.success() {
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    return Err(anyhow::anyhow!("{stderr}"));
+  }
+  Ok(())
+}
+
 pub fn list_keys() -> Result<Vec<KeyInfo>> {
   let pub_bytes = Command::new("gpg")
     .args(["--export"])

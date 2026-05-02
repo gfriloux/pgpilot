@@ -47,11 +47,18 @@ fn sidebar(app: &App) -> Element<'_, Message> {
     }
   };
 
+  let import_btn = button(text("↑ Importer une clef").size(14))
+    .on_press(Message::ImportKey)
+    .width(Length::Fill)
+    .style(button::text);
+
   container(
     column![
       text("pgpilot").size(20),
       nav_btn("Mes clefs", View::MyKeys),
       nav_btn("Clefs publiques", View::PublicKeys),
+      horizontal_rule(1),
+      import_btn,
       nav_btn("+ Créer une clef", View::CreateKey),
     ]
     .spacing(8)
