@@ -66,6 +66,8 @@ pub enum Message {
   DeleteKeyExecute(usize),
   DeleteKeyDone(Result<(), String>),
   CopyToClipboard(String),
+  AddSubkey(usize, String, String),
+  AddSubkeyDone(Result<(), String>),
   RenewSubkey(usize, usize),
   RenewSubkeyExpiryChanged(KeyExpiry),
   RenewSubkeyExecute,
@@ -322,11 +324,27 @@ impl App {
       Message::RenewSubkeyDone(Ok(())) => {
         self.status = Some("Sous-clef renouvelée".to_string());
         self.loading = true;
-        self.selected = None;
         return Self::reload_keys();
       }
       Message::RenewSubkeyDone(Err(e)) => {
         self.status = Some(format!("Erreur renouvellement : {e}"));
+      }
+      Message::AddSubkey(key_idx, algo, usage) => {
+        let master_fp = self.keys[key_idx].fingerprint.clone();
+        return Task::perform(
+          blocking_task(move || {
+            crate::gpg::add_subkey(&master_fp, &algo, &usage, &KeyExpiry::TwoYears)
+          }),
+          Message::AddSubkeyDone,
+        );
+      }
+      Message::AddSubkeyDone(Ok(())) => {
+        self.status = Some("Sous-clef créée".to_string());
+        self.loading = true;
+        return Self::reload_keys();
+      }
+      Message::AddSubkeyDone(Err(e)) => {
+        self.status = Some(format!("Erreur création sous-clef : {e}"));
       }
     }
     Task::none()

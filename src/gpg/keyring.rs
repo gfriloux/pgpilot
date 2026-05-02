@@ -2,7 +2,12 @@ use std::collections::HashSet;
 use std::process::Command;
 
 use anyhow::{Context, Result};
-use sequoia_openpgp::{cert::CertParser, parse::Parse, policy::StandardPolicy, Cert};
+use sequoia_openpgp::{
+  cert::CertParser,
+  parse::Parse,
+  policy::{NullPolicy, StandardPolicy},
+  Cert,
+};
 
 use super::card::card_status;
 use super::types::{format_date, KeyExpiry, KeyInfo, SubkeyInfo};
@@ -135,6 +140,19 @@ pub fn export_secret_key(fingerprint: &str, path: &std::path::Path) -> Result<()
   }
 
   std::fs::write(path, &output.stdout).context("failed to write key file")
+}
+
+pub fn add_subkey(master_fp: &str, algo: &str, usage: &str, expiry: &KeyExpiry) -> Result<()> {
+  let expire = expiry_to_str(expiry);
+  let status = Command::new("gpg")
+    .args(["--batch", "--quick-add-key", master_fp, algo, usage, expire])
+    .status()
+    .context("failed to run gpg --quick-add-key")?;
+
+  if !status.success() {
+    return Err(anyhow::anyhow!("L'ajout de la sous-clef a échoué"));
+  }
+  Ok(())
 }
 
 pub fn renew_subkey(master_fp: &str, subkey_fp: &str, expiry: &KeyExpiry) -> Result<()> {
@@ -273,13 +291,16 @@ fn cert_to_key_info(
   let algo = format!("{}", primary_key.pk_algo());
   let created = format_date(primary_key.creation_time());
 
-  let policy = StandardPolicy::new();
-  let (expires, subkeys) = cert
-    .with_policy(&policy, None)
+  let expires = cert
+    .with_policy(&StandardPolicy::new(), None)
+    .ok()
+    .and_then(|vc| vc.primary_key().key_expiration_time())
+    .map(format_date);
+
+  let subkeys = cert
+    .with_policy(&NullPolicy::new(), None)
     .map(|vc| {
-      let expires = vc.primary_key().key_expiration_time().map(format_date);
-      let subkeys = vc
-        .keys()
+      vc.keys()
         .subkeys()
         .map(|ka| {
           let k = ka.key();
@@ -309,10 +330,9 @@ fn cert_to_key_info(
             expires: ka.key_expiration_time().map(format_date),
           }
         })
-        .collect();
-      (expires, subkeys)
+        .collect()
     })
-    .unwrap_or((None, vec![]));
+    .unwrap_or_default();
 
   KeyInfo {
     fingerprint: fp,
