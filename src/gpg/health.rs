@@ -23,10 +23,7 @@ pub struct HealthCheck {
 }
 
 fn gnupg_dir() -> String {
-  std::env::var("GNUPGHOME").unwrap_or_else(|_| {
-    let home = std::env::var("HOME").unwrap_or_default();
-    format!("{home}/.gnupg")
-  })
+  super::gnupg_dir()
 }
 
 fn check_gpg_installed() -> HealthCheck {

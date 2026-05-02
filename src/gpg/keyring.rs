@@ -188,8 +188,7 @@ pub fn backup_key(
   let key_filename = format!("{short_id}_secret.asc");
   export_secret_key(fingerprint, &dir.join(&key_filename))?;
 
-  let gnupg_dir = std::env::var("GNUPGHOME")
-    .unwrap_or_else(|_| format!("{}/.gnupg", std::env::var("HOME").unwrap_or_default()));
+  let gnupg_dir = super::gnupg_dir();
   let rev_src = format!(
     "{gnupg_dir}/openpgp-revocs.d/{}.rev",
     fingerprint.to_uppercase()

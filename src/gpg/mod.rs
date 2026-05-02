@@ -3,6 +3,11 @@ pub mod health;
 pub mod keyring;
 pub mod types;
 
+pub(crate) fn gnupg_dir() -> String {
+  std::env::var("GNUPGHOME")
+    .unwrap_or_else(|_| format!("{}/.gnupg", std::env::var("HOME").unwrap_or_default()))
+}
+
 pub use card::move_key_to_card;
 pub use health::{run_all_checks, CheckStatus, HealthCheck};
 pub use keyring::{
