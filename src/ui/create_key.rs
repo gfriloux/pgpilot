@@ -1,7 +1,7 @@
 use iced::{
   font,
   widget::{
-    button, checkbox, column, container, horizontal_rule, pick_list, row, text, text_input,
+    button, checkbox, column, container, horizontal_rule, pick_list, row, rule, text, text_input,
   },
   Background, Border, Color, Element, Font, Length,
 };
@@ -16,6 +16,15 @@ pub fn view(form: &CreateKeyForm) -> Element<'_, Message> {
     ..Font::DEFAULT
   };
 
+  let separator = || {
+    horizontal_rule(1).style(|_: &iced::Theme| rule::Style {
+      color: theme::BORDER,
+      width: 1,
+      radius: 0.0.into(),
+      fill_mode: rule::FillMode::Full,
+    })
+  };
+
   let expiry_list = pick_list(
     vec![
       KeyExpiry::OneYear,
@@ -25,7 +34,36 @@ pub fn view(form: &CreateKeyForm) -> Element<'_, Message> {
     Some(form.subkey_expiry.clone()),
     Message::CreateKeySubkeyExpiryChanged,
   )
-  .width(Length::Fill);
+  .width(Length::Fill)
+  .style(|_: &iced::Theme, status| {
+    let border = match status {
+      pick_list::Status::Opened => theme::ACCENT,
+      pick_list::Status::Hovered => theme::ACCENT_BORDER,
+      _ => theme::BORDER,
+    };
+    pick_list::Style {
+      text_color: theme::TEXT_STRONG,
+      placeholder_color: theme::TEXT_MUTED,
+      handle_color: theme::TEXT_MUTED,
+      background: Background::Color(theme::HEADER_BG),
+      border: Border {
+        color: border,
+        width: 1.0,
+        radius: 6.0.into(),
+      },
+    }
+  })
+  .menu_style(|_: &iced::Theme| iced::overlay::menu::Style {
+    text_color: theme::TEXT_STRONG,
+    background: Background::Color(theme::CARD_BG),
+    border: Border {
+      color: theme::BORDER,
+      width: 1.0,
+      radius: 6.0.into(),
+    },
+    selected_text_color: theme::TEXT_ON_ACCENT,
+    selected_background: Background::Color(theme::ACCENT),
+  });
 
   let label = if form.submitting {
     "Génération..."
@@ -100,7 +138,7 @@ pub fn view(form: &CreateKeyForm) -> Element<'_, Message> {
         ),
       ]
       .spacing(6),
-      horizontal_rule(1),
+      separator(),
       column![
         text("Identité").size(12).font(bold),
         column![
@@ -108,7 +146,26 @@ pub fn view(form: &CreateKeyForm) -> Element<'_, Message> {
           text_input("Alice Martin", &form.name)
             .on_input(Message::CreateKeyNameChanged)
             .size(14)
-            .width(Length::Fill),
+            .width(Length::Fill)
+            .style(|_: &iced::Theme, status| {
+              let border = match status {
+                text_input::Status::Focused => theme::ACCENT,
+                text_input::Status::Hovered => theme::ACCENT_BORDER,
+                _ => theme::BORDER,
+              };
+              text_input::Style {
+                background: Background::Color(theme::HEADER_BG),
+                border: Border {
+                  color: border,
+                  width: 1.0,
+                  radius: 6.0.into(),
+                },
+                icon: theme::TEXT_MUTED,
+                placeholder: theme::TEXT_MUTED,
+                value: theme::TEXT_STRONG,
+                selection: theme::ACCENT_SUBTLE,
+              }
+            }),
         ]
         .spacing(4),
         column![
@@ -116,12 +173,31 @@ pub fn view(form: &CreateKeyForm) -> Element<'_, Message> {
           text_input("alice@example.com", &form.email)
             .on_input(Message::CreateKeyEmailChanged)
             .size(14)
-            .width(Length::Fill),
+            .width(Length::Fill)
+            .style(|_: &iced::Theme, status| {
+              let border = match status {
+                text_input::Status::Focused => theme::ACCENT,
+                text_input::Status::Hovered => theme::ACCENT_BORDER,
+                _ => theme::BORDER,
+              };
+              text_input::Style {
+                background: Background::Color(theme::HEADER_BG),
+                border: Border {
+                  color: border,
+                  width: 1.0,
+                  radius: 6.0.into(),
+                },
+                icon: theme::TEXT_MUTED,
+                placeholder: theme::TEXT_MUTED,
+                value: theme::TEXT_STRONG,
+                selection: theme::ACCENT_SUBTLE,
+              }
+            }),
         ]
         .spacing(4),
       ]
       .spacing(10),
-      horizontal_rule(1),
+      separator(),
       column![
         text("Sous-clefs").size(12).font(bold),
         column![
@@ -138,7 +214,34 @@ pub fn view(form: &CreateKeyForm) -> Element<'_, Message> {
           checkbox("Inclure une clef d'authentification SSH", form.include_auth,)
             .on_toggle(Message::CreateKeyIncludeAuthToggled)
             .text_size(13)
-            .size(16),
+            .size(16)
+            .style(|_: &iced::Theme, status| {
+              let (is_checked, is_hovered) = match status {
+                checkbox::Status::Active { is_checked } => (is_checked, false),
+                checkbox::Status::Hovered { is_checked } => (is_checked, true),
+                checkbox::Status::Disabled { is_checked } => (is_checked, false),
+              };
+              checkbox::Style {
+                background: Background::Color(if is_checked {
+                  theme::ACCENT
+                } else {
+                  theme::HEADER_BG
+                }),
+                icon_color: theme::TEXT_ON_ACCENT,
+                border: Border {
+                  color: if is_checked {
+                    theme::ACCENT
+                  } else if is_hovered {
+                    theme::ACCENT_BORDER
+                  } else {
+                    theme::BORDER
+                  },
+                  width: 1.0,
+                  radius: 3.0.into(),
+                },
+                text_color: Some(theme::TEXT_STRONG),
+              }
+            }),
           hint(
             "Permet de vous authentifier sur des serveurs distants sans mot de passe, \
              en utilisant votre clef PGP comme clef SSH.",
@@ -147,7 +250,7 @@ pub fn view(form: &CreateKeyForm) -> Element<'_, Message> {
         .spacing(6),
       ]
       .spacing(14),
-      horizontal_rule(1),
+      separator(),
       container(
         column![
           text("À propos de la clef maître").size(12).font(bold),
@@ -160,7 +263,7 @@ pub fn view(form: &CreateKeyForm) -> Element<'_, Message> {
         .spacing(6),
       )
       .padding([4, 0]),
-      horizontal_rule(1),
+      separator(),
       row![cancel_btn, submit_btn].spacing(8),
     ]
     .spacing(20),

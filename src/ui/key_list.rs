@@ -1,6 +1,6 @@
 use iced::{
   font,
-  widget::{column, container, horizontal_rule, mouse_area, row, scrollable, text, Column},
+  widget::{column, container, horizontal_rule, mouse_area, row, rule, scrollable, text, Column},
   Background, Border, Element, Font, Length,
 };
 
@@ -140,7 +140,12 @@ pub fn view(app: &App) -> Element<'_, Message> {
   if let Some(idx) = app.selected {
     column![
       list_view.height(Length::Fill),
-      horizontal_rule(1),
+      horizontal_rule(1).style(|_: &iced::Theme| rule::Style {
+        color: theme::BORDER,
+        width: 1,
+        radius: 0.0.into(),
+        fill_mode: rule::FillMode::Full,
+      }),
       container(key_detail::view(
         &app.keys[idx],
         idx,

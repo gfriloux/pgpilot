@@ -1,7 +1,7 @@
 use chrono::{Duration, Utc};
 use iced::{
   font,
-  widget::{button, column, container, row, text, vertical_rule, Column, Row},
+  widget::{button, column, container, row, rule, text, vertical_rule, Column, Row},
   Alignment, Background, Border, Color, Element, Font, Length,
 };
 
@@ -930,12 +930,7 @@ pub fn view(key: &KeyInfo, idx: usize, ctx: ViewCtx) -> Element<'_, Message> {
               .style(|_: &iced::Theme| container::Style {
                 background: Some(Background::Color(theme::SIDEBAR_BG)),
                 border: Border {
-                  color: Color {
-                    r: 1.0,
-                    g: 1.0,
-                    b: 1.0,
-                    a: 0.08,
-                  },
+                  color: theme::BORDER,
                   width: 1.0,
                   radius: 6.0.into(),
                 },
@@ -1028,9 +1023,18 @@ pub fn view(key: &KeyInfo, idx: usize, ctx: ViewCtx) -> Element<'_, Message> {
     .padding([16, 12])
     .width(220);
 
-  row![left_col, vertical_rule(1), right_col]
-    .width(Length::Fill)
-    .into()
+  row![
+    left_col,
+    vertical_rule(1).style(|_: &iced::Theme| rule::Style {
+      color: theme::BORDER,
+      width: 1,
+      radius: 0.0.into(),
+      fill_mode: rule::FillMode::Full,
+    }),
+    right_col,
+  ]
+  .width(Length::Fill)
+  .into()
 }
 
 fn expiry_until_date(expiry: &KeyExpiry) -> String {

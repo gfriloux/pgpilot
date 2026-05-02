@@ -1,8 +1,8 @@
 use iced::{
   font,
   widget::{
-    button, column, container, horizontal_rule, pick_list, row, scrollable, text, text_editor,
-    text_input,
+    button, column, container, horizontal_rule, pick_list, row, rule, scrollable, text,
+    text_editor, text_input,
   },
   Background, Border, Color, Element, Font, Length,
 };
@@ -15,6 +15,15 @@ pub fn view(form: &ImportForm) -> Element<'_, Message> {
   let bold = Font {
     weight: font::Weight::Bold,
     ..Font::DEFAULT
+  };
+
+  let separator = || {
+    horizontal_rule(1).style(|_: &iced::Theme| rule::Style {
+      color: theme::BORDER,
+      width: 1,
+      radius: 0.0.into(),
+      fill_mode: rule::FillMode::Full,
+    })
   };
 
   let section_label = |s: &'static str| text(s).size(12).font(bold);
@@ -105,7 +114,36 @@ pub fn view(form: &ImportForm) -> Element<'_, Message> {
     Some(form.keyserver.clone()),
     Message::ImportKeyserverChanged,
   )
-  .width(Length::Fill);
+  .width(Length::Fill)
+  .style(|_: &iced::Theme, status| {
+    let border = match status {
+      pick_list::Status::Opened => theme::ACCENT,
+      pick_list::Status::Hovered => theme::ACCENT_BORDER,
+      _ => theme::BORDER,
+    };
+    pick_list::Style {
+      text_color: theme::TEXT_STRONG,
+      placeholder_color: theme::TEXT_MUTED,
+      handle_color: theme::TEXT_MUTED,
+      background: Background::Color(theme::HEADER_BG),
+      border: Border {
+        color: border,
+        width: 1.0,
+        radius: 6.0.into(),
+      },
+    }
+  })
+  .menu_style(|_: &iced::Theme| iced::overlay::menu::Style {
+    text_color: theme::TEXT_STRONG,
+    background: Background::Color(theme::CARD_BG),
+    border: Border {
+      color: theme::BORDER,
+      width: 1.0,
+      radius: 6.0.into(),
+    },
+    selected_text_color: theme::TEXT_ON_ACCENT,
+    selected_background: Background::Color(theme::ACCENT),
+  });
 
   let card = container(
     column![
@@ -119,27 +157,65 @@ pub fn view(form: &ImportForm) -> Element<'_, Message> {
         ),
       ]
       .spacing(6),
-      horizontal_rule(1),
+      separator(),
       file_btn,
-      horizontal_rule(1),
+      separator(),
       column![
         section_label("Depuis une URL"),
         hint("Collez une URL pointant vers une clef armored (paste.rs, page web, etc.)."),
         text_input("https://paste.rs/abc123", &form.url)
           .on_input(Message::ImportUrlChanged)
           .size(13)
-          .width(Length::Fill),
+          .width(Length::Fill)
+          .style(|_: &iced::Theme, status| {
+            let border = match status {
+              text_input::Status::Focused => theme::ACCENT,
+              text_input::Status::Hovered => theme::ACCENT_BORDER,
+              _ => theme::BORDER,
+            };
+            text_input::Style {
+              background: Background::Color(theme::HEADER_BG),
+              border: Border {
+                color: border,
+                width: 1.0,
+                radius: 6.0.into(),
+              },
+              icon: theme::TEXT_MUTED,
+              placeholder: theme::TEXT_MUTED,
+              value: theme::TEXT_STRONG,
+              selection: theme::ACCENT_SUBTLE,
+            }
+          }),
         action_btn("Importer depuis l'URL", Message::ImportFromUrl, url_ready),
       ]
       .spacing(8),
-      horizontal_rule(1),
+      separator(),
       column![
         section_label("Depuis un keyserver"),
         hint("Fingerprint complet, ID court (8 chars) ou adresse email."),
         text_input("ABC123... ou alice@example.com", &form.keyserver_query)
           .on_input(Message::ImportKeyserverQueryChanged)
           .size(13)
-          .width(Length::Fill),
+          .width(Length::Fill)
+          .style(|_: &iced::Theme, status| {
+            let border = match status {
+              text_input::Status::Focused => theme::ACCENT,
+              text_input::Status::Hovered => theme::ACCENT_BORDER,
+              _ => theme::BORDER,
+            };
+            text_input::Style {
+              background: Background::Color(theme::HEADER_BG),
+              border: Border {
+                color: border,
+                width: 1.0,
+                radius: 6.0.into(),
+              },
+              icon: theme::TEXT_MUTED,
+              placeholder: theme::TEXT_MUTED,
+              value: theme::TEXT_STRONG,
+              selection: theme::ACCENT_SUBTLE,
+            }
+          }),
         ks_list,
         action_btn(
           "Importer depuis le keyserver",
@@ -148,23 +224,32 @@ pub fn view(form: &ImportForm) -> Element<'_, Message> {
         ),
       ]
       .spacing(8),
-      horizontal_rule(1),
+      separator(),
       column![
         section_label("Coller la clef"),
         hint("Collez directement le contenu d'une clef PGP armored (-----BEGIN PGP...)."),
-        container(
-          text_editor(&form.pasted_key)
-            .on_action(Message::ImportPastedKeyChanged)
-            .height(120),
-        )
-        .style(|_: &iced::Theme| container::Style {
-          border: Border {
-            color: theme::BORDER,
-            width: 1.0,
-            radius: 4.0.into(),
-          },
-          ..Default::default()
-        }),
+        text_editor(&form.pasted_key)
+          .on_action(Message::ImportPastedKeyChanged)
+          .height(120)
+          .style(|_: &iced::Theme, status| {
+            let border = match status {
+              text_editor::Status::Focused => theme::ACCENT,
+              text_editor::Status::Hovered => theme::ACCENT_BORDER,
+              _ => theme::BORDER,
+            };
+            text_editor::Style {
+              background: Background::Color(theme::HEADER_BG),
+              border: Border {
+                color: border,
+                width: 1.0,
+                radius: 6.0.into(),
+              },
+              icon: theme::TEXT_MUTED,
+              placeholder: theme::TEXT_MUTED,
+              value: theme::TEXT_STRONG,
+              selection: theme::ACCENT_SUBTLE,
+            }
+          }),
         action_btn(
           "Importer la clef collée",
           Message::ImportFromPaste,
@@ -172,7 +257,7 @@ pub fn view(form: &ImportForm) -> Element<'_, Message> {
         ),
       ]
       .spacing(8),
-      horizontal_rule(1),
+      separator(),
       cancel_btn,
     ]
     .spacing(20),
