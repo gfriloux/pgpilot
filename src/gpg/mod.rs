@@ -1,5 +1,6 @@
 use std::collections::HashSet;
-use std::process::Command;
+use std::io::Write;
+use std::process::{Command, Stdio};
 
 use anyhow::{Context, Result};
 use sequoia_openpgp::{cert::CertParser, parse::Parse, policy::StandardPolicy, Cert};
@@ -72,6 +73,67 @@ pub fn create_key(name: &str, email: &str, algo: &KeyAlgo, expiry: &KeyExpiry) -
 }
 
 #[derive(Debug, Clone)]
+pub struct CardInfo {
+  pub serial: String,
+  pub sig_fp: Option<String>,
+  pub enc_fp: Option<String>,
+  pub auth_fp: Option<String>,
+}
+
+pub fn card_status() -> Option<CardInfo> {
+  let output = Command::new("gpg").args(["--card-status"]).output().ok()?;
+
+  if !output.status.success() {
+    return None;
+  }
+
+  let text = String::from_utf8(output.stdout).ok()?;
+  let mut serial = String::new();
+  let mut sig_fp = None;
+  let mut enc_fp = None;
+  let mut auth_fp = None;
+
+  for line in text.lines() {
+    if let Some(v) = strip_card_value(line, "Serial number") {
+      serial = v.to_string();
+    } else if let Some(v) = strip_card_value(line, "Signature key") {
+      sig_fp = parse_card_fp(v);
+    } else if let Some(v) = strip_card_value(line, "Encryption key") {
+      enc_fp = parse_card_fp(v);
+    } else if let Some(v) = strip_card_value(line, "Authentication key") {
+      auth_fp = parse_card_fp(v);
+    }
+  }
+
+  if serial.is_empty() {
+    return None;
+  }
+  Some(CardInfo {
+    serial,
+    sig_fp,
+    enc_fp,
+    auth_fp,
+  })
+}
+
+fn strip_card_value<'a>(line: &'a str, field: &str) -> Option<&'a str> {
+  let rest = line.strip_prefix(field)?.split_once(':').map(|x| x.1)?;
+  Some(rest.trim())
+}
+
+fn parse_card_fp(s: &str) -> Option<String> {
+  if s == "[none]" || s.is_empty() {
+    return None;
+  }
+  Some(
+    s.chars()
+      .filter(|c| !c.is_whitespace())
+      .collect::<String>()
+      .to_uppercase(),
+  )
+}
+
+#[derive(Debug, Clone)]
 pub struct KeyInfo {
   pub fingerprint: String,
   pub short_id: String,
@@ -81,6 +143,8 @@ pub struct KeyInfo {
   pub created: String,
   pub expires: Option<String>,
   pub has_secret: bool,
+  pub on_card: bool,
+  pub card_serial: Option<String>,
 }
 
 pub fn export_public_key(fingerprint: &str, path: &std::path::Path) -> Result<()> {
@@ -132,7 +196,91 @@ pub fn import_key(path: &std::path::Path) -> Result<()> {
   Ok(())
 }
 
-pub fn list_keys() -> Result<Vec<KeyInfo>> {
+pub fn move_key_to_card(fingerprint: &str) -> Result<()> {
+  let pub_bytes = Command::new("gpg")
+    .args(["--export", fingerprint])
+    .output()
+    .context("failed to export key for inspection")?
+    .stdout;
+
+  let cert = CertParser::from_bytes(&pub_bytes)
+    .context("failed to parse key")?
+    .filter_map(|r| r.ok())
+    .next()
+    .ok_or_else(|| anyhow::anyhow!("Clef introuvable : {fingerprint}"))?;
+
+  let stdin_cmds = build_keytocard_sequence(&cert)?;
+
+  let mut child = Command::new("gpg")
+    .args([
+      "--no-tty",
+      "--yes",
+      "--command-fd",
+      "0",
+      "--edit-key",
+      fingerprint,
+    ])
+    .stdin(Stdio::piped())
+    .stdout(Stdio::piped())
+    .stderr(Stdio::piped())
+    .spawn()
+    .context("failed to spawn gpg --edit-key")?;
+
+  {
+    let stdin = child.stdin.as_mut().context("failed to open gpg stdin")?;
+    stdin
+      .write_all(stdin_cmds.as_bytes())
+      .context("failed to write to gpg stdin")?;
+  }
+
+  let output = child.wait_with_output().context("failed to wait for gpg")?;
+
+  if !output.status.success() {
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    return Err(anyhow::anyhow!("Migration échouée : {stderr}"));
+  }
+
+  Ok(())
+}
+
+fn build_keytocard_sequence(cert: &Cert) -> Result<String> {
+  let policy = StandardPolicy::new();
+  let vc = cert
+    .with_policy(&policy, None)
+    .context("la clef ne satisfait pas la politique de sécurité")?;
+
+  let mut cmds = String::new();
+
+  let primary_signs = vc
+    .primary_key()
+    .key_flags()
+    .map(|f| f.for_signing())
+    .unwrap_or(false);
+  if primary_signs {
+    cmds.push_str("keytocard\n1\n");
+  }
+
+  for (i, subkey) in vc.keys().subkeys().enumerate() {
+    let n = i + 1;
+    let slot = subkey.key_flags().and_then(|f| {
+      if f.for_transport_encryption() || f.for_storage_encryption() {
+        Some(2u8)
+      } else if f.for_authentication() {
+        Some(3u8)
+      } else {
+        None
+      }
+    });
+    if let Some(slot) = slot {
+      cmds.push_str(&format!("key {n}\nkeytocard\n{slot}\nkey {n}\n"));
+    }
+  }
+
+  cmds.push_str("save\n");
+  Ok(cmds)
+}
+
+pub fn list_keys() -> Result<(Vec<KeyInfo>, bool)> {
   let pub_bytes = Command::new("gpg")
     .args(["--export"])
     .output()
@@ -140,6 +288,19 @@ pub fn list_keys() -> Result<Vec<KeyInfo>> {
     .stdout;
 
   let secret_fps = secret_key_fingerprints()?;
+  let card = card_status();
+  let card_connected = card.is_some();
+
+  let (card_fps, card_serial) = match &card {
+    Some(c) => {
+      let fps: HashSet<String> = [&c.sig_fp, &c.enc_fp, &c.auth_fp]
+        .into_iter()
+        .filter_map(|fp| fp.clone())
+        .collect();
+      (fps, Some(c.serial.clone()))
+    }
+    None => (HashSet::new(), None),
+  };
 
   let keys = CertParser::from_bytes(&pub_bytes)
     .context("failed to parse keyring")?
@@ -147,11 +308,15 @@ pub fn list_keys() -> Result<Vec<KeyInfo>> {
     .map(|cert| {
       let fp = cert.fingerprint().to_hex();
       let has_secret = secret_fps.contains(&fp);
-      cert_to_key_info(cert, has_secret)
+      let on_card = cert
+        .keys()
+        .any(|ka| card_fps.contains(&ka.key().fingerprint().to_hex()));
+      let serial = if on_card { card_serial.clone() } else { None };
+      cert_to_key_info(cert, has_secret, on_card, serial)
     })
     .collect();
 
-  Ok(keys)
+  Ok((keys, card_connected))
 }
 
 fn secret_key_fingerprints() -> Result<HashSet<String>> {
@@ -175,7 +340,12 @@ fn secret_key_fingerprints() -> Result<HashSet<String>> {
   )
 }
 
-fn cert_to_key_info(cert: Cert, has_secret: bool) -> KeyInfo {
+fn cert_to_key_info(
+  cert: Cert,
+  has_secret: bool,
+  on_card: bool,
+  card_serial: Option<String>,
+) -> KeyInfo {
   let fp = cert.fingerprint().to_hex();
   let short_id = fp[fp.len().saturating_sub(8)..].to_string();
 
@@ -216,5 +386,7 @@ fn cert_to_key_info(cert: Cert, has_secret: bool) -> KeyInfo {
     created,
     expires,
     has_secret,
+    on_card,
+    card_serial,
   }
 }

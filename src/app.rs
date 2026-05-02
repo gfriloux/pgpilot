@@ -28,12 +28,14 @@ pub struct App {
   pub error: Option<String>,
   pub status: Option<String>,
   pub loading: bool,
+  pub card_connected: bool,
+  pub pending_migration: Option<usize>,
   pub create_form: CreateKeyForm,
 }
 
 #[derive(Debug, Clone)]
 pub enum Message {
-  KeysLoaded(Result<Vec<KeyInfo>, String>),
+  KeysLoaded(Result<(Vec<KeyInfo>, bool), String>),
   NavChanged(View),
   KeySelected(usize),
   ExportPublicKey(usize),
@@ -47,6 +49,10 @@ pub enum Message {
   CreateKeyDone(Result<(), String>),
   ImportKey,
   ImportKeyDone(Result<Option<String>, String>),
+  MoveToCard(usize),
+  MoveToCardCancel,
+  MoveToCardExecute(usize),
+  MoveToCardDone(Result<(), String>),
 }
 
 impl App {
@@ -81,8 +87,9 @@ impl App {
 
   pub fn update(&mut self, message: Message) -> Task<Message> {
     match message {
-      Message::KeysLoaded(Ok(keys)) => {
+      Message::KeysLoaded(Ok((keys, card_connected))) => {
         self.keys = keys;
+        self.card_connected = card_connected;
         self.loading = false;
       }
       Message::KeysLoaded(Err(e)) => {
@@ -93,10 +100,12 @@ impl App {
         self.view = view;
         self.selected = None;
         self.status = None;
+        self.pending_migration = None;
       }
       Message::KeySelected(i) => {
         self.selected = Some(i);
         self.status = None;
+        self.pending_migration = None;
       }
       Message::ExportPublicKey(i) => {
         let fp = self.keys[i].fingerprint.clone();
@@ -230,6 +239,34 @@ impl App {
       }
       Message::ImportKeyDone(Err(e)) => {
         self.status = Some(format!("Erreur import : {e}"));
+      }
+      Message::MoveToCard(i) => {
+        self.pending_migration = Some(i);
+        self.status = None;
+      }
+      Message::MoveToCardCancel => {
+        self.pending_migration = None;
+      }
+      Message::MoveToCardExecute(i) => {
+        self.pending_migration = None;
+        let fp = self.keys[i].fingerprint.clone();
+        return Task::perform(
+          async move {
+            tokio::task::spawn_blocking(move || crate::gpg::move_key_to_card(&fp))
+              .await
+              .unwrap_or_else(|e| Err(anyhow::anyhow!(e)))
+          },
+          |result| Message::MoveToCardDone(result.map_err(|e| e.to_string())),
+        );
+      }
+      Message::MoveToCardDone(Ok(())) => {
+        self.status = Some("Clef migrée sur YubiKey avec succès".to_string());
+        self.loading = true;
+        self.selected = None;
+        return Self::reload_keys();
+      }
+      Message::MoveToCardDone(Err(e)) => {
+        self.status = Some(format!("Erreur migration : {e}"));
       }
     }
     Task::none()

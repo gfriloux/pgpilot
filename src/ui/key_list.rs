@@ -80,12 +80,14 @@ pub fn view(app: &App) -> Element<'_, Message> {
 
       let name = key.name.clone();
       let expires = key.expires.as_deref().unwrap_or("—");
+      let card_icon = if key.on_card { "\u{f283}" } else { "" };
 
       let row_content = row![
         text(name).size(13).width(200),
         text(key.email.clone()).size(13).width(250),
         text(key.short_id.clone()).size(12).width(120),
         text(expires).size(12).width(100),
+        text(card_icon).font(theme::ICONS).size(12).width(20),
       ]
       .spacing(8);
 
@@ -122,12 +124,17 @@ pub fn view(app: &App) -> Element<'_, Message> {
     column![
       list_view.height(Length::Fill),
       horizontal_rule(1),
-      container(key_detail::view(&app.keys[idx], idx))
-        .width(Length::Fill)
-        .style(|_: &iced::Theme| container::Style {
-          background: Some(Background::Color(theme::DETAIL_BG)),
-          ..Default::default()
-        }),
+      container(key_detail::view(
+        &app.keys[idx],
+        idx,
+        app.card_connected,
+        app.pending_migration == Some(idx),
+      ))
+      .width(Length::Fill)
+      .style(|_: &iced::Theme| container::Style {
+        background: Some(Background::Color(theme::DETAIL_BG)),
+        ..Default::default()
+      }),
     ]
     .width(Length::Fill)
     .height(Length::Fill)
