@@ -107,6 +107,43 @@ pub fn create_key(
   Ok(())
 }
 
+pub fn export_public_key_armored(fingerprint: &str) -> Result<String> {
+  let output = Command::new("gpg")
+    .args(["--export", "--armor", fingerprint])
+    .output()
+    .context("failed to run gpg --export")?;
+
+  if !output.status.success() {
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    return Err(anyhow::anyhow!("{stderr}"));
+  }
+  if output.stdout.is_empty() {
+    return Err(anyhow::anyhow!("Aucune clef trouvée pour ce fingerprint"));
+  }
+  String::from_utf8(output.stdout).context("invalid UTF-8 in key")
+}
+
+pub fn upload_public_key(fingerprint: &str, _short_id: &str) -> Result<String> {
+  let armored = export_public_key_armored(fingerprint)?;
+  let resp = ureq::post("https://paste.rs/")
+    .set("Content-Type", "text/plain")
+    .set("User-Agent", "pgpilot/1.0")
+    .send_string(&armored)
+    .map_err(|e| match e {
+      ureq::Error::Status(code, _) => anyhow::anyhow!("paste.rs a refusé la requête (HTTP {code})"),
+      other => anyhow::anyhow!("Connexion à paste.rs impossible : {other}"),
+    })?;
+  let url = resp
+    .into_string()
+    .context("impossible de lire la réponse")?
+    .trim()
+    .to_string();
+  if !url.starts_with("http") {
+    return Err(anyhow::anyhow!("Réponse inattendue de paste.rs : {url}"));
+  }
+  Ok(url)
+}
+
 pub fn export_public_key(fingerprint: &str, path: &std::path::Path) -> Result<()> {
   let output = Command::new("gpg")
     .args(["--export", "--armor", fingerprint])

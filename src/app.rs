@@ -49,6 +49,7 @@ pub struct App {
   pub pending_migration: Option<usize>,
   pub pending_delete: Option<usize>,
   pub pending_renewal: Option<PendingRenewal>,
+  pub pending_export_pub: Option<usize>,
   pub pending_publish: Option<Keyserver>,
   pub pending_rotation: Option<(usize, usize)>,
   pub keyserver_statuses: HashMap<String, KeyserverStatus>,
@@ -60,7 +61,13 @@ pub enum Message {
   KeysLoaded(Result<(Vec<KeyInfo>, bool), String>),
   NavChanged(View),
   KeySelected(usize),
+  ExportPublicKeyMenu(usize),
+  ExportPublicKeyMenuCancel,
   ExportPublicKey(usize),
+  ExportPublicKeyClipboard(usize),
+  ExportPublicKeyClipboardDone(Result<String, String>),
+  ExportPublicKeyUpload(usize),
+  ExportPublicKeyUploadDone(Result<String, String>),
   ExportSecretKey(usize),
   ExportDone(Result<Option<String>, String>),
   CreateKeyNameChanged(String),
@@ -199,6 +206,7 @@ impl App {
         self.pending_migration = None;
         self.pending_delete = None;
         self.pending_renewal = None;
+        self.pending_export_pub = None;
         self.pending_publish = None;
         self.pending_rotation = None;
       }
@@ -208,6 +216,7 @@ impl App {
         self.pending_migration = None;
         self.pending_delete = None;
         self.pending_renewal = None;
+        self.pending_export_pub = None;
         self.pending_publish = None;
         self.pending_rotation = None;
         let fp = self.keys[i].fingerprint.clone();
@@ -225,13 +234,57 @@ impl App {
           );
         }
       }
+      Message::ExportPublicKeyMenu(i) => {
+        self.pending_export_pub = Some(i);
+        self.pending_publish = None;
+        self.pending_rotation = None;
+        self.pending_migration = None;
+        self.pending_delete = None;
+        self.pending_renewal = None;
+        self.status = None;
+      }
+      Message::ExportPublicKeyMenuCancel => {
+        self.pending_export_pub = None;
+      }
       Message::ExportPublicKey(i) => {
+        self.pending_export_pub = None;
         let fp = self.keys[i].fingerprint.clone();
         let name = self.keys[i].name.replace(' ', "_");
         return Task::perform(
           blocking_task(move || export_key_to_file(fp, name, false)),
           Message::ExportDone,
         );
+      }
+      Message::ExportPublicKeyClipboard(i) => {
+        self.pending_export_pub = None;
+        let fp = self.keys[i].fingerprint.clone();
+        return Task::perform(
+          blocking_task(move || crate::gpg::export_public_key_armored(&fp)),
+          Message::ExportPublicKeyClipboardDone,
+        );
+      }
+      Message::ExportPublicKeyClipboardDone(Ok(armored)) => {
+        self.status = Some("Clef copiée dans le presse-papier".to_string());
+        return iced::clipboard::write(armored);
+      }
+      Message::ExportPublicKeyClipboardDone(Err(e)) => {
+        self.status = Some(format!("Erreur : {e}"));
+      }
+      Message::ExportPublicKeyUpload(i) => {
+        self.pending_export_pub = None;
+        let fp = self.keys[i].fingerprint.clone();
+        let short_id = self.keys[i].short_id.clone();
+        return Task::perform(
+          blocking_task(move || crate::gpg::upload_public_key(&fp, &short_id)),
+          Message::ExportPublicKeyUploadDone,
+        );
+      }
+      Message::ExportPublicKeyUploadDone(Ok(url)) => {
+        self.status = Some(format!("Lien copié : {url}"));
+        return iced::clipboard::write(url);
+      }
+      Message::ExportPublicKeyUploadDone(Err(e)) => {
+        self.status = Some(format!("Erreur upload : {e}"));
       }
       Message::ExportSecretKey(i) => {
         let fp = self.keys[i].fingerprint.clone();
@@ -311,6 +364,7 @@ impl App {
         self.pending_migration = Some(i);
         self.pending_delete = None;
         self.pending_renewal = None;
+        self.pending_export_pub = None;
         self.pending_publish = None;
         self.pending_rotation = None;
         self.status = None;
@@ -339,6 +393,7 @@ impl App {
         self.pending_delete = Some(i);
         self.pending_migration = None;
         self.pending_renewal = None;
+        self.pending_export_pub = None;
         self.pending_publish = None;
         self.pending_rotation = None;
         self.status = None;
@@ -376,6 +431,7 @@ impl App {
         });
         self.pending_migration = None;
         self.pending_delete = None;
+        self.pending_export_pub = None;
         self.pending_publish = None;
         self.pending_rotation = None;
         self.status = None;
@@ -443,6 +499,7 @@ impl App {
         self.pending_publish = Some(ks);
       }
       Message::PublishKeyCancel => {
+        self.pending_export_pub = None;
         self.pending_publish = None;
         self.pending_rotation = None;
       }

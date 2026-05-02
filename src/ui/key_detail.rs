@@ -14,6 +14,7 @@ pub struct ViewCtx {
   pub card_connected: bool,
   pub confirming: bool,
   pub delete_confirming: bool,
+  pub export_pub_menu: bool,
   pub renewing_subkey: Option<(usize, KeyExpiry)>,
   pub rotating_subkey: Option<usize>,
   pub publish_confirming: Option<Keyserver>,
@@ -25,6 +26,7 @@ pub fn view(key: &KeyInfo, idx: usize, ctx: ViewCtx) -> Element<'_, Message> {
     card_connected,
     confirming,
     delete_confirming,
+    export_pub_menu,
     renewing_subkey,
     rotating_subkey,
     publish_confirming,
@@ -57,7 +59,7 @@ pub fn view(key: &KeyInfo, idx: usize, ctx: ViewCtx) -> Element<'_, Message> {
 
   let mut action_buttons: Vec<Element<Message>> =
     vec![button(icon_row("\u{f019}", "Exporter pub"))
-      .on_press(Message::ExportPublicKey(idx))
+      .on_press(Message::ExportPublicKeyMenu(idx))
       .style(|_: &iced::Theme, status: button::Status| button::Style {
         background: Some(Background::Color(match status {
           button::Status::Hovered | button::Status::Pressed => theme::ACCENT_HOVER,
@@ -592,6 +594,93 @@ pub fn view(key: &KeyInfo, idx: usize, ctx: ViewCtx) -> Element<'_, Message> {
           .spacing(8),
         ]
         .spacing(10),
+      )
+      .padding(12)
+      .style(|_: &iced::Theme| container::Style {
+        background: Some(Background::Color(theme::ACCENT_SUBTLE)),
+        border: Border {
+          color: theme::ACCENT_BORDER,
+          width: 1.0,
+          radius: 6.0.into(),
+        },
+        ..Default::default()
+      })
+      .into(),
+    );
+  } else if export_pub_menu {
+    let menu_btn = |icon: &'static str, label: &'static str, msg: Message| {
+      button(
+        row![text(icon).font(theme::ICONS).size(12), text(label).size(12)]
+          .spacing(6)
+          .align_y(Alignment::Center),
+      )
+      .on_press(msg)
+      .width(Length::Fill)
+      .style(|_: &iced::Theme, status: button::Status| button::Style {
+        background: Some(Background::Color(match status {
+          button::Status::Hovered | button::Status::Pressed => theme::ACCENT_SUBTLE,
+          _ => Color::TRANSPARENT,
+        })),
+        text_color: theme::TEXT_STRONG,
+        border: Border {
+          color: Color::TRANSPARENT,
+          width: 0.0,
+          radius: 6.0.into(),
+        },
+        shadow: Default::default(),
+      })
+    };
+
+    left_items.push(
+      container(
+        column![
+          row![
+            text("\u{f019}")
+              .font(theme::ICONS)
+              .size(12)
+              .color(theme::ACCENT),
+            text("Exporter la clef publique")
+              .size(12)
+              .font(bold)
+              .color(theme::ACCENT),
+          ]
+          .spacing(6)
+          .align_y(Alignment::Center),
+          menu_btn(
+            "\u{f0c7}",
+            "Enregistrer sur le disque",
+            Message::ExportPublicKey(idx)
+          ),
+          menu_btn(
+            "\u{f0c5}",
+            "Copier dans le presse-papier",
+            Message::ExportPublicKeyClipboard(idx)
+          ),
+          menu_btn(
+            "\u{f0c1}",
+            "Obtenir un lien public (paste.rs)",
+            Message::ExportPublicKeyUpload(idx)
+          ),
+          button(text("Annuler").size(12))
+            .on_press(Message::ExportPublicKeyMenuCancel)
+            .style(|_: &iced::Theme, status: button::Status| button::Style {
+              background: Some(Background::Color(match status {
+                button::Status::Hovered | button::Status::Pressed => Color {
+                  a: 0.06,
+                  ..theme::TEXT_SECONDARY
+                },
+                _ => Color::TRANSPARENT,
+              })),
+              text_color: theme::TEXT_SECONDARY,
+              border: Border {
+                color: theme::BORDER,
+                width: 1.0,
+                radius: 6.0.into(),
+              },
+              shadow: Default::default(),
+            }),
+        ]
+        .spacing(6),
       )
       .padding(12)
       .style(|_: &iced::Theme| container::Style {

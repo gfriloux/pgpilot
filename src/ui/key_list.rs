@@ -148,6 +148,7 @@ pub fn view(app: &App) -> Element<'_, Message> {
           card_connected: app.card_connected,
           confirming: app.pending_migration == Some(idx),
           delete_confirming: app.pending_delete == Some(idx),
+          export_pub_menu: app.pending_export_pub == Some(idx),
           renewing_subkey: app.pending_renewal.as_ref().and_then(|r| {
             if r.key_idx == idx {
               Some((r.subkey_idx, r.expiry.clone()))
