@@ -199,7 +199,8 @@ impl App {
     )
   }
 
-  fn reload_keys() -> Task<Message> {
+  fn reload_keys(&mut self) -> Task<Message> {
+    self.loading = true;
     Task::perform(blocking_task(crate::gpg::list_keys), Message::KeysLoaded)
   }
 
@@ -378,9 +379,8 @@ impl App {
       Message::CreateKeyDone(Ok(())) => {
         self.view = View::MyKeys;
         self.create_form = CreateKeyForm::default();
-        self.loading = true;
         self.selected = None;
-        return Self::reload_keys();
+        return self.reload_keys();
       }
       Message::CreateKeyDone(Err(e)) => {
         self.create_form.submitting = false;
@@ -411,9 +411,8 @@ impl App {
       Message::ImportKeyDone(Ok(Some(filename))) => {
         self.status = Some(format!("Clef importée depuis {filename}"));
         self.view = View::PublicKeys;
-        self.loading = true;
         self.selected = None;
-        return Self::reload_keys();
+        return self.reload_keys();
       }
       Message::ImportKeyDone(Err(e)) => {
         self.status = Some(format!("Erreur import : {e}"));
@@ -430,9 +429,8 @@ impl App {
       Message::ImportFromUrlDone(Ok(())) => {
         self.import_form = ImportForm::default();
         self.view = View::PublicKeys;
-        self.loading = true;
         self.selected = None;
-        return Self::reload_keys();
+        return self.reload_keys();
       }
       Message::ImportFromUrlDone(Err(e)) => {
         self.import_form.submitting = false;
@@ -452,9 +450,8 @@ impl App {
       Message::ImportFromKeyserverDone(Ok(())) => {
         self.import_form = ImportForm::default();
         self.view = View::PublicKeys;
-        self.loading = true;
         self.selected = None;
-        return Self::reload_keys();
+        return self.reload_keys();
       }
       Message::ImportFromKeyserverDone(Err(e)) => {
         self.import_form.submitting = false;
@@ -474,9 +471,8 @@ impl App {
       Message::ImportFromPasteDone(Ok(())) => {
         self.import_form = ImportForm::default();
         self.view = View::PublicKeys;
-        self.loading = true;
         self.selected = None;
-        return Self::reload_keys();
+        return self.reload_keys();
       }
       Message::ImportFromPasteDone(Err(e)) => {
         self.import_form.submitting = false;
@@ -503,9 +499,8 @@ impl App {
       }
       Message::MoveToCardDone(Ok(())) => {
         self.status = Some("Clef migrée sur YubiKey avec succès".to_string());
-        self.loading = true;
         self.selected = None;
-        return Self::reload_keys();
+        return self.reload_keys();
       }
       Message::MoveToCardDone(Err(e)) => {
         self.status = Some(format!("Erreur migration : {e}"));
@@ -532,9 +527,8 @@ impl App {
       }
       Message::DeleteKeyDone(Ok(())) => {
         self.status = Some("Clef supprimée".to_string());
-        self.loading = true;
         self.selected = None;
-        return Self::reload_keys();
+        return self.reload_keys();
       }
       Message::DeleteKeyDone(Err(e)) => {
         self.status = Some(format!("Erreur suppression : {e}"));
@@ -578,8 +572,7 @@ impl App {
       }
       Message::RenewSubkeyDone(Ok(())) => {
         self.status = Some("Sous-clef renouvelée".to_string());
-        self.loading = true;
-        let reload = Self::reload_keys();
+        let reload = self.reload_keys();
         if let Some(i) = self.selected {
           if let Some(publish) = self.auto_republish_task(i) {
             return Task::batch([reload, publish]);
@@ -664,8 +657,7 @@ impl App {
       }
       Message::AddSubkeyDone(Ok(())) => {
         self.status = Some("Sous-clef créée".to_string());
-        self.loading = true;
-        let reload = Self::reload_keys();
+        let reload = self.reload_keys();
         if let Some(i) = self.selected {
           if let Some(publish) = self.auto_republish_task(i) {
             return Task::batch([reload, publish]);
@@ -716,8 +708,7 @@ impl App {
       }
       Message::RotateSubkeyDone(Ok(())) => {
         self.status = Some("Sous-clef remplacée avec succès".to_string());
-        self.loading = true;
-        let reload = Self::reload_keys();
+        let reload = self.reload_keys();
         if let Some(i) = self.selected {
           if let Some(publish) = self.auto_republish_task(i) {
             return Task::batch([reload, publish]);
