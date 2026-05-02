@@ -180,6 +180,32 @@ pub fn export_secret_key(fingerprint: &str, path: &std::path::Path) -> Result<()
   std::fs::write(path, &output.stdout).context("failed to write key file")
 }
 
+pub fn backup_key(
+  fingerprint: &str,
+  dir: &std::path::Path,
+  short_id: &str,
+) -> Result<(String, Option<String>)> {
+  let key_filename = format!("{short_id}_secret.asc");
+  export_secret_key(fingerprint, &dir.join(&key_filename))?;
+
+  let gnupg_dir = std::env::var("GNUPGHOME")
+    .unwrap_or_else(|_| format!("{}/.gnupg", std::env::var("HOME").unwrap_or_default()));
+  let rev_src = format!(
+    "{gnupg_dir}/openpgp-revocs.d/{}.rev",
+    fingerprint.to_uppercase()
+  );
+
+  let rev_filename = if std::path::Path::new(&rev_src).exists() {
+    let name = format!("{short_id}_revocation.rev");
+    std::fs::copy(&rev_src, dir.join(&name)).context("failed to copy revocation certificate")?;
+    Some(name)
+  } else {
+    None
+  };
+
+  Ok((key_filename, rev_filename))
+}
+
 pub fn check_keyserver(fingerprint: &str) -> Result<(String, bool)> {
   let url = format!(
     "https://keys.openpgp.org/vks/v1/by-fingerprint/{}",

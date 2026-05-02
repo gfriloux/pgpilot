@@ -75,8 +75,8 @@ pub fn view(key: &KeyInfo, idx: usize, ctx: ViewCtx) -> Element<'_, Message> {
 
   if key.has_secret {
     action_buttons.push(
-      button(icon_row("\u{f023}", "Exporter privée"))
-        .on_press(Message::ExportSecretKey(idx))
+      button(icon_row("\u{f0c7}", "Sauvegarder"))
+        .on_press(Message::BackupKey(idx))
         .style(|_: &iced::Theme, status: button::Status| button::Style {
           background: Some(Background::Color(match status {
             button::Status::Hovered | button::Status::Pressed => theme::DESTRUCTIVE_HOVER_BG,
@@ -308,8 +308,8 @@ pub fn view(key: &KeyInfo, idx: usize, ctx: ViewCtx) -> Element<'_, Message> {
           )
           .size(12),
           row![
-            button(icon_row("\u{f019}", "Exporter d'abord"))
-              .on_press(Message::ExportSecretKey(idx))
+            button(icon_row("\u{f0c7}", "Sauvegarder d'abord"))
+              .on_press(Message::BackupKey(idx))
               .style(|_: &iced::Theme, status: button::Status| button::Style {
                 background: Some(Background::Color(match status {
                   button::Status::Hovered | button::Status::Pressed => theme::ACCENT_HOVER,
@@ -401,7 +401,7 @@ pub fn view(key: &KeyInfo, idx: usize, ctx: ViewCtx) -> Element<'_, Message> {
     if key.has_secret && !key.on_card {
       del_btns.push(
         button(icon_row("\u{f019}", "Exporter d'abord"))
-          .on_press(Message::ExportSecretKey(idx))
+          .on_press(Message::BackupKey(idx))
           .style(|_: &iced::Theme, status: button::Status| button::Style {
             background: Some(Background::Color(match status {
               button::Status::Hovered | button::Status::Pressed => theme::ACCENT_HOVER,

@@ -93,7 +93,8 @@ pub enum Message {
   ExportPublicKeyClipboardDone(Result<String, String>),
   ExportPublicKeyUpload(usize),
   ExportPublicKeyUploadDone(Result<String, String>),
-  ExportSecretKey(usize),
+  BackupKey(usize),
+  BackupDone(Result<Option<String>, String>),
   ExportDone(Result<Option<String>, String>),
   CreateKeyNameChanged(String),
   CreateKeyEmailChanged(String),
@@ -152,10 +153,9 @@ where
     .map_err(|e| e.to_string())
 }
 
-fn export_key_to_file(fp: String, name: String, secret: bool) -> anyhow::Result<Option<String>> {
-  let suffix = if secret { "sec" } else { "pub" };
+fn export_key_to_file(fp: String, name: String) -> anyhow::Result<Option<String>> {
   let path = match rfd::FileDialog::new()
-    .set_file_name(format!("{name}.{suffix}.asc"))
+    .set_file_name(format!("{name}.pub.asc"))
     .add_filter("PGP Key", &["asc"])
     .save_file()
   {
@@ -167,12 +167,24 @@ fn export_key_to_file(fp: String, name: String, secret: bool) -> anyhow::Result<
     .and_then(|n| n.to_str())
     .unwrap_or("key.asc")
     .to_string();
-  if secret {
-    crate::gpg::export_secret_key(&fp, &path)?;
-  } else {
-    crate::gpg::export_public_key(&fp, &path)?;
-  }
+  crate::gpg::export_public_key(&fp, &path)?;
   Ok(Some(filename))
+}
+
+fn backup_key_to_dir(fp: String, short_id: String) -> anyhow::Result<Option<String>> {
+  let dir = match rfd::FileDialog::new()
+    .set_title("Choisir un dossier de sauvegarde")
+    .pick_folder()
+  {
+    None => return Ok(None),
+    Some(d) => d,
+  };
+  let (key_file, rev_file) = crate::gpg::backup_key(&fp, &dir, &short_id)?;
+  let summary = match rev_file {
+    Some(rev) => format!("{key_file} + {rev}"),
+    None => format!("{key_file} (certificat de révocation introuvable)"),
+  };
+  Ok(Some(summary))
 }
 
 impl App {
@@ -291,7 +303,7 @@ impl App {
         let fp = self.keys[i].fingerprint.clone();
         let name = self.keys[i].name.replace(' ', "_");
         return Task::perform(
-          blocking_task(move || export_key_to_file(fp, name, false)),
+          blocking_task(move || export_key_to_file(fp, name)),
           Message::ExportDone,
         );
       }
@@ -326,13 +338,20 @@ impl App {
       Message::ExportPublicKeyUploadDone(Err(e)) => {
         self.status = Some(format!("Erreur upload : {e}"));
       }
-      Message::ExportSecretKey(i) => {
+      Message::BackupKey(i) => {
         let fp = self.keys[i].fingerprint.clone();
-        let name = self.keys[i].name.replace(' ', "_");
+        let short_id = self.keys[i].short_id.clone();
         return Task::perform(
-          blocking_task(move || export_key_to_file(fp, name, true)),
-          Message::ExportDone,
+          blocking_task(move || backup_key_to_dir(fp, short_id)),
+          Message::BackupDone,
         );
+      }
+      Message::BackupDone(Ok(None)) => {}
+      Message::BackupDone(Ok(Some(summary))) => {
+        self.status = Some(format!("Sauvegardé : {summary}"));
+      }
+      Message::BackupDone(Err(e)) => {
+        self.status = Some(format!("Erreur : {e}"));
       }
       Message::ExportDone(Ok(None)) => {}
       Message::ExportDone(Ok(Some(filename))) => {
