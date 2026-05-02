@@ -55,7 +55,16 @@ pub fn root(app: &App) -> Element<'_, Message> {
       ..Default::default()
     });
 
-  row![sidebar_el, main]
+  let main_el = container(main)
+    .height(Length::Fill)
+    .width(Length::Fill)
+    .style(|_: &iced::Theme| container::Style {
+      background: Some(Background::Color(theme::DETAIL_BG)),
+      text_color: Some(theme::TEXT_STRONG),
+      ..Default::default()
+    });
+
+  row![sidebar_el, main_el]
     .width(Length::Fill)
     .height(Length::Fill)
     .into()

@@ -1,19 +1,12 @@
 use iced::{
   font,
   widget::{column, container, row, scrollable, text, Column},
-  Background, Border, Color, Element, Font, Length,
+  Background, Border, Element, Font, Length,
 };
 
 use crate::app::Message;
 use crate::gpg::{CheckStatus, HealthCheck};
 use crate::ui::theme;
-
-const AMBER: Color = Color {
-  r: 0.96,
-  g: 0.62,
-  b: 0.11,
-  a: 1.0,
-};
 
 pub fn view(checks: &[HealthCheck], loading: bool) -> Element<'_, Message> {
   let bold = Font {
@@ -53,7 +46,7 @@ pub fn view(checks: &[HealthCheck], loading: bool) -> Element<'_, Message> {
       .padding(32)
       .width(560)
       .style(|_: &iced::Theme| container::Style {
-        background: Some(Background::Color(Color::WHITE)),
+        background: Some(Background::Color(theme::CARD_BG)),
         border: Border {
           color: theme::BORDER,
           width: 1.0,
@@ -86,7 +79,7 @@ pub fn view(checks: &[HealthCheck], loading: bool) -> Element<'_, Message> {
           let (icon, icon_color) = match check.status {
             CheckStatus::Ok => ("\u{f058}", theme::SUCCESS),
             CheckStatus::Info => ("\u{f05a}", theme::ACCENT),
-            CheckStatus::Warning => ("\u{f071}", AMBER),
+            CheckStatus::Warning => ("\u{f071}", theme::PEACH),
             CheckStatus::Error => ("\u{f057}", theme::ERROR),
           };
 
@@ -171,7 +164,7 @@ pub fn view(checks: &[HealthCheck], loading: bool) -> Element<'_, Message> {
       .padding(32)
       .width(560)
       .style(|_: &iced::Theme| container::Style {
-        background: Some(Background::Color(Color::WHITE)),
+        background: Some(Background::Color(theme::CARD_BG)),
         border: Border {
           color: theme::BORDER,
           width: 1.0,

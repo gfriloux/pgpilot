@@ -46,7 +46,7 @@ pub fn view(form: &CreateKeyForm) -> Element<'_, Message> {
           theme::DISABLED_BG
         })),
         text_color: if can_submit {
-          Color::WHITE
+          theme::TEXT_ON_ACCENT
         } else {
           theme::TEXT_MUTED
         },
@@ -168,7 +168,7 @@ pub fn view(form: &CreateKeyForm) -> Element<'_, Message> {
   .padding(32)
   .width(520)
   .style(|_: &iced::Theme| container::Style {
-    background: Some(Background::Color(Color::WHITE)),
+    background: Some(Background::Color(theme::CARD_BG)),
     border: Border {
       color: theme::BORDER,
       width: 1.0,

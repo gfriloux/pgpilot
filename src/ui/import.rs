@@ -38,7 +38,7 @@ pub fn view(form: &ImportForm) -> Element<'_, Message> {
           theme::DISABLED_BG
         })),
         text_color: if enabled {
-          Color::WHITE
+          theme::TEXT_ON_ACCENT
         } else {
           theme::TEXT_MUTED
         },
@@ -180,7 +180,7 @@ pub fn view(form: &ImportForm) -> Element<'_, Message> {
   .padding(32)
   .width(520)
   .style(|_: &iced::Theme| container::Style {
-    background: Some(Background::Color(Color::WHITE)),
+    background: Some(Background::Color(theme::CARD_BG)),
     border: Border {
       color: theme::BORDER,
       width: 1.0,

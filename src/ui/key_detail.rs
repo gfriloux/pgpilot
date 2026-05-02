@@ -63,7 +63,7 @@ pub fn view(key: &KeyInfo, idx: usize, ctx: ViewCtx) -> Element<'_, Message> {
           button::Status::Hovered | button::Status::Pressed => theme::ACCENT_HOVER,
           _ => theme::ACCENT,
         })),
-        text_color: Color::WHITE,
+        text_color: theme::TEXT_ON_ACCENT,
         border: Border {
           color: Color::TRANSPARENT,
           width: 0.0,
@@ -103,7 +103,7 @@ pub fn view(key: &KeyInfo, idx: usize, ctx: ViewCtx) -> Element<'_, Message> {
           })),
           text_color: match status {
             button::Status::Disabled => theme::TEXT_MUTED,
-            _ => Color::WHITE,
+            _ => theme::TEXT_ON_ACCENT,
           },
           border: Border {
             color: Color::TRANSPARENT,
@@ -315,7 +315,7 @@ pub fn view(key: &KeyInfo, idx: usize, ctx: ViewCtx) -> Element<'_, Message> {
                   button::Status::Hovered | button::Status::Pressed => theme::ACCENT_HOVER,
                   _ => theme::ACCENT,
                 })),
-                text_color: Color::WHITE,
+                text_color: theme::TEXT_ON_ACCENT,
                 border: Border {
                   color: Color::TRANSPARENT,
                   width: 0.0,
@@ -335,7 +335,7 @@ pub fn view(key: &KeyInfo, idx: usize, ctx: ViewCtx) -> Element<'_, Message> {
                   },
                   _ => theme::SUCCESS,
                 })),
-                text_color: Color::WHITE,
+                text_color: theme::TEXT_ON_ACCENT,
                 border: Border {
                   color: Color::TRANSPARENT,
                   width: 0.0,
@@ -407,7 +407,7 @@ pub fn view(key: &KeyInfo, idx: usize, ctx: ViewCtx) -> Element<'_, Message> {
               button::Status::Hovered | button::Status::Pressed => theme::ACCENT_HOVER,
               _ => theme::ACCENT,
             })),
-            text_color: Color::WHITE,
+            text_color: theme::TEXT_ON_ACCENT,
             border: Border {
               color: Color::TRANSPARENT,
               width: 0.0,
@@ -426,7 +426,7 @@ pub fn view(key: &KeyInfo, idx: usize, ctx: ViewCtx) -> Element<'_, Message> {
             button::Status::Hovered | button::Status::Pressed => theme::DESTRUCTIVE_HOVER_BG,
             _ => theme::DESTRUCTIVE,
           })),
-          text_color: Color::WHITE,
+          text_color: theme::TEXT_ON_ACCENT,
           border: Border {
             color: Color::TRANSPARENT,
             width: 0.0,
@@ -505,7 +505,7 @@ pub fn view(key: &KeyInfo, idx: usize, ctx: ViewCtx) -> Element<'_, Message> {
             Color::TRANSPARENT
           })),
           text_color: if selected {
-            Color::WHITE
+            theme::TEXT_ON_ACCENT
           } else {
             theme::TEXT_SECONDARY
           },
@@ -562,7 +562,7 @@ pub fn view(key: &KeyInfo, idx: usize, ctx: ViewCtx) -> Element<'_, Message> {
                   button::Status::Hovered | button::Status::Pressed => theme::ACCENT_HOVER,
                   _ => theme::ACCENT,
                 })),
-                text_color: Color::WHITE,
+                text_color: theme::TEXT_ON_ACCENT,
                 border: Border {
                   color: Color::TRANSPARENT,
                   width: 0.0,
@@ -706,13 +706,6 @@ pub fn view(key: &KeyInfo, idx: usize, ctx: ViewCtx) -> Element<'_, Message> {
     return left_col.into();
   }
 
-  let amber = Color {
-    r: 0.96,
-    g: 0.62,
-    b: 0.11,
-    a: 1.0,
-  };
-
   // (usage_char, icon, label, color, gpg_algo, gpg_usage)
   let standard_types = [
     (
@@ -731,7 +724,7 @@ pub fn view(key: &KeyInfo, idx: usize, ctx: ViewCtx) -> Element<'_, Message> {
       "cv25519",
       "encr",
     ),
-    ("A", "\u{f084}", "Auth SSH", amber, "ed25519", "auth"),
+    ("A", "\u{f084}", "Auth SSH", theme::PEACH, "ed25519", "auth"),
   ];
 
   let find_subkey = |usage_char: &str| -> Option<(usize, &SubkeyInfo)> {
@@ -778,7 +771,7 @@ pub fn view(key: &KeyInfo, idx: usize, ctx: ViewCtx) -> Element<'_, Message> {
                     Color::TRANSPARENT
                   })),
                   text_color: if selected {
-                    Color::WHITE
+                    theme::TEXT_ON_ACCENT
                   } else {
                     theme::SIDEBAR_TEXT_MUTED
                   },
@@ -821,7 +814,7 @@ pub fn view(key: &KeyInfo, idx: usize, ctx: ViewCtx) -> Element<'_, Message> {
                         },
                         _ => type_color,
                       })),
-                      text_color: Color::WHITE,
+                      text_color: theme::TEXT_ON_ACCENT,
                       border: Border {
                         color: Color::TRANSPARENT,
                         width: 0.0,
