@@ -1,11 +1,13 @@
 use iced::{
   font,
-  widget::{button, column, container, horizontal_rule, pick_list, row, text, text_input},
+  widget::{
+    button, checkbox, column, container, horizontal_rule, pick_list, row, text, text_input,
+  },
   Background, Border, Color, Element, Font, Length,
 };
 
 use crate::app::{CreateKeyForm, Message, View};
-use crate::gpg::{KeyAlgo, KeyExpiry};
+use crate::gpg::KeyExpiry;
 use crate::ui::theme;
 
 pub fn view(form: &CreateKeyForm) -> Element<'_, Message> {
@@ -14,22 +16,14 @@ pub fn view(form: &CreateKeyForm) -> Element<'_, Message> {
     ..Font::DEFAULT
   };
 
-  let algo_list = pick_list(
-    vec![KeyAlgo::Ed25519, KeyAlgo::Rsa4096],
-    Some(form.algo.clone()),
-    Message::CreateKeyAlgoChanged,
-  )
-  .width(Length::Fill);
-
   let expiry_list = pick_list(
     vec![
-      KeyExpiry::Never,
       KeyExpiry::OneYear,
       KeyExpiry::TwoYears,
       KeyExpiry::FiveYears,
     ],
-    Some(form.expiry.clone()),
-    Message::CreateKeyExpiryChanged,
+    Some(form.subkey_expiry.clone()),
+    Message::CreateKeySubkeyExpiryChanged,
   )
   .width(Length::Fill);
 
@@ -51,7 +45,11 @@ pub fn view(form: &CreateKeyForm) -> Element<'_, Message> {
         } else {
           theme::DISABLED_BG
         })),
-        text_color: Color::WHITE,
+        text_color: if can_submit {
+          Color::WHITE
+        } else {
+          theme::TEXT_MUTED
+        },
         border: Border {
           color: Color::TRANSPARENT,
           width: 0.0,
@@ -83,11 +81,18 @@ pub fn view(form: &CreateKeyForm) -> Element<'_, Message> {
       shadow: Default::default(),
     });
 
+  let hint = |s: &'static str| {
+    container(text(s).size(11)).style(|_: &iced::Theme| container::Style {
+      text_color: Some(theme::TEXT_MUTED),
+      ..Default::default()
+    })
+  };
+
   let card = container(
     column![
       column![
         text("Nouvelle clef PGP").size(22).font(bold),
-        container(text("Renseignez les informations pour générer votre clef.").size(13)).style(
+        container(text("Génère une clef maître et ses sous-clefs dédiées.").size(13),).style(
           |_: &iced::Theme| container::Style {
             text_color: Some(theme::TEXT_SECONDARY),
             ..Default::default()
@@ -97,37 +102,71 @@ pub fn view(form: &CreateKeyForm) -> Element<'_, Message> {
       .spacing(6),
       horizontal_rule(1),
       column![
-        text("Nom").size(12).font(bold),
-        text_input("Alice Martin", &form.name)
-          .on_input(Message::CreateKeyNameChanged)
-          .size(14)
-          .width(Length::Fill),
+        text("Identité").size(12).font(bold),
+        column![
+          text("Nom").size(12),
+          text_input("Alice Martin", &form.name)
+            .on_input(Message::CreateKeyNameChanged)
+            .size(14)
+            .width(Length::Fill),
+        ]
+        .spacing(4),
+        column![
+          text("Email").size(12),
+          text_input("alice@example.com", &form.email)
+            .on_input(Message::CreateKeyEmailChanged)
+            .size(14)
+            .width(Length::Fill),
+        ]
+        .spacing(4),
       ]
-      .spacing(6),
+      .spacing(10),
+      horizontal_rule(1),
       column![
-        text("Email").size(12).font(bold),
-        text_input("alice@example.com", &form.email)
-          .on_input(Message::CreateKeyEmailChanged)
-          .size(14)
-          .width(Length::Fill),
+        text("Sous-clefs").size(12).font(bold),
+        column![
+          text("Expiration").size(12),
+          expiry_list,
+          hint(
+            "Les sous-clefs expirent automatiquement. \
+             Une courte durée limite les dégâts en cas de compromission \
+             — vous pourrez les renouveler avant échéance.",
+          ),
+        ]
+        .spacing(6),
+        column![
+          checkbox("Inclure une clef d'authentification SSH", form.include_auth,)
+            .on_toggle(Message::CreateKeyIncludeAuthToggled)
+            .text_size(13)
+            .size(16),
+          hint(
+            "Permet de vous authentifier sur des serveurs distants sans mot de passe, \
+             en utilisant votre clef PGP comme clef SSH.",
+          ),
+        ]
+        .spacing(6),
       ]
-      .spacing(6),
-      row![
-        column![text("Algorithme").size(12).font(bold), algo_list]
-          .spacing(6)
-          .width(Length::Fill),
-        column![text("Expiration").size(12).font(bold), expiry_list]
-          .spacing(6)
-          .width(Length::Fill),
-      ]
-      .spacing(16),
+      .spacing(14),
+      horizontal_rule(1),
+      container(
+        column![
+          text("À propos de la clef maître").size(12).font(bold),
+          hint(
+            "La clef maître définit votre identité PGP à long terme — elle ne sert qu'à \
+             certifier vos sous-clefs. Elle n'expire jamais. \
+             Conservez-la hors ligne avec son certificat de révocation.",
+          ),
+        ]
+        .spacing(6),
+      )
+      .padding([4, 0]),
       horizontal_rule(1),
       row![cancel_btn, submit_btn].spacing(8),
     ]
     .spacing(20),
   )
   .padding(32)
-  .width(480)
+  .width(520)
   .style(|_: &iced::Theme| container::Style {
     background: Some(Background::Color(Color::WHITE)),
     border: Border {

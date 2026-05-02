@@ -5,36 +5,99 @@ use anyhow::{Context, Result};
 use sequoia_openpgp::{cert::CertParser, parse::Parse, policy::StandardPolicy, Cert};
 
 use super::card::card_status;
-use super::types::{format_date, KeyAlgo, KeyExpiry, KeyInfo};
+use super::types::{format_date, KeyExpiry, KeyInfo, SubkeyInfo};
 
-pub fn create_key(name: &str, email: &str, algo: &KeyAlgo, expiry: &KeyExpiry) -> Result<()> {
-  let user_id = format!("{name} <{email}>");
-  let algo_str = match algo {
-    KeyAlgo::Ed25519 => "ed25519",
-    KeyAlgo::Rsa4096 => "rsa4096",
-  };
-  let expire_str = match expiry {
-    KeyExpiry::Never => "0",
+fn expiry_to_str(expiry: &KeyExpiry) -> &'static str {
+  match expiry {
     KeyExpiry::OneYear => "1y",
     KeyExpiry::TwoYears => "2y",
     KeyExpiry::FiveYears => "5y",
-  };
+  }
+}
+
+fn all_public_fingerprints() -> Result<HashSet<String>> {
+  let output = Command::new("gpg")
+    .args(["--list-keys", "--with-colons"])
+    .output()
+    .context("failed to list keys")?;
+
+  Ok(
+    String::from_utf8(output.stdout)?
+      .lines()
+      .filter_map(|line| {
+        let fields: Vec<&str> = line.split(':').collect();
+        if fields.len() > 9 && fields[0] == "fpr" {
+          Some(fields[9].to_string())
+        } else {
+          None
+        }
+      })
+      .collect(),
+  )
+}
+
+pub fn create_key(
+  name: &str,
+  email: &str,
+  subkey_expiry: &KeyExpiry,
+  include_auth: bool,
+) -> Result<()> {
+  let user_id = format!("{name} <{email}>");
+  let sub_expire = expiry_to_str(subkey_expiry);
+
+  let fps_before = all_public_fingerprints()?;
 
   let status = Command::new("gpg")
     .args([
       "--batch",
       "--quick-gen-key",
       &user_id,
-      algo_str,
-      "-",
-      expire_str,
+      "ed25519",
+      "cert",
+      "0",
     ])
     .status()
     .context("failed to run gpg --quick-gen-key")?;
 
   if !status.success() {
-    return Err(anyhow::anyhow!("La génération de clef a échoué"));
+    return Err(anyhow::anyhow!("La génération de la clef maître a échoué"));
   }
+
+  let fp = all_public_fingerprints()?
+    .difference(&fps_before)
+    .next()
+    .cloned()
+    .ok_or_else(|| anyhow::anyhow!("Fingerprint de la nouvelle clef introuvable"))?;
+
+  for (algo, usage) in [("ed25519", "sign"), ("cv25519", "encr")] {
+    let status = Command::new("gpg")
+      .args(["--batch", "--quick-add-key", &fp, algo, usage, sub_expire])
+      .status()
+      .context("failed to run gpg --quick-add-key")?;
+    if !status.success() {
+      return Err(anyhow::anyhow!("L'ajout de la sous-clef {usage} a échoué"));
+    }
+  }
+
+  if include_auth {
+    let status = Command::new("gpg")
+      .args([
+        "--batch",
+        "--quick-add-key",
+        &fp,
+        "ed25519",
+        "auth",
+        sub_expire,
+      ])
+      .status()
+      .context("failed to run gpg --quick-add-key (auth)")?;
+    if !status.success() {
+      return Err(anyhow::anyhow!(
+        "L'ajout de la sous-clef d'authentification a échoué"
+      ));
+    }
+  }
+
   Ok(())
 }
 
@@ -190,11 +253,45 @@ fn cert_to_key_info(
   let created = format_date(primary_key.creation_time());
 
   let policy = StandardPolicy::new();
-  let expires = cert
+  let (expires, subkeys) = cert
     .with_policy(&policy, None)
-    .ok()
-    .and_then(|vc| vc.primary_key().key_expiration_time())
-    .map(format_date);
+    .map(|vc| {
+      let expires = vc.primary_key().key_expiration_time().map(format_date);
+      let subkeys = vc
+        .keys()
+        .subkeys()
+        .map(|ka| {
+          let k = ka.key();
+          let sfp = k.fingerprint().to_hex();
+          let short_id = sfp[sfp.len().saturating_sub(16)..].to_string();
+          let usage = ka
+            .key_flags()
+            .map(|f| {
+              let mut u = String::new();
+              if f.for_signing() {
+                u.push('S');
+              }
+              if f.for_transport_encryption() || f.for_storage_encryption() {
+                u.push('E');
+              }
+              if f.for_authentication() {
+                u.push('A');
+              }
+              u
+            })
+            .unwrap_or_default();
+          SubkeyInfo {
+            fingerprint: sfp,
+            short_id,
+            algo: format!("{}", k.pk_algo()),
+            usage,
+            expires: ka.key_expiration_time().map(format_date),
+          }
+        })
+        .collect();
+      (expires, subkeys)
+    })
+    .unwrap_or((None, vec![]));
 
   KeyInfo {
     fingerprint: fp,
@@ -207,5 +304,6 @@ fn cert_to_key_info(
     has_secret,
     on_card,
     card_serial,
+    subkeys,
   }
 }

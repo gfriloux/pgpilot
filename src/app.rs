@@ -1,6 +1,6 @@
 use iced::Task;
 
-use crate::gpg::{KeyAlgo, KeyExpiry, KeyInfo};
+use crate::gpg::{KeyExpiry, KeyInfo};
 use crate::ui;
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
@@ -15,8 +15,8 @@ pub enum View {
 pub struct CreateKeyForm {
   pub name: String,
   pub email: String,
-  pub algo: KeyAlgo,
-  pub expiry: KeyExpiry,
+  pub subkey_expiry: KeyExpiry,
+  pub include_auth: bool,
   pub submitting: bool,
 }
 
@@ -44,8 +44,8 @@ pub enum Message {
   ExportDone(Result<Option<String>, String>),
   CreateKeyNameChanged(String),
   CreateKeyEmailChanged(String),
-  CreateKeyAlgoChanged(KeyAlgo),
-  CreateKeyExpiryChanged(KeyExpiry),
+  CreateKeySubkeyExpiryChanged(KeyExpiry),
+  CreateKeyIncludeAuthToggled(bool),
   CreateKeySubmit,
   CreateKeyDone(Result<(), String>),
   ImportKey,
@@ -58,6 +58,7 @@ pub enum Message {
   DeleteKeyCancel,
   DeleteKeyExecute(usize),
   DeleteKeyDone(Result<(), String>),
+  CopyToClipboard(String),
 }
 
 async fn blocking_task<T, F>(f: F) -> Result<T, String>
@@ -159,16 +160,18 @@ impl App {
       }
       Message::CreateKeyNameChanged(v) => self.create_form.name = v,
       Message::CreateKeyEmailChanged(v) => self.create_form.email = v,
-      Message::CreateKeyAlgoChanged(v) => self.create_form.algo = v,
-      Message::CreateKeyExpiryChanged(v) => self.create_form.expiry = v,
+      Message::CreateKeySubkeyExpiryChanged(v) => self.create_form.subkey_expiry = v,
+      Message::CreateKeyIncludeAuthToggled(v) => self.create_form.include_auth = v,
       Message::CreateKeySubmit => {
         let name = self.create_form.name.clone();
         let email = self.create_form.email.clone();
-        let algo = self.create_form.algo.clone();
-        let expiry = self.create_form.expiry.clone();
+        let subkey_expiry = self.create_form.subkey_expiry.clone();
+        let include_auth = self.create_form.include_auth;
         self.create_form.submitting = true;
         return Task::perform(
-          blocking_task(move || crate::gpg::create_key(&name, &email, &algo, &expiry)),
+          blocking_task(move || {
+            crate::gpg::create_key(&name, &email, &subkey_expiry, include_auth)
+          }),
           Message::CreateKeyDone,
         );
       }
@@ -264,6 +267,10 @@ impl App {
       }
       Message::DeleteKeyDone(Err(e)) => {
         self.status = Some(format!("Erreur suppression : {e}"));
+      }
+      Message::CopyToClipboard(text) => {
+        self.status = Some("Copié dans le presse-papier".to_string());
+        return iced::clipboard::write(text);
       }
     }
     Task::none()

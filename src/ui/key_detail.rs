@@ -1,6 +1,6 @@
 use iced::{
   font,
-  widget::{button, column, container, row, text, Column, Row},
+  widget::{button, column, container, row, text, vertical_rule, Column, Row},
   Alignment, Background, Border, Color, Element, Font, Length,
 };
 
@@ -126,7 +126,7 @@ pub fn view(
       .into(),
   );
 
-  let mut items: Vec<Element<Message>> = vec![
+  let mut left_items: Vec<Element<Message>> = vec![
     container(
       row![
         text(&key.name).size(15).font(bold),
@@ -176,7 +176,7 @@ pub fn view(
   ];
 
   if let (true, Some(serial)) = (key.on_card, &key.card_serial) {
-    items.push(
+    left_items.push(
       container(
         row![
           text("\u{f283}").font(theme::ICONS).size(12),
@@ -194,7 +194,7 @@ pub fn view(
   }
 
   if confirming {
-    items.push(
+    left_items.push(
       container(
         column![
           text("Opération irréversible : la clef privée va être déplacée sur la YubiKey.")
@@ -356,7 +356,7 @@ pub fn view(
         .into(),
     );
 
-    items.push(
+    left_items.push(
       container(
         column![
           text(warn_title).size(12).font(bold),
@@ -379,12 +379,103 @@ pub fn view(
       .into(),
     );
   } else {
-    items.push(Row::with_children(action_buttons).spacing(8).into());
+    left_items.push(Row::with_children(action_buttons).spacing(8).into());
   }
 
-  Column::with_children(items)
+  let left_col = Column::with_children(left_items)
     .spacing(10)
     .padding(16)
+    .width(Length::Fill);
+
+  if key.subkeys.is_empty() {
+    return left_col.into();
+  }
+
+  let subkey_cards: Vec<Element<Message>> = key
+    .subkeys
+    .iter()
+    .map(|sk| {
+      let (icon, type_label, type_color) = match sk.usage.as_str() {
+        "S" => ("\u{f040}", "Signature", theme::ACCENT),
+        "E" => ("\u{f023}", "Chiffrement", theme::SUCCESS),
+        "A" => (
+          "\u{f084}",
+          "Auth SSH",
+          Color {
+            r: 0.96,
+            g: 0.62,
+            b: 0.11,
+            a: 1.0,
+          },
+        ),
+        _ => ("\u{f0c0}", "Autre", theme::SIDEBAR_TEXT),
+      };
+      let expires_str = sk.expires.as_deref().unwrap_or("Aucune expiration");
+
+      container(
+        column![
+          row![
+            text(icon).font(theme::ICONS).size(12).color(type_color),
+            text(type_label).size(12).font(bold).color(type_color),
+          ]
+          .spacing(6)
+          .align_y(Alignment::Center),
+          row![
+            column![
+              text(&sk.algo).size(10),
+              text(format_fingerprint(&sk.short_id)).font(mono).size(10),
+            ]
+            .spacing(2)
+            .width(Length::Fill),
+            button(text("\u{f0c5}").font(theme::ICONS).size(11))
+              .on_press(Message::CopyToClipboard(sk.fingerprint.clone()))
+              .style(|_: &iced::Theme, status: button::Status| button::Style {
+                background: Some(Background::Color(match status {
+                  button::Status::Hovered | button::Status::Pressed => theme::SIDEBAR_HOVER_BG,
+                  _ => Color::TRANSPARENT,
+                })),
+                text_color: theme::SIDEBAR_TEXT_MUTED,
+                border: Border {
+                  color: Color::TRANSPARENT,
+                  width: 0.0,
+                  radius: 4.0.into(),
+                },
+                shadow: Default::default(),
+              }),
+          ]
+          .spacing(4)
+          .align_y(Alignment::Center),
+          text(expires_str).size(10).color(theme::SIDEBAR_TEXT_MUTED),
+        ]
+        .spacing(4),
+      )
+      .padding(8)
+      .width(Length::Fill)
+      .style(|_: &iced::Theme| container::Style {
+        background: Some(Background::Color(theme::SIDEBAR_BG)),
+        border: Border {
+          color: Color {
+            r: 1.0,
+            g: 1.0,
+            b: 1.0,
+            a: 0.08,
+          },
+          width: 1.0,
+          radius: 6.0.into(),
+        },
+        text_color: Some(theme::SIDEBAR_TEXT),
+        ..Default::default()
+      })
+      .into()
+    })
+    .collect();
+
+  let right_col = Column::with_children(subkey_cards)
+    .spacing(8)
+    .padding([16, 12])
+    .width(220);
+
+  row![left_col, vertical_rule(1), right_col]
     .width(Length::Fill)
     .into()
 }
