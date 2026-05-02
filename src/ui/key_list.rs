@@ -75,7 +75,7 @@ pub fn view(app: &App) -> Element<'_, Message> {
     column![
       list_view.height(Length::Fill),
       horizontal_rule(1),
-      key_detail::view(&app.keys[idx]),
+      key_detail::view(&app.keys[idx], idx),
     ]
     .width(Length::Fill)
     .height(Length::Fill)

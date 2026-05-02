@@ -25,6 +25,8 @@ mkShell {
     libxkbcommon
     libGL
     vulkan-loader
+    # rfd (native file dialog)
+    gtk3
   ];
 
   shellHook = ''
