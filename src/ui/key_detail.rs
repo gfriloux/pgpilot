@@ -1,7 +1,7 @@
 use iced::{
   font,
   widget::{button, column, container, row, text, Row},
-  Background, Border, Color, Element, Font, Length,
+  Alignment, Background, Border, Color, Element, Font, Length,
 };
 
 use crate::app::Message;
@@ -26,26 +26,33 @@ pub fn view(key: &KeyInfo, idx: usize) -> Element<'_, Message> {
     ..Font::DEFAULT
   };
 
-  let mut action_buttons: Vec<Element<Message>> = vec![button(text("Exporter pub").size(12))
-    .on_press(Message::ExportPublicKey(idx))
-    .style(|_: &iced::Theme, status: button::Status| button::Style {
-      background: Some(Background::Color(match status {
-        button::Status::Hovered | button::Status::Pressed => theme::ACCENT_HOVER,
-        _ => theme::ACCENT,
-      })),
-      text_color: Color::WHITE,
-      border: Border {
-        color: Color::TRANSPARENT,
-        width: 0.0,
-        radius: 6.0.into(),
-      },
-      shadow: Default::default(),
-    })
-    .into()];
+  let icon_row = |icon: &'static str, label: &'static str| {
+    row![text(icon).font(theme::ICONS).size(12), text(label).size(12),]
+      .spacing(6)
+      .align_y(Alignment::Center)
+  };
+
+  let mut action_buttons: Vec<Element<Message>> =
+    vec![button(icon_row("\u{f019}", "Exporter pub"))
+      .on_press(Message::ExportPublicKey(idx))
+      .style(|_: &iced::Theme, status: button::Status| button::Style {
+        background: Some(Background::Color(match status {
+          button::Status::Hovered | button::Status::Pressed => theme::ACCENT_HOVER,
+          _ => theme::ACCENT,
+        })),
+        text_color: Color::WHITE,
+        border: Border {
+          color: Color::TRANSPARENT,
+          width: 0.0,
+          radius: 6.0.into(),
+        },
+        shadow: Default::default(),
+      })
+      .into()];
 
   if key.has_secret {
     action_buttons.push(
-      button(text("Exporter privée").size(12))
+      button(icon_row("\u{f023}", "Exporter privée"))
         .on_press(Message::ExportSecretKey(idx))
         .style(|_: &iced::Theme, status: button::Status| button::Style {
           background: Some(Background::Color(match status {

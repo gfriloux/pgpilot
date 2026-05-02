@@ -78,11 +78,7 @@ pub fn view(app: &App) -> Element<'_, Message> {
       let i = *i;
       let selected = app.selected == Some(i);
 
-      let name = if key.has_secret {
-        format!("★ {}", key.name)
-      } else {
-        key.name.clone()
-      };
+      let name = key.name.clone();
       let expires = key.expires.as_deref().unwrap_or("—");
 
       let row_content = row![

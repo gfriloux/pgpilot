@@ -1,4 +1,6 @@
-use iced::Color;
+use iced::{Color, Font};
+
+pub const ICONS: Font = Font::with_name("Symbols Nerd Font Mono");
 
 // Sidebar
 pub const SIDEBAR_BG: Color = Color {
