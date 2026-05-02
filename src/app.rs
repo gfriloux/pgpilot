@@ -51,7 +51,6 @@ pub struct App {
   pub pending_renewal: Option<PendingRenewal>,
   pub pending_export_pub: Option<usize>,
   pub pending_publish: Option<Keyserver>,
-  pub pending_rotation: Option<(usize, usize)>,
   pub keyserver_statuses: HashMap<String, KeyserverStatus>,
   pub create_form: CreateKeyForm,
 }
@@ -94,8 +93,6 @@ pub enum Message {
   PublishKeyCancel,
   PublishKeyDone(Result<String, String>),
   AutoRepublishDone(Result<(), String>),
-  RotateSubkey(usize, usize),
-  RotateSubkeyCancel,
   RotateSubkeyExecute(usize, usize),
   RotateSubkeyDone(Result<(), String>),
   AddSubkey(usize, String, String),
@@ -208,7 +205,6 @@ impl App {
         self.pending_renewal = None;
         self.pending_export_pub = None;
         self.pending_publish = None;
-        self.pending_rotation = None;
       }
       Message::KeySelected(i) => {
         self.selected = Some(i);
@@ -218,7 +214,6 @@ impl App {
         self.pending_renewal = None;
         self.pending_export_pub = None;
         self.pending_publish = None;
-        self.pending_rotation = None;
         let fp = self.keys[i].fingerprint.clone();
         let unknown = matches!(
           self.keyserver_statuses.get(&fp),
@@ -237,7 +232,6 @@ impl App {
       Message::ExportPublicKeyMenu(i) => {
         self.pending_export_pub = Some(i);
         self.pending_publish = None;
-        self.pending_rotation = None;
         self.pending_migration = None;
         self.pending_delete = None;
         self.pending_renewal = None;
@@ -366,7 +360,6 @@ impl App {
         self.pending_renewal = None;
         self.pending_export_pub = None;
         self.pending_publish = None;
-        self.pending_rotation = None;
         self.status = None;
       }
       Message::MoveToCardCancel => {
@@ -395,7 +388,6 @@ impl App {
         self.pending_renewal = None;
         self.pending_export_pub = None;
         self.pending_publish = None;
-        self.pending_rotation = None;
         self.status = None;
       }
       Message::DeleteKeyCancel => {
@@ -433,7 +425,6 @@ impl App {
         self.pending_delete = None;
         self.pending_export_pub = None;
         self.pending_publish = None;
-        self.pending_rotation = None;
         self.status = None;
       }
       Message::RenewSubkeyExpiryChanged(expiry) => {
@@ -501,7 +492,6 @@ impl App {
       Message::PublishKeyCancel => {
         self.pending_export_pub = None;
         self.pending_publish = None;
-        self.pending_rotation = None;
       }
       Message::PublishKeyExecute(i) => {
         let keyserver = self.pending_publish.take().unwrap_or_default();
@@ -573,19 +563,12 @@ impl App {
       Message::AutoRepublishDone(Err(e)) => {
         self.status = Some(format!("Republication automatique échouée : {e}"));
       }
-      Message::RotateSubkey(key_idx, subkey_idx) => {
-        self.pending_rotation = Some((key_idx, subkey_idx));
-        self.pending_migration = None;
-        self.pending_delete = None;
-        self.pending_renewal = None;
-        self.pending_publish = None;
-        self.status = None;
-      }
-      Message::RotateSubkeyCancel => {
-        self.pending_rotation = None;
-      }
       Message::RotateSubkeyExecute(key_idx, subkey_idx) => {
-        self.pending_rotation = None;
+        let expiry = self
+          .pending_renewal
+          .take()
+          .map(|r| r.expiry)
+          .unwrap_or_default();
         let master_fp = self.keys[key_idx].fingerprint.clone();
         let old_fp = self.keys[key_idx].subkeys[subkey_idx].fingerprint.clone();
         let usage = self.keys[key_idx].subkeys[subkey_idx].usage.clone();
@@ -598,7 +581,7 @@ impl App {
         };
         return Task::perform(
           blocking_task(move || {
-            crate::gpg::rotate_subkey(&master_fp, &old_fp, &algo, &gpg_usage, &KeyExpiry::TwoYears)
+            crate::gpg::rotate_subkey(&master_fp, &old_fp, &algo, &gpg_usage, &expiry)
           }),
           Message::RotateSubkeyDone,
         );
