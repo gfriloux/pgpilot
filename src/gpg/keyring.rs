@@ -1,5 +1,6 @@
 use std::collections::HashSet;
-use std::process::Command;
+use std::io::Write;
+use std::process::{Command, Stdio};
 
 use anyhow::{Context, Result};
 use sequoia_openpgp::{
@@ -166,6 +167,82 @@ pub fn publish_key(fingerprint: &str, keyserver_url: &str) -> Result<String> {
     return Err(anyhow::anyhow!("L'envoi de la clef a échoué"));
   }
   Ok(keyserver_url.to_string())
+}
+
+fn subkey_position(master_fp: &str, subkey_fp: &str) -> Result<usize> {
+  let output = Command::new("gpg")
+    .args(["--list-keys", "--with-colons", master_fp])
+    .output()
+    .context("failed to list key")?;
+
+  let text = String::from_utf8(output.stdout)?;
+  let mut pos: usize = 0;
+  let mut last_was_key = false;
+
+  for line in text.lines() {
+    let fields: Vec<&str> = line.split(':').collect();
+    match fields.first().copied().unwrap_or("") {
+      "pub" => {
+        pos = 0;
+        last_was_key = true;
+      }
+      "sub" | "ssb" => {
+        pos += 1;
+        last_was_key = true;
+      }
+      "fpr" => {
+        if last_was_key {
+          last_was_key = false;
+          if fields.len() > 9 && fields[9].to_uppercase() == subkey_fp.to_uppercase() {
+            return Ok(pos);
+          }
+        }
+      }
+      _ => {
+        last_was_key = false;
+      }
+    }
+  }
+  Err(anyhow::anyhow!("Position de la sous-clef introuvable"))
+}
+
+fn revoke_subkey_at_pos(master_fp: &str, pos: usize) -> Result<()> {
+  let cmds = format!("key {pos}\nrevkey\n2\n\ny\nsave\n");
+
+  let mut child = Command::new("gpg")
+    .args(["--no-tty", "--command-fd", "0", "--edit-key", master_fp])
+    .stdin(Stdio::piped())
+    .stdout(Stdio::piped())
+    .stderr(Stdio::piped())
+    .spawn()
+    .context("failed to spawn gpg --edit-key")?;
+
+  {
+    let stdin = child.stdin.as_mut().context("failed to open gpg stdin")?;
+    stdin
+      .write_all(cmds.as_bytes())
+      .context("failed to write to gpg stdin")?;
+  }
+
+  let output = child.wait_with_output().context("failed to wait for gpg")?;
+
+  if !output.status.success() {
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    return Err(anyhow::anyhow!("Révocation échouée : {stderr}"));
+  }
+  Ok(())
+}
+
+pub fn rotate_subkey(
+  master_fp: &str,
+  old_subkey_fp: &str,
+  algo: &str,
+  usage: &str,
+  expiry: &KeyExpiry,
+) -> Result<()> {
+  add_subkey(master_fp, algo, usage, expiry)?;
+  let pos = subkey_position(master_fp, old_subkey_fp)?;
+  revoke_subkey_at_pos(master_fp, pos)
 }
 
 pub fn add_subkey(master_fp: &str, algo: &str, usage: &str, expiry: &KeyExpiry) -> Result<()> {

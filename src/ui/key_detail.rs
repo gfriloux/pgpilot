@@ -15,6 +15,7 @@ pub struct ViewCtx {
   pub confirming: bool,
   pub delete_confirming: bool,
   pub renewing_subkey: Option<(usize, KeyExpiry)>,
+  pub rotating_subkey: Option<usize>,
   pub publish_confirming: Option<Keyserver>,
   pub keyserver_status: KeyserverStatus,
 }
@@ -25,6 +26,7 @@ pub fn view(key: &KeyInfo, idx: usize, ctx: ViewCtx) -> Element<'_, Message> {
     confirming,
     delete_confirming,
     renewing_subkey,
+    rotating_subkey,
     publish_confirming,
     keyserver_status,
   } = ctx;
@@ -763,6 +765,64 @@ pub fn view(key: &KeyInfo, idx: usize, ctx: ViewCtx) -> Element<'_, Message> {
             ]
             .spacing(8)
             .into()
+          } else if rotating_subkey == Some(sk_idx) {
+            let warning = match sk.usage.as_str() {
+              "S" => "La clef de signature sera révoquée. Les signatures passées restent valides.",
+              "E" => {
+                "La clef de chiffrement sera révoquée. Les données passées restent déchiffrables."
+              }
+              "A" => "La clef d'authentification SSH sera révoquée.",
+              _ => "Cette sous-clef sera révoquée.",
+            };
+            column![
+              text("Une nouvelle sous-clef sera créée.")
+                .size(11)
+                .color(theme::SIDEBAR_TEXT),
+              text(warning).size(10).color(theme::SIDEBAR_TEXT_MUTED),
+              row![
+                button(text("Confirmer").size(11))
+                  .on_press(Message::RotateSubkeyExecute(idx, sk_idx))
+                  .style(
+                    move |_: &iced::Theme, status: button::Status| button::Style {
+                      background: Some(Background::Color(match status {
+                        button::Status::Hovered | button::Status::Pressed => Color {
+                          a: 0.85,
+                          ..type_color
+                        },
+                        _ => type_color,
+                      })),
+                      text_color: Color::WHITE,
+                      border: Border {
+                        color: Color::TRANSPARENT,
+                        width: 0.0,
+                        radius: 4.0.into(),
+                      },
+                      shadow: Default::default(),
+                    }
+                  ),
+                button(text("Annuler").size(11))
+                  .on_press(Message::RotateSubkeyCancel)
+                  .style(|_: &iced::Theme, status: button::Status| button::Style {
+                    background: Some(Background::Color(match status {
+                      button::Status::Hovered | button::Status::Pressed => theme::SIDEBAR_HOVER_BG,
+                      _ => Color::TRANSPARENT,
+                    })),
+                    text_color: theme::SIDEBAR_TEXT_MUTED,
+                    border: Border {
+                      color: Color {
+                        a: 0.3,
+                        ..theme::SIDEBAR_TEXT_MUTED
+                      },
+                      width: 1.0,
+                      radius: 4.0.into(),
+                    },
+                    shadow: Default::default(),
+                  }),
+              ]
+              .spacing(6),
+            ]
+            .spacing(6)
+            .into()
           } else {
             let expires_str = sk.expires.as_deref().unwrap_or("Aucune expiration");
             column![
@@ -811,6 +871,29 @@ pub fn view(key: &KeyInfo, idx: usize, ctx: ViewCtx) -> Element<'_, Message> {
                     },
                     shadow: Default::default(),
                   }),
+                button(text("\u{f01e}").font(theme::ICONS).size(10))
+                  .on_press(Message::RotateSubkey(idx, sk_idx))
+                  .style(
+                    move |_: &iced::Theme, status: button::Status| button::Style {
+                      background: Some(Background::Color(match status {
+                        button::Status::Hovered | button::Status::Pressed => Color {
+                          a: 0.15,
+                          ..type_color
+                        },
+                        _ => Color::TRANSPARENT,
+                      })),
+                      text_color: Color {
+                        a: 0.6,
+                        ..type_color
+                      },
+                      border: Border {
+                        color: Color::TRANSPARENT,
+                        width: 0.0,
+                        radius: 4.0.into(),
+                      },
+                      shadow: Default::default(),
+                    }
+                  ),
               ]
               .spacing(4)
               .align_y(Alignment::Center),

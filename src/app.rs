@@ -50,6 +50,7 @@ pub struct App {
   pub pending_delete: Option<usize>,
   pub pending_renewal: Option<PendingRenewal>,
   pub pending_publish: Option<Keyserver>,
+  pub pending_rotation: Option<(usize, usize)>,
   pub keyserver_statuses: HashMap<String, KeyserverStatus>,
   pub create_form: CreateKeyForm,
 }
@@ -86,6 +87,10 @@ pub enum Message {
   PublishKeyCancel,
   PublishKeyDone(Result<String, String>),
   AutoRepublishDone(Result<(), String>),
+  RotateSubkey(usize, usize),
+  RotateSubkeyCancel,
+  RotateSubkeyExecute(usize, usize),
+  RotateSubkeyDone(Result<(), String>),
   AddSubkey(usize, String, String),
   AddSubkeyDone(Result<(), String>),
   RenewSubkey(usize, usize),
@@ -195,6 +200,7 @@ impl App {
         self.pending_delete = None;
         self.pending_renewal = None;
         self.pending_publish = None;
+        self.pending_rotation = None;
       }
       Message::KeySelected(i) => {
         self.selected = Some(i);
@@ -203,6 +209,7 @@ impl App {
         self.pending_delete = None;
         self.pending_renewal = None;
         self.pending_publish = None;
+        self.pending_rotation = None;
         let fp = self.keys[i].fingerprint.clone();
         let unknown = matches!(
           self.keyserver_statuses.get(&fp),
@@ -305,6 +312,7 @@ impl App {
         self.pending_delete = None;
         self.pending_renewal = None;
         self.pending_publish = None;
+        self.pending_rotation = None;
         self.status = None;
       }
       Message::MoveToCardCancel => {
@@ -332,6 +340,7 @@ impl App {
         self.pending_migration = None;
         self.pending_renewal = None;
         self.pending_publish = None;
+        self.pending_rotation = None;
         self.status = None;
       }
       Message::DeleteKeyCancel => {
@@ -368,6 +377,7 @@ impl App {
         self.pending_migration = None;
         self.pending_delete = None;
         self.pending_publish = None;
+        self.pending_rotation = None;
         self.status = None;
       }
       Message::RenewSubkeyExpiryChanged(expiry) => {
@@ -434,6 +444,7 @@ impl App {
       }
       Message::PublishKeyCancel => {
         self.pending_publish = None;
+        self.pending_rotation = None;
       }
       Message::PublishKeyExecute(i) => {
         let keyserver = self.pending_publish.take().unwrap_or_default();
@@ -504,6 +515,50 @@ impl App {
       }
       Message::AutoRepublishDone(Err(e)) => {
         self.status = Some(format!("Republication automatique échouée : {e}"));
+      }
+      Message::RotateSubkey(key_idx, subkey_idx) => {
+        self.pending_rotation = Some((key_idx, subkey_idx));
+        self.pending_migration = None;
+        self.pending_delete = None;
+        self.pending_renewal = None;
+        self.pending_publish = None;
+        self.status = None;
+      }
+      Message::RotateSubkeyCancel => {
+        self.pending_rotation = None;
+      }
+      Message::RotateSubkeyExecute(key_idx, subkey_idx) => {
+        self.pending_rotation = None;
+        let master_fp = self.keys[key_idx].fingerprint.clone();
+        let old_fp = self.keys[key_idx].subkeys[subkey_idx].fingerprint.clone();
+        let usage = self.keys[key_idx].subkeys[subkey_idx].usage.clone();
+        let (algo, gpg_usage) = if usage.contains('E') {
+          ("cv25519".to_string(), "encr".to_string())
+        } else if usage.contains('A') {
+          ("ed25519".to_string(), "auth".to_string())
+        } else {
+          ("ed25519".to_string(), "sign".to_string())
+        };
+        return Task::perform(
+          blocking_task(move || {
+            crate::gpg::rotate_subkey(&master_fp, &old_fp, &algo, &gpg_usage, &KeyExpiry::TwoYears)
+          }),
+          Message::RotateSubkeyDone,
+        );
+      }
+      Message::RotateSubkeyDone(Ok(())) => {
+        self.status = Some("Sous-clef remplacée avec succès".to_string());
+        self.loading = true;
+        let reload = Self::reload_keys();
+        if let Some(i) = self.selected {
+          if let Some(publish) = self.auto_republish_task(i) {
+            return Task::batch([reload, publish]);
+          }
+        }
+        return reload;
+      }
+      Message::RotateSubkeyDone(Err(e)) => {
+        self.status = Some(format!("Erreur rotation : {e}"));
       }
     }
     Task::none()

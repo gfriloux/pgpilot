@@ -155,6 +155,13 @@ pub fn view(app: &App) -> Element<'_, Message> {
               None
             }
           }),
+          rotating_subkey: app.pending_rotation.and_then(|(ki, si)| {
+            if ki == idx {
+              Some(si)
+            } else {
+              None
+            }
+          }),
           publish_confirming: app.pending_publish.clone(),
           keyserver_status: app
             .keyserver_statuses
