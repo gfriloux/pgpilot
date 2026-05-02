@@ -182,7 +182,7 @@ pub fn view(form: &CreateKeyForm) -> Element<'_, Message> {
     .center_x(Length::Fill)
     .center_y(Length::Fill)
     .style(|_: &iced::Theme| container::Style {
-      background: Some(Background::Color(theme::HEADER_BG)),
+      background: Some(Background::Color(theme::SIDEBAR_BG)),
       ..Default::default()
     })
     .into()

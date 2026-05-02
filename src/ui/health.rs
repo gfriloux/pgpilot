@@ -187,7 +187,7 @@ pub fn view(checks: &[HealthCheck], loading: bool) -> Element<'_, Message> {
       .padding([24, 0])
       .width(Length::Fill)
       .style(|_: &iced::Theme| container::Style {
-        background: Some(Background::Color(theme::HEADER_BG)),
+        background: Some(Background::Color(theme::SIDEBAR_BG)),
         ..Default::default()
       }),
   )
