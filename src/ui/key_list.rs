@@ -1,38 +1,83 @@
 use iced::{
+  font,
   widget::{column, container, horizontal_rule, mouse_area, row, scrollable, text, Column},
-  Background, Color, Element, Length,
+  Background, Border, Element, Font, Length,
 };
 
-use crate::app::{App, Message};
-use crate::ui::key_detail;
+use crate::app::{App, Message, View};
+use crate::ui::{key_detail, theme};
 
 pub fn view(app: &App) -> Element<'_, Message> {
   if app.loading {
-    return text("Chargement...").into();
+    return container(text("Chargement...").size(14))
+      .padding(24)
+      .style(|_: &iced::Theme| container::Style {
+        text_color: Some(theme::TEXT_MUTED),
+        ..Default::default()
+      })
+      .into();
   }
 
   if let Some(ref err) = app.error {
-    return text(format!("Erreur : {err}")).into();
+    return container(text(format!("Erreur : {err}")).size(14))
+      .padding(24)
+      .style(|_: &iced::Theme| container::Style {
+        text_color: Some(theme::ERROR),
+        ..Default::default()
+      })
+      .into();
   }
 
-  if app.keys.is_empty() {
-    return text("Aucune clef trouvée.").into();
-  }
-
-  let header = row![
-    text("Nom").width(200),
-    text("Email").width(250),
-    text("ID").width(120),
-    text("Expire").width(100),
-  ]
-  .padding([4, 12])
-  .spacing(8);
-
-  let key_rows: Vec<Element<Message>> = app
+  let keys: Vec<_> = app
     .keys
     .iter()
     .enumerate()
+    .filter(|(_, k)| match app.view {
+      View::MyKeys => k.has_secret,
+      View::PublicKeys => !k.has_secret,
+      _ => false,
+    })
+    .collect();
+
+  if keys.is_empty() {
+    return container(text("Aucune clef trouvée.").size(14))
+      .padding(24)
+      .style(|_: &iced::Theme| container::Style {
+        text_color: Some(theme::TEXT_MUTED),
+        ..Default::default()
+      })
+      .into();
+  }
+
+  let bold = Font {
+    weight: font::Weight::Bold,
+    ..Font::DEFAULT
+  };
+
+  let header = container(
+    row![
+      text("Nom").size(11).width(200).font(bold),
+      text("Email").size(11).width(250).font(bold),
+      text("ID").size(11).width(120).font(bold),
+      text("Expire").size(11).width(100).font(bold),
+    ]
+    .padding([0, 12])
+    .spacing(8),
+  )
+  .padding([8, 0])
+  .width(Length::Fill)
+  .style(|_: &iced::Theme| container::Style {
+    background: Some(Background::Color(theme::HEADER_BG)),
+    text_color: Some(theme::TEXT_HEADER),
+    ..Default::default()
+  });
+
+  let key_rows: Vec<Element<Message>> = keys
+    .iter()
     .map(|(i, key)| {
+      let i = *i;
+      let selected = app.selected == Some(i);
+
       let name = if key.has_secret {
         format!("★ {}", key.name)
       } else {
@@ -41,41 +86,52 @@ pub fn view(app: &App) -> Element<'_, Message> {
       let expires = key.expires.as_deref().unwrap_or("—");
 
       let row_content = row![
-        text(name).width(200),
-        text(key.email.clone()).width(250),
-        text(key.short_id.clone()).width(120),
-        text(expires).width(100),
+        text(name).size(13).width(200),
+        text(key.email.clone()).size(13).width(250),
+        text(key.short_id.clone()).size(12).width(120),
+        text(expires).size(12).width(100),
       ]
-      .padding([4, 12])
       .spacing(8);
 
-      let styled = if app.selected == Some(i) {
-        container(row_content)
-          .style(|_: &iced::Theme| iced::widget::container::Style {
-            background: Some(Background::Color(Color::from_rgba(0.3, 0.5, 1.0, 0.15))),
-            ..Default::default()
-          })
-          .width(Length::Fill)
-      } else {
-        container(row_content).width(Length::Fill)
-      };
+      let styled = container(row_content)
+        .padding([7, 12])
+        .width(Length::Fill)
+        .style(move |_: &iced::Theme| {
+          if selected {
+            container::Style {
+              background: Some(Background::Color(theme::ACCENT_SUBTLE)),
+              border: Border {
+                color: theme::ACCENT_BORDER,
+                width: 1.0,
+                radius: 6.0.into(),
+              },
+              ..Default::default()
+            }
+          } else {
+            container::Style::default()
+          }
+        });
 
       mouse_area(styled).on_press(Message::KeySelected(i)).into()
     })
     .collect();
 
-  let list_scrollable = scrollable(Column::with_children(key_rows).spacing(2));
+  let list_scrollable = scrollable(Column::with_children(key_rows).spacing(2).padding([4, 8]));
 
   let list_view = column![header, list_scrollable.height(Length::Fill)]
-    .spacing(4)
-    .padding(12)
+    .spacing(0)
     .width(Length::Fill);
 
   if let Some(idx) = app.selected {
     column![
       list_view.height(Length::Fill),
       horizontal_rule(1),
-      key_detail::view(&app.keys[idx], idx),
+      container(key_detail::view(&app.keys[idx], idx))
+        .width(Length::Fill)
+        .style(|_: &iced::Theme| container::Style {
+          background: Some(Background::Color(theme::DETAIL_BG)),
+          ..Default::default()
+        }),
     ]
     .width(Length::Fill)
     .height(Length::Fill)

@@ -1,34 +1,57 @@
 pub mod create_key;
 pub mod key_detail;
 pub mod key_list;
+pub mod theme;
 
 use iced::{
-  widget::{button, column, container, horizontal_rule, row, text},
-  Element, Length,
+  font,
+  widget::{button, column, container, row, text},
+  Background, Border, Color, Element, Font, Length,
 };
 
 use crate::app::{App, Message, View};
 
 pub fn root(app: &App) -> Element<'_, Message> {
-  let sidebar = sidebar(app);
   let content = match app.view {
     View::MyKeys | View::PublicKeys => key_list::view(app),
     View::CreateKey => create_key::view(&app.create_form),
   };
 
   let main: Element<Message> = match &app.status {
-    Some(status) => column![
-      content,
-      horizontal_rule(1),
-      container(text(status.as_str()).size(12)).padding(4),
-    ]
-    .height(Length::Fill)
-    .width(Length::Fill)
-    .into(),
+    Some(status) => {
+      let is_error = status.starts_with("Erreur");
+      let (bg, fg) = if is_error {
+        (theme::ERROR_BG, theme::ERROR)
+      } else {
+        (theme::SUCCESS_BG, theme::SUCCESS)
+      };
+      column![
+        content,
+        container(text(status.as_str()).size(12))
+          .padding([8, 16])
+          .width(Length::Fill)
+          .style(move |_: &iced::Theme| container::Style {
+            background: Some(Background::Color(bg)),
+            text_color: Some(fg),
+            ..Default::default()
+          }),
+      ]
+      .height(Length::Fill)
+      .width(Length::Fill)
+      .into()
+    }
     None => content,
   };
 
-  row![sidebar, main]
+  let sidebar_el = container(sidebar(app))
+    .height(Length::Fill)
+    .style(|_: &iced::Theme| container::Style {
+      background: Some(Background::Color(theme::SIDEBAR_BG)),
+      text_color: Some(theme::SIDEBAR_TEXT),
+      ..Default::default()
+    });
+
+  row![sidebar_el, main]
     .width(Length::Fill)
     .height(Length::Fill)
     .into()
@@ -37,33 +60,69 @@ pub fn root(app: &App) -> Element<'_, Message> {
 fn sidebar(app: &App) -> Element<'_, Message> {
   let nav_btn = |label: &'static str, view: View| {
     let active = app.view == view;
-    let btn = button(text(label).size(14))
+    button(text(label).size(13))
       .on_press(Message::NavChanged(view))
-      .width(Length::Fill);
-    if active {
-      btn.style(button::primary)
-    } else {
-      btn.style(button::text)
-    }
+      .width(Length::Fill)
+      .style(
+        move |_: &iced::Theme, status: button::Status| button::Style {
+          background: if active {
+            Some(Background::Color(theme::ACCENT))
+          } else {
+            match status {
+              button::Status::Hovered | button::Status::Pressed => {
+                Some(Background::Color(theme::SIDEBAR_HOVER_BG))
+              }
+              _ => None,
+            }
+          },
+          text_color: if active {
+            theme::TEXT_ON_ACCENT
+          } else {
+            theme::SIDEBAR_TEXT
+          },
+          border: Border {
+            color: Color::TRANSPARENT,
+            width: 0.0,
+            radius: 6.0.into(),
+          },
+          shadow: Default::default(),
+        },
+      )
   };
 
-  let import_btn = button(text("↑ Importer une clef").size(14))
+  let import_btn = button(text("↑ Importer").size(13))
     .on_press(Message::ImportKey)
     .width(Length::Fill)
-    .style(button::text);
+    .style(|_: &iced::Theme, status: button::Status| button::Style {
+      background: match status {
+        button::Status::Hovered | button::Status::Pressed => {
+          Some(Background::Color(theme::SIDEBAR_HOVER_BG))
+        }
+        _ => None,
+      },
+      text_color: theme::SIDEBAR_TEXT_MUTED,
+      border: Border {
+        color: Color::TRANSPARENT,
+        width: 0.0,
+        radius: 6.0.into(),
+      },
+      shadow: Default::default(),
+    });
 
-  container(
+  column![
+    text("pgpilot").size(20).font(Font {
+      weight: font::Weight::Bold,
+      ..Font::DEFAULT
+    }),
     column![
-      text("pgpilot").size(20),
       nav_btn("Mes clefs", View::MyKeys),
       nav_btn("Clefs publiques", View::PublicKeys),
-      horizontal_rule(1),
-      import_btn,
-      nav_btn("+ Créer une clef", View::CreateKey),
     ]
-    .spacing(8)
-    .padding(12),
-  )
+    .spacing(2),
+    column![import_btn, nav_btn("+ Créer une clef", View::CreateKey)].spacing(2),
+  ]
+  .spacing(16)
+  .padding(12)
   .width(180)
   .height(Length::Fill)
   .into()
