@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use iced::widget::text_editor;
 use iced::Task;
 
 use crate::gpg::{KeyExpiry, KeyInfo, Keyserver};
@@ -11,6 +12,27 @@ pub enum View {
   MyKeys,
   PublicKeys,
   CreateKey,
+  Import,
+}
+
+pub struct ImportForm {
+  pub url: String,
+  pub keyserver_query: String,
+  pub keyserver: Keyserver,
+  pub pasted_key: text_editor::Content,
+  pub submitting: bool,
+}
+
+impl Default for ImportForm {
+  fn default() -> Self {
+    Self {
+      url: String::new(),
+      keyserver_query: String::new(),
+      keyserver: Keyserver::default(),
+      pasted_key: text_editor::Content::new(),
+      submitting: false,
+    }
+  }
 }
 
 #[derive(Default)]
@@ -53,6 +75,7 @@ pub struct App {
   pub pending_publish: Option<Keyserver>,
   pub keyserver_statuses: HashMap<String, KeyserverStatus>,
   pub create_form: CreateKeyForm,
+  pub import_form: ImportForm,
 }
 
 #[derive(Debug, Clone)]
@@ -77,6 +100,16 @@ pub enum Message {
   CreateKeyDone(Result<(), String>),
   ImportKey,
   ImportKeyDone(Result<Option<String>, String>),
+  ImportUrlChanged(String),
+  ImportFromUrl,
+  ImportFromUrlDone(Result<(), String>),
+  ImportKeyserverQueryChanged(String),
+  ImportKeyserverChanged(Keyserver),
+  ImportFromKeyserver,
+  ImportFromKeyserverDone(Result<(), String>),
+  ImportPastedKeyChanged(text_editor::Action),
+  ImportFromPaste,
+  ImportFromPasteDone(Result<(), String>),
   MoveToCard(usize),
   MoveToCardCancel,
   MoveToCardExecute(usize),
@@ -347,11 +380,76 @@ impl App {
       Message::ImportKeyDone(Ok(None)) => {}
       Message::ImportKeyDone(Ok(Some(filename))) => {
         self.status = Some(format!("Clef importée depuis {filename}"));
+        self.view = View::PublicKeys;
         self.loading = true;
         self.selected = None;
         return Self::reload_keys();
       }
       Message::ImportKeyDone(Err(e)) => {
+        self.status = Some(format!("Erreur import : {e}"));
+      }
+      Message::ImportUrlChanged(v) => self.import_form.url = v,
+      Message::ImportFromUrl => {
+        self.import_form.submitting = true;
+        let url = self.import_form.url.clone();
+        return Task::perform(
+          blocking_task(move || crate::gpg::import_key_from_url(&url)),
+          Message::ImportFromUrlDone,
+        );
+      }
+      Message::ImportFromUrlDone(Ok(())) => {
+        self.import_form = ImportForm::default();
+        self.view = View::PublicKeys;
+        self.loading = true;
+        self.selected = None;
+        return Self::reload_keys();
+      }
+      Message::ImportFromUrlDone(Err(e)) => {
+        self.import_form.submitting = false;
+        self.status = Some(format!("Erreur import URL : {e}"));
+      }
+      Message::ImportKeyserverQueryChanged(v) => self.import_form.keyserver_query = v,
+      Message::ImportKeyserverChanged(ks) => self.import_form.keyserver = ks,
+      Message::ImportFromKeyserver => {
+        self.import_form.submitting = true;
+        let query = self.import_form.keyserver_query.clone();
+        let url = self.import_form.keyserver.url().to_string();
+        return Task::perform(
+          blocking_task(move || crate::gpg::import_key_from_keyserver(&query, &url)),
+          Message::ImportFromKeyserverDone,
+        );
+      }
+      Message::ImportFromKeyserverDone(Ok(())) => {
+        self.import_form = ImportForm::default();
+        self.view = View::PublicKeys;
+        self.loading = true;
+        self.selected = None;
+        return Self::reload_keys();
+      }
+      Message::ImportFromKeyserverDone(Err(e)) => {
+        self.import_form.submitting = false;
+        self.status = Some(format!("Erreur import keyserver : {e}"));
+      }
+      Message::ImportPastedKeyChanged(action) => {
+        self.import_form.pasted_key.perform(action);
+      }
+      Message::ImportFromPaste => {
+        self.import_form.submitting = true;
+        let content = self.import_form.pasted_key.text();
+        return Task::perform(
+          blocking_task(move || crate::gpg::import_key_from_text(&content)),
+          Message::ImportFromPasteDone,
+        );
+      }
+      Message::ImportFromPasteDone(Ok(())) => {
+        self.import_form = ImportForm::default();
+        self.view = View::PublicKeys;
+        self.loading = true;
+        self.selected = None;
+        return Self::reload_keys();
+      }
+      Message::ImportFromPasteDone(Err(e)) => {
+        self.import_form.submitting = false;
         self.status = Some(format!("Erreur import : {e}"));
       }
       Message::MoveToCard(i) => {

@@ -334,6 +334,70 @@ pub fn delete_key(fingerprint: &str, has_secret: bool) -> Result<()> {
   Ok(())
 }
 
+pub fn import_key_from_text(content: &str) -> Result<()> {
+  let mut child = Command::new("gpg")
+    .args(["--import"])
+    .stdin(Stdio::piped())
+    .stdout(Stdio::piped())
+    .stderr(Stdio::piped())
+    .spawn()
+    .context("failed to spawn gpg --import")?;
+  {
+    let stdin = child.stdin.as_mut().context("failed to open stdin")?;
+    stdin
+      .write_all(content.as_bytes())
+      .context("failed to write to stdin")?;
+  }
+  let output = child.wait_with_output().context("failed to wait for gpg")?;
+  if !output.status.success() {
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    return Err(anyhow::anyhow!("{stderr}"));
+  }
+  Ok(())
+}
+
+pub fn import_key_from_url(url: &str) -> Result<()> {
+  let resp = ureq::get(url)
+    .set("User-Agent", "pgpilot/1.0")
+    .call()
+    .map_err(|e| anyhow::anyhow!("Impossible de charger l'URL : {e}"))?;
+  let content = resp
+    .into_string()
+    .context("impossible de lire le contenu")?;
+  import_key_from_text(&content)
+}
+
+pub fn import_key_from_keyserver(query: &str, keyserver_url: &str) -> Result<()> {
+  if query.contains('@') {
+    let encoded = query.replace('@', "%40");
+    let url = format!("https://{keyserver_url}/pks/lookup?op=get&search={encoded}");
+    let resp = ureq::get(&url)
+      .set("User-Agent", "pgpilot/1.0")
+      .call()
+      .map_err(|e| match e {
+        ureq::Error::Status(404, _) => {
+          anyhow::anyhow!("Aucune clef trouvée pour '{query}'")
+        }
+        ureq::Error::Status(code, _) => anyhow::anyhow!("Keyserver : HTTP {code}"),
+        other => anyhow::anyhow!("Impossible de joindre le keyserver : {other}"),
+      })?;
+    let content = resp
+      .into_string()
+      .context("impossible de lire la réponse")?;
+    import_key_from_text(&content)
+  } else {
+    let output = Command::new("gpg")
+      .args(["--keyserver", keyserver_url, "--recv-keys", query])
+      .output()
+      .context("failed to run gpg --recv-keys")?;
+    if !output.status.success() {
+      let stderr = String::from_utf8_lossy(&output.stderr);
+      return Err(anyhow::anyhow!("{stderr}"));
+    }
+    Ok(())
+  }
+}
+
 pub fn import_key(path: &std::path::Path) -> Result<()> {
   let output = Command::new("gpg")
     .args(["--import", &path.to_string_lossy()])

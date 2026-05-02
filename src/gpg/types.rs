@@ -66,6 +66,12 @@ impl Keyserver {
   }
 }
 
+impl std::fmt::Display for Keyserver {
+  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    write!(f, "{}", self.url())
+  }
+}
+
 pub fn format_date(t: std::time::SystemTime) -> String {
   let dt: chrono::DateTime<Utc> = t.into();
   dt.format("%Y-%m-%d").to_string()

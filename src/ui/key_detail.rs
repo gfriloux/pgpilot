@@ -897,29 +897,34 @@ pub fn view(key: &KeyInfo, idx: usize, ctx: ViewCtx) -> Element<'_, Message> {
               ]
               .spacing(4)
               .align_y(Alignment::Center),
-              row![
-                text(expires_str)
-                  .size(10)
-                  .color(theme::SIDEBAR_TEXT_MUTED)
-                  .width(Length::Fill),
-                button(text("\u{f021}").font(theme::ICONS).size(10))
-                  .on_press(Message::RenewSubkey(idx, sk_idx))
-                  .style(|_: &iced::Theme, status: button::Status| button::Style {
-                    background: Some(Background::Color(match status {
-                      button::Status::Hovered | button::Status::Pressed => theme::SIDEBAR_HOVER_BG,
-                      _ => Color::TRANSPARENT,
-                    })),
-                    text_color: theme::SIDEBAR_TEXT_MUTED,
-                    border: Border {
-                      color: Color::TRANSPARENT,
-                      width: 0.0,
-                      radius: 4.0.into(),
-                    },
-                    shadow: Default::default(),
-                  }),
-              ]
-              .spacing(4)
-              .align_y(Alignment::Center),
+              if can_edit {
+                row![
+                  text(expires_str)
+                    .size(10)
+                    .color(theme::SIDEBAR_TEXT_MUTED)
+                    .width(Length::Fill),
+                  button(text("\u{f021}").font(theme::ICONS).size(10))
+                    .on_press(Message::RenewSubkey(idx, sk_idx))
+                    .style(|_: &iced::Theme, status: button::Status| button::Style {
+                      background: Some(Background::Color(match status {
+                        button::Status::Hovered | button::Status::Pressed =>
+                          theme::SIDEBAR_HOVER_BG,
+                        _ => Color::TRANSPARENT,
+                      })),
+                      text_color: theme::SIDEBAR_TEXT_MUTED,
+                      border: Border {
+                        color: Color::TRANSPARENT,
+                        width: 0.0,
+                        radius: 4.0.into(),
+                      },
+                      shadow: Default::default(),
+                    }),
+                ]
+                .spacing(4)
+                .align_y(Alignment::Center)
+              } else {
+                row![text(expires_str).size(10).color(theme::SIDEBAR_TEXT_MUTED)].spacing(0)
+              },
             ]
             .spacing(4)
             .into()

@@ -1,4 +1,5 @@
 pub mod create_key;
+pub mod import;
 pub mod key_detail;
 pub mod key_list;
 pub mod theme;
@@ -15,6 +16,7 @@ pub fn root(app: &App) -> Element<'_, Message> {
   let content = match app.view {
     View::MyKeys | View::PublicKeys => key_list::view(app),
     View::CreateKey => create_key::view(&app.create_form),
+    View::Import => import::view(&app.import_form),
   };
 
   let main: Element<Message> = match &app.status {
@@ -102,7 +104,7 @@ fn sidebar(app: &App) -> Element<'_, Message> {
     .spacing(8)
     .align_y(Alignment::Center),
   )
-  .on_press(Message::ImportKey)
+  .on_press(Message::NavChanged(View::Import))
   .width(Length::Fill)
   .style(|_: &iced::Theme, status: button::Status| button::Style {
     background: match status {
