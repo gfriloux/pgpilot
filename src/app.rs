@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use iced::widget::text_editor;
 use iced::Task;
 
-use crate::gpg::{KeyExpiry, KeyInfo, Keyserver};
+use crate::gpg::{HealthCheck, KeyExpiry, KeyInfo, Keyserver};
 use crate::ui;
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
@@ -13,6 +13,7 @@ pub enum View {
   PublicKeys,
   CreateKey,
   Import,
+  Health,
 }
 
 pub struct ImportForm {
@@ -76,6 +77,8 @@ pub struct App {
   pub keyserver_statuses: HashMap<String, KeyserverStatus>,
   pub create_form: CreateKeyForm,
   pub import_form: ImportForm,
+  pub health_report: Vec<HealthCheck>,
+  pub health_loading: bool,
 }
 
 #[derive(Debug, Clone)]
@@ -110,6 +113,7 @@ pub enum Message {
   ImportPastedKeyChanged(text_editor::Action),
   ImportFromPaste,
   ImportFromPasteDone(Result<(), String>),
+  HealthChecksLoaded(Vec<HealthCheck>),
   MoveToCard(usize),
   MoveToCardCancel,
   MoveToCardExecute(usize),
@@ -230,6 +234,7 @@ impl App {
         self.loading = false;
       }
       Message::NavChanged(view) => {
+        let is_health = view == View::Health;
         self.view = view;
         self.selected = None;
         self.status = None;
@@ -238,6 +243,14 @@ impl App {
         self.pending_renewal = None;
         self.pending_export_pub = None;
         self.pending_publish = None;
+        if is_health {
+          self.health_loading = true;
+          let keys = self.keys.clone();
+          return Task::perform(
+            blocking_task(move || Ok(crate::gpg::run_all_checks(&keys))),
+            |r| Message::HealthChecksLoaded(r.unwrap_or_default()),
+          );
+        }
       }
       Message::KeySelected(i) => {
         self.selected = Some(i);
@@ -697,6 +710,10 @@ impl App {
       }
       Message::RotateSubkeyDone(Err(e)) => {
         self.status = Some(format!("Erreur rotation : {e}"));
+      }
+      Message::HealthChecksLoaded(checks) => {
+        self.health_report = checks;
+        self.health_loading = false;
       }
     }
     Task::none()

@@ -1,8 +1,10 @@
 pub mod card;
+pub mod health;
 pub mod keyring;
 pub mod types;
 
 pub use card::move_key_to_card;
+pub use health::{run_all_checks, CheckStatus, HealthCheck};
 pub use keyring::{
   add_subkey, check_keyserver, create_key, delete_key, export_public_key,
   export_public_key_armored, export_secret_key, import_key, import_key_from_keyserver,
