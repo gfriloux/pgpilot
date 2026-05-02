@@ -1,6 +1,8 @@
+use std::collections::HashMap;
+
 use iced::Task;
 
-use crate::gpg::{KeyExpiry, KeyInfo};
+use crate::gpg::{KeyExpiry, KeyInfo, Keyserver};
 use crate::ui;
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
@@ -18,6 +20,15 @@ pub struct CreateKeyForm {
   pub subkey_expiry: KeyExpiry,
   pub include_auth: bool,
   pub submitting: bool,
+}
+
+#[derive(Default, Clone, Copy, PartialEq)]
+pub enum KeyserverStatus {
+  #[default]
+  Unknown,
+  Checking,
+  Published,
+  NotPublished,
 }
 
 pub struct PendingRenewal {
@@ -38,6 +49,8 @@ pub struct App {
   pub pending_migration: Option<usize>,
   pub pending_delete: Option<usize>,
   pub pending_renewal: Option<PendingRenewal>,
+  pub pending_publish: Option<Keyserver>,
+  pub keyserver_statuses: HashMap<String, KeyserverStatus>,
   pub create_form: CreateKeyForm,
 }
 
@@ -66,6 +79,13 @@ pub enum Message {
   DeleteKeyExecute(usize),
   DeleteKeyDone(Result<(), String>),
   CopyToClipboard(String),
+  KeyserverStatusLoaded(Result<(String, bool), String>),
+  PublishKey,
+  PublishKeyserverChanged(Keyserver),
+  PublishKeyExecute(usize),
+  PublishKeyCancel,
+  PublishKeyDone(Result<String, String>),
+  AutoRepublishDone(Result<(), String>),
   AddSubkey(usize, String, String),
   AddSubkeyDone(Result<(), String>),
   RenewSubkey(usize, usize),
@@ -125,12 +145,43 @@ impl App {
     Task::perform(blocking_task(crate::gpg::list_keys), Message::KeysLoaded)
   }
 
+  fn auto_republish_task(&self, key_idx: usize) -> Option<Task<Message>> {
+    let fp = self.keys[key_idx].fingerprint.clone();
+    if self.keyserver_statuses.get(&fp) == Some(&KeyserverStatus::Published) {
+      Some(Task::perform(
+        blocking_task(move || crate::gpg::publish_key(&fp, "keys.openpgp.org").map(|_| ())),
+        Message::AutoRepublishDone,
+      ))
+    } else {
+      None
+    }
+  }
+
   pub fn update(&mut self, message: Message) -> Task<Message> {
     match message {
       Message::KeysLoaded(Ok((keys, card_connected))) => {
         self.keys = keys;
         self.card_connected = card_connected;
         self.loading = false;
+        let new_fps: Vec<String> = self
+          .keys
+          .iter()
+          .filter(|k| !self.keyserver_statuses.contains_key(&k.fingerprint))
+          .map(|k| k.fingerprint.clone())
+          .collect();
+        for fp in &new_fps {
+          self
+            .keyserver_statuses
+            .insert(fp.clone(), KeyserverStatus::Checking);
+        }
+        if !new_fps.is_empty() {
+          return Task::batch(new_fps.into_iter().map(|fp| {
+            Task::perform(
+              blocking_task(move || crate::gpg::check_keyserver(&fp)),
+              Message::KeyserverStatusLoaded,
+            )
+          }));
+        }
       }
       Message::KeysLoaded(Err(e)) => {
         self.error = Some(e);
@@ -143,6 +194,7 @@ impl App {
         self.pending_migration = None;
         self.pending_delete = None;
         self.pending_renewal = None;
+        self.pending_publish = None;
       }
       Message::KeySelected(i) => {
         self.selected = Some(i);
@@ -150,6 +202,21 @@ impl App {
         self.pending_migration = None;
         self.pending_delete = None;
         self.pending_renewal = None;
+        self.pending_publish = None;
+        let fp = self.keys[i].fingerprint.clone();
+        let unknown = matches!(
+          self.keyserver_statuses.get(&fp),
+          None | Some(KeyserverStatus::Unknown)
+        );
+        if unknown {
+          self
+            .keyserver_statuses
+            .insert(fp.clone(), KeyserverStatus::Checking);
+          return Task::perform(
+            blocking_task(move || crate::gpg::check_keyserver(&fp)),
+            Message::KeyserverStatusLoaded,
+          );
+        }
       }
       Message::ExportPublicKey(i) => {
         let fp = self.keys[i].fingerprint.clone();
@@ -237,6 +304,7 @@ impl App {
         self.pending_migration = Some(i);
         self.pending_delete = None;
         self.pending_renewal = None;
+        self.pending_publish = None;
         self.status = None;
       }
       Message::MoveToCardCancel => {
@@ -263,6 +331,7 @@ impl App {
         self.pending_delete = Some(i);
         self.pending_migration = None;
         self.pending_renewal = None;
+        self.pending_publish = None;
         self.status = None;
       }
       Message::DeleteKeyCancel => {
@@ -298,6 +367,7 @@ impl App {
         });
         self.pending_migration = None;
         self.pending_delete = None;
+        self.pending_publish = None;
         self.status = None;
       }
       Message::RenewSubkeyExpiryChanged(expiry) => {
@@ -324,10 +394,78 @@ impl App {
       Message::RenewSubkeyDone(Ok(())) => {
         self.status = Some("Sous-clef renouvelée".to_string());
         self.loading = true;
-        return Self::reload_keys();
+        let reload = Self::reload_keys();
+        if let Some(i) = self.selected {
+          if let Some(publish) = self.auto_republish_task(i) {
+            return Task::batch([reload, publish]);
+          }
+        }
+        return reload;
       }
       Message::RenewSubkeyDone(Err(e)) => {
         self.status = Some(format!("Erreur renouvellement : {e}"));
+      }
+      Message::KeyserverStatusLoaded(Ok((fp, found))) => {
+        self.keyserver_statuses.insert(
+          fp,
+          if found {
+            KeyserverStatus::Published
+          } else {
+            KeyserverStatus::NotPublished
+          },
+        );
+      }
+      Message::KeyserverStatusLoaded(Err(_)) => {
+        for status in self.keyserver_statuses.values_mut() {
+          if *status == KeyserverStatus::Checking {
+            *status = KeyserverStatus::Unknown;
+          }
+        }
+      }
+      Message::PublishKey => {
+        self.pending_publish = Some(Keyserver::default());
+        self.pending_migration = None;
+        self.pending_delete = None;
+        self.pending_renewal = None;
+        self.status = None;
+      }
+      Message::PublishKeyserverChanged(ks) => {
+        self.pending_publish = Some(ks);
+      }
+      Message::PublishKeyCancel => {
+        self.pending_publish = None;
+      }
+      Message::PublishKeyExecute(i) => {
+        let keyserver = self.pending_publish.take().unwrap_or_default();
+        let fp = self.keys[i].fingerprint.clone();
+        let url = keyserver.url().to_string();
+        return Task::perform(
+          blocking_task(move || crate::gpg::publish_key(&fp, &url)),
+          Message::PublishKeyDone,
+        );
+      }
+      Message::PublishKeyDone(Ok(url)) => {
+        self.status = if url == "keys.openpgp.org" {
+          Some(
+            "Clef publiée. Vérifiez votre email pour valider la publication sur keys.openpgp.org."
+              .to_string(),
+          )
+        } else {
+          Some("Clef publiée avec succès.".to_string())
+        };
+        if let Some(i) = self.selected {
+          let fp = self.keys[i].fingerprint.clone();
+          self
+            .keyserver_statuses
+            .insert(fp.clone(), KeyserverStatus::Checking);
+          return Task::perform(
+            blocking_task(move || crate::gpg::check_keyserver(&fp)),
+            Message::KeyserverStatusLoaded,
+          );
+        }
+      }
+      Message::PublishKeyDone(Err(e)) => {
+        self.status = Some(format!("Erreur publication : {e}"));
       }
       Message::AddSubkey(key_idx, algo, usage) => {
         let master_fp = self.keys[key_idx].fingerprint.clone();
@@ -341,10 +479,31 @@ impl App {
       Message::AddSubkeyDone(Ok(())) => {
         self.status = Some("Sous-clef créée".to_string());
         self.loading = true;
-        return Self::reload_keys();
+        let reload = Self::reload_keys();
+        if let Some(i) = self.selected {
+          if let Some(publish) = self.auto_republish_task(i) {
+            return Task::batch([reload, publish]);
+          }
+        }
+        return reload;
       }
       Message::AddSubkeyDone(Err(e)) => {
         self.status = Some(format!("Erreur création sous-clef : {e}"));
+      }
+      Message::AutoRepublishDone(Ok(())) => {
+        if let Some(i) = self.selected {
+          let fp = self.keys[i].fingerprint.clone();
+          self
+            .keyserver_statuses
+            .insert(fp.clone(), KeyserverStatus::Checking);
+          return Task::perform(
+            blocking_task(move || crate::gpg::check_keyserver(&fp)),
+            Message::KeyserverStatusLoaded,
+          );
+        }
+      }
+      Message::AutoRepublishDone(Err(e)) => {
+        self.status = Some(format!("Republication automatique échouée : {e}"));
       }
     }
     Task::none()

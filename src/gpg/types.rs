@@ -50,6 +50,22 @@ pub struct CardInfo {
   pub auth_fp: Option<String>,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
+pub enum Keyserver {
+  #[default]
+  Openpgp,
+  Ubuntu,
+}
+
+impl Keyserver {
+  pub fn url(&self) -> &'static str {
+    match self {
+      Self::Openpgp => "keys.openpgp.org",
+      Self::Ubuntu => "keyserver.ubuntu.com",
+    }
+  }
+}
+
 pub fn format_date(t: std::time::SystemTime) -> String {
   let dt: chrono::DateTime<Utc> = t.into();
   dt.format("%Y-%m-%d").to_string()

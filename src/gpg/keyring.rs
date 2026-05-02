@@ -142,6 +142,32 @@ pub fn export_secret_key(fingerprint: &str, path: &std::path::Path) -> Result<()
   std::fs::write(path, &output.stdout).context("failed to write key file")
 }
 
+pub fn check_keyserver(fingerprint: &str) -> Result<(String, bool)> {
+  let url = format!(
+    "https://keys.openpgp.org/vks/v1/by-fingerprint/{}",
+    fingerprint.to_uppercase()
+  );
+  match ureq::get(&url).call() {
+    Ok(_) => Ok((fingerprint.to_string(), true)),
+    Err(ureq::Error::Status(404, _)) => Ok((fingerprint.to_string(), false)),
+    Err(e) => Err(anyhow::anyhow!(
+      "Impossible de joindre keys.openpgp.org : {e}"
+    )),
+  }
+}
+
+pub fn publish_key(fingerprint: &str, keyserver_url: &str) -> Result<String> {
+  let status = Command::new("gpg")
+    .args(["--keyserver", keyserver_url, "--send-keys", fingerprint])
+    .status()
+    .context("failed to run gpg --send-keys")?;
+
+  if !status.success() {
+    return Err(anyhow::anyhow!("L'envoi de la clef a échoué"));
+  }
+  Ok(keyserver_url.to_string())
+}
+
 pub fn add_subkey(master_fp: &str, algo: &str, usage: &str, expiry: &KeyExpiry) -> Result<()> {
   let expire = expiry_to_str(expiry);
   let status = Command::new("gpg")

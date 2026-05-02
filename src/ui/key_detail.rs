@@ -5,19 +5,29 @@ use iced::{
   Alignment, Background, Border, Color, Element, Font, Length,
 };
 
-use crate::app::Message;
+use crate::app::{KeyserverStatus, Message};
 use crate::gpg::types::SubkeyInfo;
-use crate::gpg::{KeyExpiry, KeyInfo};
+use crate::gpg::{KeyExpiry, KeyInfo, Keyserver};
 use crate::ui::theme;
 
-pub fn view(
-  key: &KeyInfo,
-  idx: usize,
-  card_connected: bool,
-  confirming: bool,
-  delete_confirming: bool,
-  renewing_subkey: Option<(usize, KeyExpiry)>,
-) -> Element<'_, Message> {
+pub struct ViewCtx {
+  pub card_connected: bool,
+  pub confirming: bool,
+  pub delete_confirming: bool,
+  pub renewing_subkey: Option<(usize, KeyExpiry)>,
+  pub publish_confirming: Option<Keyserver>,
+  pub keyserver_status: KeyserverStatus,
+}
+
+pub fn view(key: &KeyInfo, idx: usize, ctx: ViewCtx) -> Element<'_, Message> {
+  let ViewCtx {
+    card_connected,
+    confirming,
+    delete_confirming,
+    renewing_subkey,
+    publish_confirming,
+    keyserver_status,
+  } = ctx;
   let expires = key.expires.as_deref().unwrap_or("Aucune expiration");
   let key_type = if key.on_card {
     "Sur YubiKey"
@@ -110,6 +120,27 @@ pub fn view(
     }
   }
 
+  if keyserver_status != KeyserverStatus::Published {
+    action_buttons.push(
+      button(icon_row("\u{f1d8}", "Publier"))
+        .on_press(Message::PublishKey)
+        .style(|_: &iced::Theme, status: button::Status| button::Style {
+          background: Some(Background::Color(match status {
+            button::Status::Hovered | button::Status::Pressed => theme::ACCENT_HOVER,
+            _ => Color::TRANSPARENT,
+          })),
+          text_color: theme::ACCENT,
+          border: Border {
+            color: theme::ACCENT_BORDER,
+            width: 1.0,
+            radius: 6.0.into(),
+          },
+          shadow: Default::default(),
+        })
+        .into(),
+    );
+  }
+
   action_buttons.push(
     button(icon_row("\u{f1f8}", "Supprimer"))
       .on_press(Message::DeleteKey(idx))
@@ -159,6 +190,72 @@ pub fn view(
       ..Default::default()
     })
     .into(),
+    {
+      match keyserver_status {
+        KeyserverStatus::Published => {
+          let share_url = format!(
+            "https://keys.openpgp.org/search?q={}",
+            key.fingerprint.to_uppercase()
+          );
+          container(
+            row![
+              text("\u{f058}")
+                .font(theme::ICONS)
+                .size(11)
+                .color(theme::SUCCESS),
+              text("Publiée sur keys.openpgp.org")
+                .size(11)
+                .color(theme::SUCCESS)
+                .width(Length::Fill),
+              button(
+                row![
+                  text("\u{f0c1}").font(theme::ICONS).size(10),
+                  text("Lien").size(10),
+                ]
+                .spacing(3)
+                .align_y(Alignment::Center),
+              )
+              .on_press(Message::CopyToClipboard(share_url))
+              .style(|_: &iced::Theme, status: button::Status| button::Style {
+                background: Some(Background::Color(match status {
+                  button::Status::Hovered | button::Status::Pressed => theme::ACCENT_SUBTLE,
+                  _ => Color::TRANSPARENT,
+                })),
+                text_color: theme::ACCENT,
+                border: Border {
+                  color: theme::ACCENT_BORDER,
+                  width: 1.0,
+                  radius: 4.0.into(),
+                },
+                shadow: Default::default(),
+              }),
+            ]
+            .spacing(5)
+            .align_y(Alignment::Center),
+          )
+          .into()
+        }
+        KeyserverStatus::NotPublished => container(
+          row![
+            text("\u{f10c}")
+              .font(theme::ICONS)
+              .size(11)
+              .color(theme::TEXT_MUTED),
+            text("Pas encore publiée").size(11).color(theme::TEXT_MUTED),
+          ]
+          .spacing(5)
+          .align_y(Alignment::Center),
+        )
+        .into(),
+        KeyserverStatus::Checking => container(
+          text("Vérification sur keys.openpgp.org\u{2026}")
+            .size(11)
+            .color(theme::TEXT_MUTED),
+        )
+        .into(),
+        KeyserverStatus::Unknown => container(text("").size(0)).into(),
+      }
+    },
     container(
       row![
         text(key.algo.to_string()).size(12),
@@ -374,6 +471,131 @@ pub fn view(
         text_color: Some(theme::TEXT_STRONG),
         border: Border {
           color: theme::ERROR,
+          width: 1.0,
+          radius: 6.0.into(),
+        },
+        ..Default::default()
+      })
+      .into(),
+    );
+  } else if let Some(ref selected_ks) = publish_confirming {
+    let description = match selected_ks {
+      Keyserver::Openpgp => format!(
+        "Recommandé · Respecte le RGPD. \
+         Un email de validation sera envoyé à {} \
+         pour rendre votre identité visible dans les recherches.",
+        key.email
+      ),
+      Keyserver::Ubuntu => "Publication immédiate sans validation. \
+         Votre clef sera visible dans les recherches instantanément \
+         et ne pourra jamais être supprimée du keyserver."
+        .to_string(),
+    };
+
+    let ks_btn = |label: &'static str, value: Keyserver| {
+      let selected = selected_ks == &value;
+      button(text(label).size(11))
+        .on_press(Message::PublishKeyserverChanged(value))
+        .style(move |_: &iced::Theme, _| button::Style {
+          background: Some(Background::Color(if selected {
+            theme::ACCENT
+          } else {
+            Color::TRANSPARENT
+          })),
+          text_color: if selected {
+            Color::WHITE
+          } else {
+            theme::TEXT_SECONDARY
+          },
+          border: Border {
+            color: if selected {
+              Color::TRANSPARENT
+            } else {
+              theme::ACCENT_BORDER
+            },
+            width: 1.0,
+            radius: 4.0.into(),
+          },
+          shadow: Default::default(),
+        })
+    };
+
+    left_items.push(
+      container(
+        column![
+          row![
+            text("\u{f1d8}")
+              .font(theme::ICONS)
+              .size(12)
+              .color(theme::ACCENT),
+            text("Publier sur un keyserver")
+              .size(12)
+              .font(bold)
+              .color(theme::ACCENT),
+          ]
+          .spacing(6)
+          .align_y(Alignment::Center),
+          row![
+            ks_btn("keys.openpgp.org", Keyserver::Openpgp),
+            ks_btn("keyserver.ubuntu.com", Keyserver::Ubuntu),
+          ]
+          .spacing(8),
+          container(text(description).size(11))
+            .padding([8, 10])
+            .style(|_: &iced::Theme| container::Style {
+              background: Some(Background::Color(theme::ACCENT_SUBTLE)),
+              border: Border {
+                color: theme::ACCENT_BORDER,
+                width: 1.0,
+                radius: 4.0.into(),
+              },
+              text_color: Some(theme::TEXT_SECONDARY),
+              ..Default::default()
+            }),
+          row![
+            button(icon_row("\u{f1d8}", "Publier"))
+              .on_press(Message::PublishKeyExecute(idx))
+              .style(|_: &iced::Theme, status: button::Status| button::Style {
+                background: Some(Background::Color(match status {
+                  button::Status::Hovered | button::Status::Pressed => theme::ACCENT_HOVER,
+                  _ => theme::ACCENT,
+                })),
+                text_color: Color::WHITE,
+                border: Border {
+                  color: Color::TRANSPARENT,
+                  width: 0.0,
+                  radius: 6.0.into(),
+                },
+                shadow: Default::default(),
+              }),
+            button(icon_row("\u{f00d}", "Annuler"))
+              .on_press(Message::PublishKeyCancel)
+              .style(|_: &iced::Theme, status: button::Status| button::Style {
+                background: Some(Background::Color(match status {
+                  button::Status::Hovered | button::Status::Pressed => Color {
+                    a: 0.08,
+                    ..theme::TEXT_SECONDARY
+                  },
+                  _ => Color::TRANSPARENT,
+                })),
+                text_color: theme::TEXT_SECONDARY,
+                border: Border {
+                  color: theme::BORDER,
+                  width: 1.0,
+                  radius: 6.0.into(),
+                },
+                shadow: Default::default(),
+              }),
+          ]
+          .spacing(8),
+        ]
+        .spacing(10),
+      )
+      .padding(12)
+      .style(|_: &iced::Theme| container::Style {
+        background: Some(Background::Color(theme::ACCENT_SUBTLE)),
+        border: Border {
+          color: theme::ACCENT_BORDER,
           width: 1.0,
           radius: 6.0.into(),
         },

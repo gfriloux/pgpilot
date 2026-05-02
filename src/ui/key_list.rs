@@ -4,7 +4,8 @@ use iced::{
   Background, Border, Element, Font, Length,
 };
 
-use crate::app::{App, Message, View};
+use crate::app::{App, KeyserverStatus, Message, View};
+use crate::ui::key_detail::ViewCtx;
 use crate::ui::{key_detail, theme};
 
 pub fn view(app: &App) -> Element<'_, Message> {
@@ -82,12 +83,28 @@ pub fn view(app: &App) -> Element<'_, Message> {
       let expires = key.expires.as_deref().unwrap_or("—");
       let card_icon = if key.on_card { "\u{f283}" } else { "" };
 
+      let (pub_icon, pub_color) = match app
+        .keyserver_statuses
+        .get(&key.fingerprint)
+        .copied()
+        .unwrap_or_default()
+      {
+        KeyserverStatus::Published => ("\u{f058}", theme::SUCCESS),
+        KeyserverStatus::NotPublished => ("\u{f10c}", theme::TEXT_MUTED),
+        _ => ("", theme::TEXT_MUTED),
+      };
+
       let row_content = row![
         text(name).size(13).width(200),
         text(key.email.clone()).size(13).width(250),
         text(key.short_id.clone()).size(12).width(120),
         text(expires).size(12).width(100),
         text(card_icon).font(theme::ICONS).size(12).width(20),
+        text(pub_icon)
+          .font(theme::ICONS)
+          .size(11)
+          .color(pub_color)
+          .width(20),
       ]
       .spacing(8);
 
@@ -127,16 +144,24 @@ pub fn view(app: &App) -> Element<'_, Message> {
       container(key_detail::view(
         &app.keys[idx],
         idx,
-        app.card_connected,
-        app.pending_migration == Some(idx),
-        app.pending_delete == Some(idx),
-        app.pending_renewal.as_ref().and_then(|r| {
-          if r.key_idx == idx {
-            Some((r.subkey_idx, r.expiry.clone()))
-          } else {
-            None
-          }
-        }),
+        ViewCtx {
+          card_connected: app.card_connected,
+          confirming: app.pending_migration == Some(idx),
+          delete_confirming: app.pending_delete == Some(idx),
+          renewing_subkey: app.pending_renewal.as_ref().and_then(|r| {
+            if r.key_idx == idx {
+              Some((r.subkey_idx, r.expiry.clone()))
+            } else {
+              None
+            }
+          }),
+          publish_confirming: app.pending_publish.clone(),
+          keyserver_status: app
+            .keyserver_statuses
+            .get(&app.keys[idx].fingerprint)
+            .copied()
+            .unwrap_or_default(),
+        },
       ))
       .width(Length::Fill)
       .style(|_: &iced::Theme| container::Style {
