@@ -55,8 +55,8 @@ pub enum KeyserverStatus {
 }
 
 pub struct PendingRenewal {
-  pub key_idx: usize,
-  pub subkey_idx: usize,
+  pub key_fp: String,
+  pub subkey_fp: String,
   pub expiry: KeyExpiry,
 }
 
@@ -64,15 +64,15 @@ pub struct PendingRenewal {
 pub struct App {
   pub view: View,
   pub keys: Vec<KeyInfo>,
-  pub selected: Option<usize>,
+  pub selected: Option<String>,
   pub error: Option<String>,
   pub status: Option<String>,
   pub loading: bool,
   pub card_connected: bool,
-  pub pending_migration: Option<usize>,
-  pub pending_delete: Option<usize>,
+  pub pending_migration: Option<String>,
+  pub pending_delete: Option<String>,
   pub pending_renewal: Option<PendingRenewal>,
-  pub pending_export_pub: Option<usize>,
+  pub pending_export_pub: Option<String>,
   pub pending_publish: Option<Keyserver>,
   pub keyserver_statuses: HashMap<String, KeyserverStatus>,
   pub create_form: CreateKeyForm,
@@ -85,15 +85,15 @@ pub struct App {
 pub enum Message {
   KeysLoaded(Result<(Vec<KeyInfo>, bool), String>),
   NavChanged(View),
-  KeySelected(usize),
-  ExportPublicKeyMenu(usize),
+  KeySelected(String),
+  ExportPublicKeyMenu(String),
   ExportPublicKeyMenuCancel,
-  ExportPublicKey(usize),
-  ExportPublicKeyClipboard(usize),
+  ExportPublicKey(String),
+  ExportPublicKeyClipboard(String),
   ExportPublicKeyClipboardDone(Result<String, String>),
-  ExportPublicKeyUpload(usize),
+  ExportPublicKeyUpload(String),
   ExportPublicKeyUploadDone(Result<String, String>),
-  BackupKey(usize),
+  BackupKey(String),
   BackupDone(Result<Option<String>, String>),
   ExportDone(Result<Option<String>, String>),
   CreateKeyNameChanged(String),
@@ -115,27 +115,27 @@ pub enum Message {
   ImportFromPaste,
   ImportFromPasteDone(Result<(), String>),
   HealthChecksLoaded(Vec<HealthCheck>),
-  MoveToCard(usize),
+  MoveToCard(String),
   MoveToCardCancel,
-  MoveToCardExecute(usize),
+  MoveToCardExecute(String),
   MoveToCardDone(Result<(), String>),
-  DeleteKey(usize),
+  DeleteKey(String),
   DeleteKeyCancel,
-  DeleteKeyExecute(usize),
+  DeleteKeyExecute(String),
   DeleteKeyDone(Result<(), String>),
   CopyToClipboard(String),
   KeyserverStatusLoaded(Result<(String, bool), String>),
   PublishKey,
   PublishKeyserverChanged(Keyserver),
-  PublishKeyExecute(usize),
+  PublishKeyExecute(String),
   PublishKeyCancel,
   PublishKeyDone(Result<String, String>),
   AutoRepublishDone(Result<(), String>),
-  RotateSubkeyExecute(usize, usize),
+  RotateSubkeyExecute(String, String),
   RotateSubkeyDone(Result<(), String>),
-  AddSubkey(usize, crate::gpg::SubkeyType),
+  AddSubkey(String, crate::gpg::SubkeyType),
   AddSubkeyDone(Result<(), String>),
-  RenewSubkey(usize, usize),
+  RenewSubkey(String, String),
   RenewSubkeyExpiryChanged(KeyExpiry),
   RenewSubkeyExecute,
   RenewSubkeyCancel,
@@ -213,9 +213,13 @@ impl App {
     self.pending_publish = None;
   }
 
-  fn auto_republish_task(&self, key_idx: usize) -> Option<Task<Message>> {
-    let fp = self.keys[key_idx].fingerprint.clone();
-    if self.keyserver_statuses.get(&fp) == Some(&KeyserverStatus::Published) {
+  fn key_by_fp(&self, fp: &str) -> Option<&KeyInfo> {
+    self.keys.iter().find(|k| k.fingerprint == fp)
+  }
+
+  fn auto_republish_task(&self, fp: &str) -> Option<Task<Message>> {
+    if self.keyserver_statuses.get(fp) == Some(&KeyserverStatus::Published) {
+      let fp = fp.to_string();
       Some(Task::perform(
         blocking_task(move || crate::gpg::publish_key(&fp, "keys.openpgp.org").map(|_| ())),
         Message::AutoRepublishDone,
@@ -294,15 +298,15 @@ impl App {
       // Delegated handlers
       Message::KeysLoaded(r) => self.on_keys_loaded(r),
       Message::NavChanged(v) => self.on_nav_changed(v),
-      Message::KeySelected(i) => self.on_key_selected(i),
+      Message::KeySelected(fp) => self.on_key_selected(fp),
       Message::KeyserverStatusLoaded(r) => self.on_keyserver_status_loaded(r),
-      Message::ExportPublicKeyMenu(i) => self.on_export_pub_menu(i),
-      Message::ExportPublicKey(i) => self.on_export_public(i),
-      Message::ExportPublicKeyClipboard(i) => self.on_export_clipboard(i),
+      Message::ExportPublicKeyMenu(fp) => self.on_export_pub_menu(fp),
+      Message::ExportPublicKey(fp) => self.on_export_public(fp),
+      Message::ExportPublicKeyClipboard(fp) => self.on_export_clipboard(fp),
       Message::ExportPublicKeyClipboardDone(r) => self.on_export_clipboard_done(r),
-      Message::ExportPublicKeyUpload(i) => self.on_export_upload(i),
+      Message::ExportPublicKeyUpload(fp) => self.on_export_upload(fp),
       Message::ExportPublicKeyUploadDone(r) => self.on_export_upload_done(r),
-      Message::BackupKey(i) => self.on_backup_key(i),
+      Message::BackupKey(fp) => self.on_backup_key(fp),
       Message::BackupDone(r) => self.on_backup_done(r),
       Message::ExportDone(r) => self.on_export_done(r),
       Message::CreateKeySubmit => self.on_create_key_submit(),
@@ -315,22 +319,22 @@ impl App {
       Message::ImportFromKeyserverDone(r) => self.on_import_from_keyserver_done(r),
       Message::ImportFromPaste => self.on_import_from_paste(),
       Message::ImportFromPasteDone(r) => self.on_import_from_paste_done(r),
-      Message::MoveToCard(i) => self.on_move_to_card(i),
-      Message::MoveToCardExecute(i) => self.on_move_to_card_execute(i),
+      Message::MoveToCard(fp) => self.on_move_to_card(fp),
+      Message::MoveToCardExecute(fp) => self.on_move_to_card_execute(fp),
       Message::MoveToCardDone(r) => self.on_move_to_card_done(r),
-      Message::DeleteKey(i) => self.on_delete_key(i),
-      Message::DeleteKeyExecute(i) => self.on_delete_key_execute(i),
+      Message::DeleteKey(fp) => self.on_delete_key(fp),
+      Message::DeleteKeyExecute(fp) => self.on_delete_key_execute(fp),
       Message::DeleteKeyDone(r) => self.on_delete_key_done(r),
       Message::CopyToClipboard(text) => self.on_copy_to_clipboard(text),
-      Message::RenewSubkey(ki, si) => self.on_renew_subkey(ki, si),
+      Message::RenewSubkey(kfp, sfp) => self.on_renew_subkey(kfp, sfp),
       Message::RenewSubkeyExecute => self.on_renew_subkey_execute(),
       Message::RenewSubkeyDone(r) => self.on_renew_subkey_done(r),
-      Message::AddSubkey(ki, st) => self.on_add_subkey(ki, st),
+      Message::AddSubkey(kfp, st) => self.on_add_subkey(kfp, st),
       Message::AddSubkeyDone(r) => self.on_add_subkey_done(r),
-      Message::RotateSubkeyExecute(ki, si) => self.on_rotate_subkey_execute(ki, si),
+      Message::RotateSubkeyExecute(kfp, sfp) => self.on_rotate_subkey_execute(kfp, sfp),
       Message::RotateSubkeyDone(r) => self.on_rotate_subkey_done(r),
       Message::PublishKey => self.on_publish_key(),
-      Message::PublishKeyExecute(i) => self.on_publish_key_execute(i),
+      Message::PublishKeyExecute(fp) => self.on_publish_key_execute(fp),
       Message::PublishKeyCancel => self.on_publish_key_cancel(),
       Message::PublishKeyDone(r) => self.on_publish_key_done(r),
       Message::AutoRepublishDone(r) => self.on_auto_republish_done(r),
@@ -390,10 +394,9 @@ impl App {
     Task::none()
   }
 
-  fn on_key_selected(&mut self, i: usize) -> Task<Message> {
-    self.selected = Some(i);
+  fn on_key_selected(&mut self, fp: String) -> Task<Message> {
+    self.selected = Some(fp.clone());
     self.reset_pending_ops();
-    let fp = self.keys[i].fingerprint.clone();
     let unknown = matches!(
       self.keyserver_statuses.get(&fp),
       None | Some(KeyserverStatus::Unknown)
@@ -438,25 +441,26 @@ impl App {
 
   // --- Export / Backup ---
 
-  fn on_export_pub_menu(&mut self, i: usize) -> Task<Message> {
+  fn on_export_pub_menu(&mut self, fp: String) -> Task<Message> {
     self.reset_pending_ops();
-    self.pending_export_pub = Some(i);
+    self.pending_export_pub = Some(fp);
     Task::none()
   }
 
-  fn on_export_public(&mut self, i: usize) -> Task<Message> {
+  fn on_export_public(&mut self, fp: String) -> Task<Message> {
     self.pending_export_pub = None;
-    let fp = self.keys[i].fingerprint.clone();
-    let name = self.keys[i].name.replace(' ', "_");
+    let name = self
+      .key_by_fp(&fp)
+      .map(|k| k.name.replace(' ', "_"))
+      .unwrap_or_default();
     Task::perform(
       blocking_task(move || export_key_to_file(fp, name)),
       Message::ExportDone,
     )
   }
 
-  fn on_export_clipboard(&mut self, i: usize) -> Task<Message> {
+  fn on_export_clipboard(&mut self, fp: String) -> Task<Message> {
     self.pending_export_pub = None;
-    let fp = self.keys[i].fingerprint.clone();
     Task::perform(
       blocking_task(move || crate::gpg::export_public_key_armored(&fp)),
       Message::ExportPublicKeyClipboardDone,
@@ -476,9 +480,8 @@ impl App {
     }
   }
 
-  fn on_export_upload(&mut self, i: usize) -> Task<Message> {
+  fn on_export_upload(&mut self, fp: String) -> Task<Message> {
     self.pending_export_pub = None;
-    let fp = self.keys[i].fingerprint.clone();
     Task::perform(
       blocking_task(move || crate::gpg::upload_public_key(&fp)),
       Message::ExportPublicKeyUploadDone,
@@ -498,9 +501,11 @@ impl App {
     }
   }
 
-  fn on_backup_key(&mut self, i: usize) -> Task<Message> {
-    let fp = self.keys[i].fingerprint.clone();
-    let short_id = self.keys[i].short_id.clone();
+  fn on_backup_key(&mut self, fp: String) -> Task<Message> {
+    let short_id = self
+      .key_by_fp(&fp)
+      .map(|k| k.short_id.clone())
+      .unwrap_or_default();
     Task::perform(
       blocking_task(move || backup_key_to_dir(fp, short_id)),
       Message::BackupDone,
@@ -673,15 +678,14 @@ impl App {
 
   // --- Key operations (YubiKey, delete, clipboard) ---
 
-  fn on_move_to_card(&mut self, i: usize) -> Task<Message> {
+  fn on_move_to_card(&mut self, fp: String) -> Task<Message> {
     self.reset_pending_ops();
-    self.pending_migration = Some(i);
+    self.pending_migration = Some(fp);
     Task::none()
   }
 
-  fn on_move_to_card_execute(&mut self, i: usize) -> Task<Message> {
+  fn on_move_to_card_execute(&mut self, fp: String) -> Task<Message> {
     self.pending_migration = None;
-    let fp = self.keys[i].fingerprint.clone();
     Task::perform(
       blocking_task(move || crate::gpg::move_key_to_card(&fp)),
       Message::MoveToCardDone,
@@ -702,16 +706,18 @@ impl App {
     }
   }
 
-  fn on_delete_key(&mut self, i: usize) -> Task<Message> {
+  fn on_delete_key(&mut self, fp: String) -> Task<Message> {
     self.reset_pending_ops();
-    self.pending_delete = Some(i);
+    self.pending_delete = Some(fp);
     Task::none()
   }
 
-  fn on_delete_key_execute(&mut self, i: usize) -> Task<Message> {
+  fn on_delete_key_execute(&mut self, fp: String) -> Task<Message> {
     self.pending_delete = None;
-    let fp = self.keys[i].fingerprint.clone();
-    let has_secret = self.keys[i].has_secret || self.keys[i].on_card;
+    let Some(key) = self.key_by_fp(&fp) else {
+      return Task::none();
+    };
+    let has_secret = key.has_secret || key.on_card;
     Task::perform(
       blocking_task(move || crate::gpg::delete_key(&fp, has_secret)),
       Message::DeleteKeyDone,
@@ -739,11 +745,11 @@ impl App {
 
   // --- Subkeys ---
 
-  fn on_renew_subkey(&mut self, key_idx: usize, subkey_idx: usize) -> Task<Message> {
+  fn on_renew_subkey(&mut self, key_fp: String, subkey_fp: String) -> Task<Message> {
     self.reset_pending_ops();
     self.pending_renewal = Some(PendingRenewal {
-      key_idx,
-      subkey_idx,
+      key_fp,
+      subkey_fp,
       expiry: KeyExpiry::TwoYears,
     });
     Task::none()
@@ -751,10 +757,8 @@ impl App {
 
   fn on_renew_subkey_execute(&mut self) -> Task<Message> {
     if let Some(renewal) = self.pending_renewal.take() {
-      let master_fp = self.keys[renewal.key_idx].fingerprint.clone();
-      let subkey_fp = self.keys[renewal.key_idx].subkeys[renewal.subkey_idx]
-        .fingerprint
-        .clone();
+      let master_fp = renewal.key_fp;
+      let subkey_fp = renewal.subkey_fp;
       let expiry = renewal.expiry;
       return Task::perform(
         blocking_task(move || crate::gpg::renew_subkey(&master_fp, &subkey_fp, &expiry)),
@@ -769,8 +773,8 @@ impl App {
       Ok(()) => {
         self.status = Some("Sous-clef renouvelée".to_string());
         let reload = self.reload_keys();
-        if let Some(i) = self.selected {
-          if let Some(publish) = self.auto_republish_task(i) {
+        if let Some(ref fp) = self.selected.clone() {
+          if let Some(publish) = self.auto_republish_task(fp) {
             return Task::batch([reload, publish]);
           }
         }
@@ -785,14 +789,13 @@ impl App {
 
   fn on_add_subkey(
     &mut self,
-    key_idx: usize,
+    key_fp: String,
     subkey_type: crate::gpg::SubkeyType,
   ) -> Task<Message> {
-    let master_fp = self.keys[key_idx].fingerprint.clone();
     Task::perform(
       blocking_task(move || {
         crate::gpg::add_subkey(
-          &master_fp,
+          &key_fp,
           subkey_type.algo(),
           subkey_type.usage(),
           &KeyExpiry::TwoYears,
@@ -807,8 +810,8 @@ impl App {
       Ok(()) => {
         self.status = Some("Sous-clef créée".to_string());
         let reload = self.reload_keys();
-        if let Some(i) = self.selected {
-          if let Some(publish) = self.auto_republish_task(i) {
+        if let Some(ref fp) = self.selected.clone() {
+          if let Some(publish) = self.auto_republish_task(fp) {
             return Task::batch([reload, publish]);
           }
         }
@@ -821,21 +824,27 @@ impl App {
     }
   }
 
-  fn on_rotate_subkey_execute(&mut self, key_idx: usize, subkey_idx: usize) -> Task<Message> {
+  fn on_rotate_subkey_execute(&mut self, key_fp: String, subkey_fp: String) -> Task<Message> {
     let expiry = self
       .pending_renewal
       .take()
       .map(|r| r.expiry)
       .unwrap_or_default();
-    let master_fp = self.keys[key_idx].fingerprint.clone();
-    let old_fp = self.keys[key_idx].subkeys[subkey_idx].fingerprint.clone();
-    let subkey_type =
-      crate::gpg::SubkeyType::from_usage_flags(&self.keys[key_idx].subkeys[subkey_idx].usage);
+    let Some(key) = self.key_by_fp(&key_fp) else {
+      return Task::none();
+    };
+    let subkey_usage = key
+      .subkeys
+      .iter()
+      .find(|s| s.fingerprint == subkey_fp)
+      .map(|s| s.usage.clone())
+      .unwrap_or_default();
+    let subkey_type = crate::gpg::SubkeyType::from_usage_flags(&subkey_usage);
     Task::perform(
       blocking_task(move || {
         crate::gpg::rotate_subkey(
-          &master_fp,
-          &old_fp,
+          &key_fp,
+          &subkey_fp,
           subkey_type.algo(),
           subkey_type.usage(),
           &expiry,
@@ -850,8 +859,8 @@ impl App {
       Ok(()) => {
         self.status = Some("Sous-clef remplacée avec succès".to_string());
         let reload = self.reload_keys();
-        if let Some(i) = self.selected {
-          if let Some(publish) = self.auto_republish_task(i) {
+        if let Some(ref fp) = self.selected.clone() {
+          if let Some(publish) = self.auto_republish_task(fp) {
             return Task::batch([reload, publish]);
           }
         }
@@ -872,9 +881,8 @@ impl App {
     Task::none()
   }
 
-  fn on_publish_key_execute(&mut self, i: usize) -> Task<Message> {
+  fn on_publish_key_execute(&mut self, fp: String) -> Task<Message> {
     let keyserver = self.pending_publish.take().unwrap_or_default();
-    let fp = self.keys[i].fingerprint.clone();
     let url = keyserver.url().to_string();
     Task::perform(
       blocking_task(move || crate::gpg::publish_key(&fp, &url)),
@@ -899,13 +907,13 @@ impl App {
         } else {
           Some("Clef publiée avec succès.".to_string())
         };
-        if let Some(i) = self.selected {
-          let fp = self.keys[i].fingerprint.clone();
+        if let Some(ref fp) = self.selected.clone() {
           self
             .keyserver_statuses
             .insert(fp.clone(), KeyserverStatus::Checking);
+          let fp2 = fp.clone();
           return Task::perform(
-            blocking_task(move || crate::gpg::check_keyserver(&fp)),
+            blocking_task(move || crate::gpg::check_keyserver(&fp2)),
             Message::KeyserverStatusLoaded,
           );
         }
@@ -921,13 +929,13 @@ impl App {
   fn on_auto_republish_done(&mut self, result: Result<(), String>) -> Task<Message> {
     match result {
       Ok(()) => {
-        if let Some(i) = self.selected {
-          let fp = self.keys[i].fingerprint.clone();
+        if let Some(ref fp) = self.selected.clone() {
           self
             .keyserver_statuses
             .insert(fp.clone(), KeyserverStatus::Checking);
+          let fp2 = fp.clone();
           return Task::perform(
-            blocking_task(move || crate::gpg::check_keyserver(&fp)),
+            blocking_task(move || crate::gpg::check_keyserver(&fp2)),
             Message::KeyserverStatusLoaded,
           );
         }

@@ -75,9 +75,8 @@ pub fn view(app: &App) -> Element<'_, Message> {
 
   let key_rows: Vec<Element<Message>> = keys
     .iter()
-    .map(|(i, key)| {
-      let i = *i;
-      let selected = app.selected == Some(i);
+    .map(|(_, key)| {
+      let selected = app.selected.as_deref() == Some(key.fingerprint.as_str());
 
       let name = key.name.clone();
       let expires = key.expires.as_deref().unwrap_or("—");
@@ -127,7 +126,9 @@ pub fn view(app: &App) -> Element<'_, Message> {
           }
         });
 
-      mouse_area(styled).on_press(Message::KeySelected(i)).into()
+      mouse_area(styled)
+        .on_press(Message::KeySelected(key.fingerprint.clone()))
+        .into()
     })
     .collect();
 
@@ -137,7 +138,13 @@ pub fn view(app: &App) -> Element<'_, Message> {
     .spacing(0)
     .width(Length::Fill);
 
-  if let Some(idx) = app.selected {
+  let selected_key = app
+    .selected
+    .as_ref()
+    .and_then(|fp| app.keys.iter().find(|k| &k.fingerprint == fp));
+
+  if let Some(key) = selected_key {
+    let key_fp = &key.fingerprint;
     column![
       list_view.height(Length::Fill),
       horizontal_rule(1).style(|_: &iced::Theme| rule::Style {
@@ -147,16 +154,15 @@ pub fn view(app: &App) -> Element<'_, Message> {
         fill_mode: rule::FillMode::Full,
       }),
       container(key_detail::view(
-        &app.keys[idx],
-        idx,
+        key,
         ViewCtx {
           card_connected: app.card_connected,
-          confirming: app.pending_migration == Some(idx),
-          delete_confirming: app.pending_delete == Some(idx),
-          export_pub_menu: app.pending_export_pub == Some(idx),
+          confirming: app.pending_migration.as_deref() == Some(key_fp),
+          delete_confirming: app.pending_delete.as_deref() == Some(key_fp),
+          export_pub_menu: app.pending_export_pub.as_deref() == Some(key_fp),
           renewing_subkey: app.pending_renewal.as_ref().and_then(|r| {
-            if r.key_idx == idx {
-              Some((r.subkey_idx, r.expiry.clone()))
+            if r.key_fp == *key_fp {
+              Some((r.subkey_fp.clone(), r.expiry.clone()))
             } else {
               None
             }
@@ -164,7 +170,7 @@ pub fn view(app: &App) -> Element<'_, Message> {
           publish_confirming: app.pending_publish.clone(),
           keyserver_status: app
             .keyserver_statuses
-            .get(&app.keys[idx].fingerprint)
+            .get(key_fp)
             .copied()
             .unwrap_or_default(),
         },

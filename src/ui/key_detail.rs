@@ -15,12 +15,12 @@ pub struct ViewCtx {
   pub confirming: bool,
   pub delete_confirming: bool,
   pub export_pub_menu: bool,
-  pub renewing_subkey: Option<(usize, KeyExpiry)>,
+  pub renewing_subkey: Option<(String, KeyExpiry)>,
   pub publish_confirming: Option<Keyserver>,
   pub keyserver_status: KeyserverStatus,
 }
 
-pub fn view(key: &KeyInfo, idx: usize, ctx: ViewCtx) -> Element<'_, Message> {
+pub fn view(key: &KeyInfo, ctx: ViewCtx) -> Element<'_, Message> {
   let ViewCtx {
     card_connected,
     confirming,
@@ -57,7 +57,7 @@ pub fn view(key: &KeyInfo, idx: usize, ctx: ViewCtx) -> Element<'_, Message> {
 
   let mut action_buttons: Vec<Element<Message>> =
     vec![button(icon_row("\u{f019}", "Exporter pub"))
-      .on_press(Message::ExportPublicKeyMenu(idx))
+      .on_press(Message::ExportPublicKeyMenu(key.fingerprint.clone()))
       .style(|_: &iced::Theme, status: button::Status| button::Style {
         background: Some(Background::Color(match status {
           button::Status::Hovered | button::Status::Pressed => theme::ACCENT_HOVER,
@@ -76,7 +76,7 @@ pub fn view(key: &KeyInfo, idx: usize, ctx: ViewCtx) -> Element<'_, Message> {
   if key.has_secret {
     action_buttons.push(
       button(icon_row("\u{f0c7}", "Sauvegarder"))
-        .on_press(Message::BackupKey(idx))
+        .on_press(Message::BackupKey(key.fingerprint.clone()))
         .style(|_: &iced::Theme, status: button::Status| button::Style {
           background: Some(Background::Color(match status {
             button::Status::Hovered | button::Status::Pressed => theme::DESTRUCTIVE_HOVER_BG,
@@ -114,7 +114,7 @@ pub fn view(key: &KeyInfo, idx: usize, ctx: ViewCtx) -> Element<'_, Message> {
         },
       );
       let migrate_btn = if card_connected {
-        migrate_btn.on_press(Message::MoveToCard(idx))
+        migrate_btn.on_press(Message::MoveToCard(key.fingerprint.clone()))
       } else {
         migrate_btn
       };
@@ -145,7 +145,7 @@ pub fn view(key: &KeyInfo, idx: usize, ctx: ViewCtx) -> Element<'_, Message> {
 
   action_buttons.push(
     button(icon_row("\u{f1f8}", "Supprimer"))
-      .on_press(Message::DeleteKey(idx))
+      .on_press(Message::DeleteKey(key.fingerprint.clone()))
       .style(|_: &iced::Theme, status: button::Status| button::Style {
         background: Some(Background::Color(match status {
           button::Status::Hovered | button::Status::Pressed => theme::DESTRUCTIVE_HOVER_BG,
@@ -309,7 +309,7 @@ pub fn view(key: &KeyInfo, idx: usize, ctx: ViewCtx) -> Element<'_, Message> {
           .size(12),
           row![
             button(icon_row("\u{f0c7}", "Sauvegarder d'abord"))
-              .on_press(Message::BackupKey(idx))
+              .on_press(Message::BackupKey(key.fingerprint.clone()))
               .style(|_: &iced::Theme, status: button::Status| button::Style {
                 background: Some(Background::Color(match status {
                   button::Status::Hovered | button::Status::Pressed => theme::ACCENT_HOVER,
@@ -324,7 +324,7 @@ pub fn view(key: &KeyInfo, idx: usize, ctx: ViewCtx) -> Element<'_, Message> {
                 shadow: Default::default(),
               }),
             button(icon_row("\u{f00c}", "J'ai un backup \u{2192} Continuer"))
-              .on_press(Message::MoveToCardExecute(idx))
+              .on_press(Message::MoveToCardExecute(key.fingerprint.clone()))
               .style(|_: &iced::Theme, status: button::Status| button::Style {
                 background: Some(Background::Color(match status {
                   button::Status::Hovered | button::Status::Pressed => Color {
@@ -401,7 +401,7 @@ pub fn view(key: &KeyInfo, idx: usize, ctx: ViewCtx) -> Element<'_, Message> {
     if key.has_secret && !key.on_card {
       del_btns.push(
         button(icon_row("\u{f019}", "Exporter d'abord"))
-          .on_press(Message::BackupKey(idx))
+          .on_press(Message::BackupKey(key.fingerprint.clone()))
           .style(|_: &iced::Theme, status: button::Status| button::Style {
             background: Some(Background::Color(match status {
               button::Status::Hovered | button::Status::Pressed => theme::ACCENT_HOVER,
@@ -420,7 +420,7 @@ pub fn view(key: &KeyInfo, idx: usize, ctx: ViewCtx) -> Element<'_, Message> {
     }
     del_btns.push(
       button(icon_row("\u{f1f8}", "Confirmer la suppression"))
-        .on_press(Message::DeleteKeyExecute(idx))
+        .on_press(Message::DeleteKeyExecute(key.fingerprint.clone()))
         .style(|_: &iced::Theme, status: button::Status| button::Style {
           background: Some(Background::Color(match status {
             button::Status::Hovered | button::Status::Pressed => theme::DESTRUCTIVE_HOVER_BG,
@@ -556,7 +556,7 @@ pub fn view(key: &KeyInfo, idx: usize, ctx: ViewCtx) -> Element<'_, Message> {
             }),
           row![
             button(icon_row("\u{f1d8}", "Publier"))
-              .on_press(Message::PublishKeyExecute(idx))
+              .on_press(Message::PublishKeyExecute(key.fingerprint.clone()))
               .style(|_: &iced::Theme, status: button::Status| button::Style {
                 background: Some(Background::Color(match status {
                   button::Status::Hovered | button::Status::Pressed => theme::ACCENT_HOVER,
@@ -647,17 +647,17 @@ pub fn view(key: &KeyInfo, idx: usize, ctx: ViewCtx) -> Element<'_, Message> {
           menu_btn(
             "\u{f0c7}",
             "Enregistrer sur le disque",
-            Message::ExportPublicKey(idx)
+            Message::ExportPublicKey(key.fingerprint.clone())
           ),
           menu_btn(
             "\u{f0c5}",
             "Copier dans le presse-papier",
-            Message::ExportPublicKeyClipboard(idx)
+            Message::ExportPublicKeyClipboard(key.fingerprint.clone())
           ),
           menu_btn(
             "\u{f0c1}",
             "Obtenir un lien public (paste.rs)",
-            Message::ExportPublicKeyUpload(idx)
+            Message::ExportPublicKeyUpload(key.fingerprint.clone())
           ),
           button(text("Annuler").size(12))
             .on_press(Message::ExportPublicKeyMenuCancel)
@@ -713,12 +713,8 @@ pub fn view(key: &KeyInfo, idx: usize, ctx: ViewCtx) -> Element<'_, Message> {
     (SubkeyType::Auth, "\u{f084}", "Auth SSH", theme::PEACH),
   ];
 
-  let find_subkey = |usage_char: char| -> Option<(usize, &SubkeyInfo)> {
-    key
-      .subkeys
-      .iter()
-      .enumerate()
-      .find(|(_, sk)| sk.usage.contains(usage_char))
+  let find_subkey = |usage_char: char| -> Option<&SubkeyInfo> {
+    key.subkeys.iter().find(|sk| sk.usage.contains(usage_char))
   };
 
   let subkey_cards: Vec<Element<Message>> = standard_types
@@ -727,7 +723,7 @@ pub fn view(key: &KeyInfo, idx: usize, ctx: ViewCtx) -> Element<'_, Message> {
       let (subkey_type, icon, type_label, type_color) =
         (*subkey_type, *icon, *type_label, *type_color);
 
-      if let Some((sk_idx, sk)) = find_subkey(subkey_type.usage_char()) {
+      if let Some(sk) = find_subkey(subkey_type.usage_char()) {
         let header = row![
           text(icon).font(theme::ICONS).size(12).color(type_color),
           text(type_label).size(12).font(bold).color(type_color),
@@ -735,7 +731,9 @@ pub fn view(key: &KeyInfo, idx: usize, ctx: ViewCtx) -> Element<'_, Message> {
         .spacing(6)
         .align_y(Alignment::Center);
 
-        let body: Element<Message> = if renewing_subkey.as_ref().is_some_and(|(r, _)| *r == sk_idx)
+        let body: Element<Message> = if renewing_subkey
+          .as_ref()
+          .is_some_and(|(r, _)| r == &sk.fingerprint)
         {
           let renewal_expiry = renewing_subkey
             .as_ref()
@@ -807,7 +805,10 @@ pub fn view(key: &KeyInfo, idx: usize, ctx: ViewCtx) -> Element<'_, Message> {
                   }
                 ),
               button(text("⟲ Remplacer").size(11))
-                .on_press(Message::RotateSubkeyExecute(idx, sk_idx))
+                .on_press(Message::RotateSubkeyExecute(
+                  key.fingerprint.clone(),
+                  sk.fingerprint.clone()
+                ))
                 .width(Length::Fill)
                 .style(|_: &iced::Theme, status: button::Status| button::Style {
                   background: Some(Background::Color(match status {
@@ -880,7 +881,10 @@ pub fn view(key: &KeyInfo, idx: usize, ctx: ViewCtx) -> Element<'_, Message> {
                   .color(theme::SIDEBAR_TEXT_MUTED)
                   .width(Length::Fill),
                 button(text("\u{f021}").font(theme::ICONS).size(10))
-                  .on_press(Message::RenewSubkey(idx, sk_idx))
+                  .on_press(Message::RenewSubkey(
+                    key.fingerprint.clone(),
+                    sk.fingerprint.clone()
+                  ))
                   .style(|_: &iced::Theme, status: button::Status| button::Style {
                     background: Some(Background::Color(match status {
                       button::Status::Hovered | button::Status::Pressed => theme::SIDEBAR_HOVER_BG,
@@ -944,7 +948,7 @@ pub fn view(key: &KeyInfo, idx: usize, ctx: ViewCtx) -> Element<'_, Message> {
                 .spacing(4)
                 .align_y(Alignment::Center),
               )
-              .on_press(Message::AddSubkey(idx, subkey_type))
+              .on_press(Message::AddSubkey(key.fingerprint.clone(), subkey_type))
               .style(
                 move |_: &iced::Theme, status: button::Status| button::Style {
                   background: Some(Background::Color(match status {
