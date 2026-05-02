@@ -137,6 +137,27 @@ pub fn export_secret_key(fingerprint: &str, path: &std::path::Path) -> Result<()
   std::fs::write(path, &output.stdout).context("failed to write key file")
 }
 
+pub fn renew_subkey(master_fp: &str, subkey_fp: &str, expiry: &KeyExpiry) -> Result<()> {
+  let expire = expiry_to_str(expiry);
+  let status = Command::new("gpg")
+    .args([
+      "--batch",
+      "--quick-set-expire",
+      master_fp,
+      expire,
+      subkey_fp,
+    ])
+    .status()
+    .context("failed to run gpg --quick-set-expire")?;
+
+  if !status.success() {
+    return Err(anyhow::anyhow!(
+      "Le renouvellement de la sous-clef a échoué"
+    ));
+  }
+  Ok(())
+}
+
 pub fn delete_key(fingerprint: &str, has_secret: bool) -> Result<()> {
   let cmd = if has_secret {
     "--delete-secret-and-public-keys"

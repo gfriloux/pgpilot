@@ -1,3 +1,4 @@
+use chrono::{Duration, Utc};
 use iced::{
   font,
   widget::{button, column, container, row, text, vertical_rule, Column, Row},
@@ -5,7 +6,7 @@ use iced::{
 };
 
 use crate::app::Message;
-use crate::gpg::KeyInfo;
+use crate::gpg::{KeyExpiry, KeyInfo};
 use crate::ui::theme;
 
 pub fn view(
@@ -14,6 +15,7 @@ pub fn view(
   card_connected: bool,
   confirming: bool,
   delete_confirming: bool,
+  renewing_subkey: Option<(usize, KeyExpiry)>,
 ) -> Element<'_, Message> {
   let expires = key.expires.as_deref().unwrap_or("Aucune expiration");
   let key_type = if key.on_card {
@@ -394,7 +396,8 @@ pub fn view(
   let subkey_cards: Vec<Element<Message>> = key
     .subkeys
     .iter()
-    .map(|sk| {
+    .enumerate()
+    .map(|(sk_idx, sk)| {
       let (icon, type_label, type_color) = match sk.usage.as_str() {
         "S" => ("\u{f040}", "Signature", theme::ACCENT),
         "E" => ("\u{f023}", "Chiffrement", theme::SUCCESS),
@@ -410,16 +413,109 @@ pub fn view(
         ),
         _ => ("\u{f0c0}", "Autre", theme::SIDEBAR_TEXT),
       };
-      let expires_str = sk.expires.as_deref().unwrap_or("Aucune expiration");
 
-      container(
+      let header = row![
+        text(icon).font(theme::ICONS).size(12).color(type_color),
+        text(type_label).size(12).font(bold).color(type_color),
+      ]
+      .spacing(6)
+      .align_y(Alignment::Center);
+
+      let body: Element<Message> = if renewing_subkey.as_ref().is_some_and(|(r, _)| *r == sk_idx) {
+        let renewal_expiry = renewing_subkey
+          .as_ref()
+          .map(|(_, e)| e)
+          .unwrap_or(&KeyExpiry::TwoYears);
+        let until = expiry_until_date(renewal_expiry);
+
+        let expiry_btn = |label: &'static str, value: KeyExpiry| {
+          let selected = renewal_expiry == &value;
+          button(text(label).size(11))
+            .on_press(Message::RenewSubkeyExpiryChanged(value))
+            .style(move |_: &iced::Theme, _| button::Style {
+              background: Some(Background::Color(if selected {
+                type_color
+              } else {
+                Color::TRANSPARENT
+              })),
+              text_color: if selected {
+                Color::WHITE
+              } else {
+                theme::SIDEBAR_TEXT_MUTED
+              },
+              border: Border {
+                color: if selected {
+                  Color::TRANSPARENT
+                } else {
+                  Color {
+                    a: 0.3,
+                    ..theme::SIDEBAR_TEXT_MUTED
+                  }
+                },
+                width: 1.0,
+                radius: 4.0.into(),
+              },
+              shadow: Default::default(),
+            })
+        };
+
         column![
+          text(format!("Valide jusqu'au : {until}"))
+            .size(11)
+            .color(theme::SIDEBAR_TEXT),
           row![
-            text(icon).font(theme::ICONS).size(12).color(type_color),
-            text(type_label).size(12).font(bold).color(type_color),
+            expiry_btn("1 an", KeyExpiry::OneYear),
+            expiry_btn("2 ans", KeyExpiry::TwoYears),
+            expiry_btn("5 ans", KeyExpiry::FiveYears),
           ]
-          .spacing(6)
-          .align_y(Alignment::Center),
+          .spacing(4),
+          row![
+            button(text("Confirmer").size(11))
+              .on_press(Message::RenewSubkeyExecute)
+              .style(
+                move |_: &iced::Theme, status: button::Status| button::Style {
+                  background: Some(Background::Color(match status {
+                    button::Status::Hovered | button::Status::Pressed => Color {
+                      a: 0.85,
+                      ..type_color
+                    },
+                    _ => type_color,
+                  })),
+                  text_color: Color::WHITE,
+                  border: Border {
+                    color: Color::TRANSPARENT,
+                    width: 0.0,
+                    radius: 4.0.into(),
+                  },
+                  shadow: Default::default(),
+                }
+              ),
+            button(text("Annuler").size(11))
+              .on_press(Message::RenewSubkeyCancel)
+              .style(|_: &iced::Theme, status: button::Status| button::Style {
+                background: Some(Background::Color(match status {
+                  button::Status::Hovered | button::Status::Pressed => theme::SIDEBAR_HOVER_BG,
+                  _ => Color::TRANSPARENT,
+                })),
+                text_color: theme::SIDEBAR_TEXT_MUTED,
+                border: Border {
+                  color: Color {
+                    a: 0.3,
+                    ..theme::SIDEBAR_TEXT_MUTED
+                  },
+                  width: 1.0,
+                  radius: 4.0.into(),
+                },
+                shadow: Default::default(),
+              }),
+          ]
+          .spacing(6),
+        ]
+        .spacing(8)
+        .into()
+      } else {
+        let expires_str = sk.expires.as_deref().unwrap_or("Aucune expiration");
+        column![
           row![
             column![
               text(&sk.algo).size(10),
@@ -445,28 +541,53 @@ pub fn view(
           ]
           .spacing(4)
           .align_y(Alignment::Center),
-          text(expires_str).size(10).color(theme::SIDEBAR_TEXT_MUTED),
+          row![
+            text(expires_str)
+              .size(10)
+              .color(theme::SIDEBAR_TEXT_MUTED)
+              .width(Length::Fill),
+            button(text("\u{f021}").font(theme::ICONS).size(10))
+              .on_press(Message::RenewSubkey(idx, sk_idx))
+              .style(|_: &iced::Theme, status: button::Status| button::Style {
+                background: Some(Background::Color(match status {
+                  button::Status::Hovered | button::Status::Pressed => theme::SIDEBAR_HOVER_BG,
+                  _ => Color::TRANSPARENT,
+                })),
+                text_color: theme::SIDEBAR_TEXT_MUTED,
+                border: Border {
+                  color: Color::TRANSPARENT,
+                  width: 0.0,
+                  radius: 4.0.into(),
+                },
+                shadow: Default::default(),
+              }),
+          ]
+          .spacing(4)
+          .align_y(Alignment::Center),
         ]
-        .spacing(4),
-      )
-      .padding(8)
-      .width(Length::Fill)
-      .style(|_: &iced::Theme| container::Style {
-        background: Some(Background::Color(theme::SIDEBAR_BG)),
-        border: Border {
-          color: Color {
-            r: 1.0,
-            g: 1.0,
-            b: 1.0,
-            a: 0.08,
+        .spacing(4)
+        .into()
+      };
+
+      container(column![header, body].spacing(6))
+        .padding(8)
+        .width(Length::Fill)
+        .style(|_: &iced::Theme| container::Style {
+          background: Some(Background::Color(theme::SIDEBAR_BG)),
+          border: Border {
+            color: Color {
+              r: 1.0,
+              g: 1.0,
+              b: 1.0,
+              a: 0.08,
+            },
+            width: 1.0,
+            radius: 6.0.into(),
           },
-          width: 1.0,
-          radius: 6.0.into(),
-        },
-        text_color: Some(theme::SIDEBAR_TEXT),
-        ..Default::default()
-      })
-      .into()
+          text_color: Some(theme::SIDEBAR_TEXT),
+          ..Default::default()
+        })
+        .into()
     })
     .collect();
 
@@ -478,6 +599,16 @@ pub fn view(
   row![left_col, vertical_rule(1), right_col]
     .width(Length::Fill)
     .into()
+}
+
+fn expiry_until_date(expiry: &KeyExpiry) -> String {
+  let days = match expiry {
+    KeyExpiry::OneYear => 365,
+    KeyExpiry::TwoYears => 730,
+    KeyExpiry::FiveYears => 1825,
+  };
+  let future = Utc::now() + Duration::days(days);
+  future.format("%Y-%m-%d").to_string()
 }
 
 fn format_fingerprint(fp: &str) -> String {

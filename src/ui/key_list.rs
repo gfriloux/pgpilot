@@ -130,6 +130,13 @@ pub fn view(app: &App) -> Element<'_, Message> {
         app.card_connected,
         app.pending_migration == Some(idx),
         app.pending_delete == Some(idx),
+        app.pending_renewal.as_ref().and_then(|r| {
+          if r.key_idx == idx {
+            Some((r.subkey_idx, r.expiry.clone()))
+          } else {
+            None
+          }
+        }),
       ))
       .width(Length::Fill)
       .style(|_: &iced::Theme| container::Style {

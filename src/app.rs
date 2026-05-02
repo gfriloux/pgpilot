@@ -20,6 +20,12 @@ pub struct CreateKeyForm {
   pub submitting: bool,
 }
 
+pub struct PendingRenewal {
+  pub key_idx: usize,
+  pub subkey_idx: usize,
+  pub expiry: KeyExpiry,
+}
+
 #[derive(Default)]
 pub struct App {
   pub view: View,
@@ -31,6 +37,7 @@ pub struct App {
   pub card_connected: bool,
   pub pending_migration: Option<usize>,
   pub pending_delete: Option<usize>,
+  pub pending_renewal: Option<PendingRenewal>,
   pub create_form: CreateKeyForm,
 }
 
@@ -59,6 +66,11 @@ pub enum Message {
   DeleteKeyExecute(usize),
   DeleteKeyDone(Result<(), String>),
   CopyToClipboard(String),
+  RenewSubkey(usize, usize),
+  RenewSubkeyExpiryChanged(KeyExpiry),
+  RenewSubkeyExecute,
+  RenewSubkeyCancel,
+  RenewSubkeyDone(Result<(), String>),
 }
 
 async fn blocking_task<T, F>(f: F) -> Result<T, String>
@@ -128,12 +140,14 @@ impl App {
         self.status = None;
         self.pending_migration = None;
         self.pending_delete = None;
+        self.pending_renewal = None;
       }
       Message::KeySelected(i) => {
         self.selected = Some(i);
         self.status = None;
         self.pending_migration = None;
         self.pending_delete = None;
+        self.pending_renewal = None;
       }
       Message::ExportPublicKey(i) => {
         let fp = self.keys[i].fingerprint.clone();
@@ -220,6 +234,7 @@ impl App {
       Message::MoveToCard(i) => {
         self.pending_migration = Some(i);
         self.pending_delete = None;
+        self.pending_renewal = None;
         self.status = None;
       }
       Message::MoveToCardCancel => {
@@ -245,6 +260,7 @@ impl App {
       Message::DeleteKey(i) => {
         self.pending_delete = Some(i);
         self.pending_migration = None;
+        self.pending_renewal = None;
         self.status = None;
       }
       Message::DeleteKeyCancel => {
@@ -271,6 +287,46 @@ impl App {
       Message::CopyToClipboard(text) => {
         self.status = Some("Copié dans le presse-papier".to_string());
         return iced::clipboard::write(text);
+      }
+      Message::RenewSubkey(key_idx, subkey_idx) => {
+        self.pending_renewal = Some(PendingRenewal {
+          key_idx,
+          subkey_idx,
+          expiry: KeyExpiry::TwoYears,
+        });
+        self.pending_migration = None;
+        self.pending_delete = None;
+        self.status = None;
+      }
+      Message::RenewSubkeyExpiryChanged(expiry) => {
+        if let Some(ref mut r) = self.pending_renewal {
+          r.expiry = expiry;
+        }
+      }
+      Message::RenewSubkeyCancel => {
+        self.pending_renewal = None;
+      }
+      Message::RenewSubkeyExecute => {
+        if let Some(renewal) = self.pending_renewal.take() {
+          let master_fp = self.keys[renewal.key_idx].fingerprint.clone();
+          let subkey_fp = self.keys[renewal.key_idx].subkeys[renewal.subkey_idx]
+            .fingerprint
+            .clone();
+          let expiry = renewal.expiry;
+          return Task::perform(
+            blocking_task(move || crate::gpg::renew_subkey(&master_fp, &subkey_fp, &expiry)),
+            Message::RenewSubkeyDone,
+          );
+        }
+      }
+      Message::RenewSubkeyDone(Ok(())) => {
+        self.status = Some("Sous-clef renouvelée".to_string());
+        self.loading = true;
+        self.selected = None;
+        return Self::reload_keys();
+      }
+      Message::RenewSubkeyDone(Err(e)) => {
+        self.status = Some(format!("Erreur renouvellement : {e}"));
       }
     }
     Task::none()
