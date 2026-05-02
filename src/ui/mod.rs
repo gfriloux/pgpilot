@@ -98,32 +98,6 @@ fn sidebar(app: &App) -> Element<'_, Message> {
     )
   };
 
-  let import_btn = button(
-    row![
-      text("\u{f093}").font(theme::ICONS).size(14),
-      text("Importer").size(13),
-    ]
-    .spacing(8)
-    .align_y(Alignment::Center),
-  )
-  .on_press(Message::NavChanged(View::Import))
-  .width(Length::Fill)
-  .style(|_: &iced::Theme, status: button::Status| button::Style {
-    background: match status {
-      button::Status::Hovered | button::Status::Pressed => {
-        Some(Background::Color(theme::SIDEBAR_HOVER_BG))
-      }
-      _ => None,
-    },
-    text_color: theme::SIDEBAR_TEXT_MUTED,
-    border: Border {
-      color: Color::TRANSPARENT,
-      width: 0.0,
-      radius: 6.0.into(),
-    },
-    shadow: Default::default(),
-  });
-
   let title_font = Font {
     weight: font::Weight::Bold,
     ..Font::DEFAULT
@@ -142,7 +116,7 @@ fn sidebar(app: &App) -> Element<'_, Message> {
     ]
     .spacing(2),
     column![
-      import_btn,
+      nav_btn("\u{f093}", "Importer", View::Import),
       nav_btn("\u{f067}", "Créer une clef", View::CreateKey),
     ]
     .spacing(2),
