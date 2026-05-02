@@ -129,6 +129,7 @@ pub fn view(app: &App) -> Element<'_, Message> {
         idx,
         app.card_connected,
         app.pending_migration == Some(idx),
+        app.pending_delete == Some(idx),
       ))
       .width(Length::Fill)
       .style(|_: &iced::Theme| container::Style {

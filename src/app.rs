@@ -30,6 +30,7 @@ pub struct App {
   pub loading: bool,
   pub card_connected: bool,
   pub pending_migration: Option<usize>,
+  pub pending_delete: Option<usize>,
   pub create_form: CreateKeyForm,
 }
 
@@ -53,6 +54,10 @@ pub enum Message {
   MoveToCardCancel,
   MoveToCardExecute(usize),
   MoveToCardDone(Result<(), String>),
+  DeleteKey(usize),
+  DeleteKeyCancel,
+  DeleteKeyExecute(usize),
+  DeleteKeyDone(Result<(), String>),
 }
 
 async fn blocking_task<T, F>(f: F) -> Result<T, String>
@@ -121,11 +126,13 @@ impl App {
         self.selected = None;
         self.status = None;
         self.pending_migration = None;
+        self.pending_delete = None;
       }
       Message::KeySelected(i) => {
         self.selected = Some(i);
         self.status = None;
         self.pending_migration = None;
+        self.pending_delete = None;
       }
       Message::ExportPublicKey(i) => {
         let fp = self.keys[i].fingerprint.clone();
@@ -209,6 +216,7 @@ impl App {
       }
       Message::MoveToCard(i) => {
         self.pending_migration = Some(i);
+        self.pending_delete = None;
         self.status = None;
       }
       Message::MoveToCardCancel => {
@@ -230,6 +238,32 @@ impl App {
       }
       Message::MoveToCardDone(Err(e)) => {
         self.status = Some(format!("Erreur migration : {e}"));
+      }
+      Message::DeleteKey(i) => {
+        self.pending_delete = Some(i);
+        self.pending_migration = None;
+        self.status = None;
+      }
+      Message::DeleteKeyCancel => {
+        self.pending_delete = None;
+      }
+      Message::DeleteKeyExecute(i) => {
+        self.pending_delete = None;
+        let fp = self.keys[i].fingerprint.clone();
+        let has_secret = self.keys[i].has_secret || self.keys[i].on_card;
+        return Task::perform(
+          blocking_task(move || crate::gpg::delete_key(&fp, has_secret)),
+          Message::DeleteKeyDone,
+        );
+      }
+      Message::DeleteKeyDone(Ok(())) => {
+        self.status = Some("Clef supprimée".to_string());
+        self.loading = true;
+        self.selected = None;
+        return Self::reload_keys();
+      }
+      Message::DeleteKeyDone(Err(e)) => {
+        self.status = Some(format!("Erreur suppression : {e}"));
       }
     }
     Task::none()

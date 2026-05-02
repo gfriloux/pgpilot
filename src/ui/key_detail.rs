@@ -13,6 +13,7 @@ pub fn view(
   idx: usize,
   card_connected: bool,
   confirming: bool,
+  delete_confirming: bool,
 ) -> Element<'_, Message> {
   let expires = key.expires.as_deref().unwrap_or("Aucune expiration");
   let key_type = if key.on_card {
@@ -105,6 +106,25 @@ pub fn view(
       action_buttons.push(migrate_btn.into());
     }
   }
+
+  action_buttons.push(
+    button(icon_row("\u{f1f8}", "Supprimer"))
+      .on_press(Message::DeleteKey(idx))
+      .style(|_: &iced::Theme, status: button::Status| button::Style {
+        background: Some(Background::Color(match status {
+          button::Status::Hovered | button::Status::Pressed => theme::DESTRUCTIVE_HOVER_BG,
+          _ => Color::TRANSPARENT,
+        })),
+        text_color: theme::DESTRUCTIVE,
+        border: Border {
+          color: theme::DESTRUCTIVE,
+          width: 1.0,
+          radius: 6.0.into(),
+        },
+        shadow: Default::default(),
+      })
+      .into(),
+  );
 
   let mut items: Vec<Element<Message>> = vec![
     container(
@@ -241,6 +261,107 @@ pub fn view(
               }),
           ]
           .spacing(8),
+        ]
+        .spacing(8),
+      )
+      .padding(12)
+      .style(|_: &iced::Theme| container::Style {
+        background: Some(Background::Color(theme::ERROR_BG)),
+        text_color: Some(theme::TEXT_STRONG),
+        border: Border {
+          color: theme::ERROR,
+          width: 1.0,
+          radius: 6.0.into(),
+        },
+        ..Default::default()
+      })
+      .into(),
+    );
+  } else if delete_confirming {
+    let (warn_title, warn_body) = if key.on_card {
+      (
+        "Seul le stub local de la clef sera supprimé.",
+        "La clef physique sur la YubiKey ne sera pas affectée.",
+      )
+    } else if key.has_secret {
+      (
+        "Opération irréversible : la clef privée sera détruite.",
+        "Sans backup, vos données chiffrées seront définitivement irrécupérables.",
+      )
+    } else {
+      (
+        "La clef publique sera supprimée de votre trousseau.",
+        "Cette opération peut être annulée en réimportant la clef.",
+      )
+    };
+
+    let mut del_btns: Vec<Element<Message>> = Vec::new();
+    if key.has_secret && !key.on_card {
+      del_btns.push(
+        button(icon_row("\u{f019}", "Exporter d'abord"))
+          .on_press(Message::ExportSecretKey(idx))
+          .style(|_: &iced::Theme, status: button::Status| button::Style {
+            background: Some(Background::Color(match status {
+              button::Status::Hovered | button::Status::Pressed => theme::ACCENT_HOVER,
+              _ => theme::ACCENT,
+            })),
+            text_color: Color::WHITE,
+            border: Border {
+              color: Color::TRANSPARENT,
+              width: 0.0,
+              radius: 6.0.into(),
+            },
+            shadow: Default::default(),
+          })
+          .into(),
+      );
+    }
+    del_btns.push(
+      button(icon_row("\u{f1f8}", "Confirmer la suppression"))
+        .on_press(Message::DeleteKeyExecute(idx))
+        .style(|_: &iced::Theme, status: button::Status| button::Style {
+          background: Some(Background::Color(match status {
+            button::Status::Hovered | button::Status::Pressed => theme::DESTRUCTIVE_HOVER_BG,
+            _ => theme::DESTRUCTIVE,
+          })),
+          text_color: Color::WHITE,
+          border: Border {
+            color: Color::TRANSPARENT,
+            width: 0.0,
+            radius: 6.0.into(),
+          },
+          shadow: Default::default(),
+        })
+        .into(),
+    );
+    del_btns.push(
+      button(icon_row("\u{f00d}", "Annuler"))
+        .on_press(Message::DeleteKeyCancel)
+        .style(|_: &iced::Theme, status: button::Status| button::Style {
+          background: Some(Background::Color(match status {
+            button::Status::Hovered | button::Status::Pressed => Color {
+              a: 0.08,
+              ..theme::TEXT_SECONDARY
+            },
+            _ => Color::TRANSPARENT,
+          })),
+          text_color: theme::TEXT_SECONDARY,
+          border: Border {
+            color: theme::TEXT_SECONDARY,
+            width: 1.0,
+            radius: 6.0.into(),
+          },
+          shadow: Default::default(),
+        })
+        .into(),
+    );
+
+    items.push(
+      container(
+        column![
+          text(warn_title).size(12).font(bold),
+          text(warn_body).size(12),
+          Row::with_children(del_btns).spacing(8),
         ]
         .spacing(8),
       )

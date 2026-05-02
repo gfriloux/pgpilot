@@ -74,6 +74,24 @@ pub fn export_secret_key(fingerprint: &str, path: &std::path::Path) -> Result<()
   std::fs::write(path, &output.stdout).context("failed to write key file")
 }
 
+pub fn delete_key(fingerprint: &str, has_secret: bool) -> Result<()> {
+  let cmd = if has_secret {
+    "--delete-secret-and-public-keys"
+  } else {
+    "--delete-keys"
+  };
+
+  let status = Command::new("gpg")
+    .args(["--batch", "--yes", cmd, fingerprint])
+    .status()
+    .context("failed to run gpg delete")?;
+
+  if !status.success() {
+    return Err(anyhow::anyhow!("La suppression de la clef a échoué"));
+  }
+  Ok(())
+}
+
 pub fn import_key(path: &std::path::Path) -> Result<()> {
   let output = Command::new("gpg")
     .args(["--import", &path.to_string_lossy()])
