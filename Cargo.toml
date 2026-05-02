@@ -1,0 +1,11 @@
+[package]
+name = "pgpilot"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1"
+chrono = "0.4"
+iced = { version = "0.13", features = ["tokio"] }
+sequoia-openpgp = { version = "1", default-features = false, features = ["crypto-nettle"] }
+tokio = { version = "1", features = ["full"] }
