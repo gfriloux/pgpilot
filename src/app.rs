@@ -133,7 +133,7 @@ pub enum Message {
   AutoRepublishDone(Result<(), String>),
   RotateSubkeyExecute(usize, usize),
   RotateSubkeyDone(Result<(), String>),
-  AddSubkey(usize, String, String),
+  AddSubkey(usize, crate::gpg::SubkeyType),
   AddSubkeyDone(Result<(), String>),
   RenewSubkey(usize, usize),
   RenewSubkeyExpiryChanged(KeyExpiry),
@@ -646,11 +646,16 @@ impl App {
       Message::PublishKeyDone(Err(e)) => {
         self.status = Some(format!("Erreur publication : {e}"));
       }
-      Message::AddSubkey(key_idx, algo, usage) => {
+      Message::AddSubkey(key_idx, subkey_type) => {
         let master_fp = self.keys[key_idx].fingerprint.clone();
         return Task::perform(
           blocking_task(move || {
-            crate::gpg::add_subkey(&master_fp, &algo, &usage, &KeyExpiry::TwoYears)
+            crate::gpg::add_subkey(
+              &master_fp,
+              subkey_type.algo(),
+              subkey_type.usage(),
+              &KeyExpiry::TwoYears,
+            )
           }),
           Message::AddSubkeyDone,
         );
@@ -691,17 +696,17 @@ impl App {
           .unwrap_or_default();
         let master_fp = self.keys[key_idx].fingerprint.clone();
         let old_fp = self.keys[key_idx].subkeys[subkey_idx].fingerprint.clone();
-        let usage = self.keys[key_idx].subkeys[subkey_idx].usage.clone();
-        let (algo, gpg_usage) = if usage.contains('E') {
-          ("cv25519".to_string(), "encr".to_string())
-        } else if usage.contains('A') {
-          ("ed25519".to_string(), "auth".to_string())
-        } else {
-          ("ed25519".to_string(), "sign".to_string())
-        };
+        let subkey_type =
+          crate::gpg::SubkeyType::from_usage_flags(&self.keys[key_idx].subkeys[subkey_idx].usage);
         return Task::perform(
           blocking_task(move || {
-            crate::gpg::rotate_subkey(&master_fp, &old_fp, &algo, &gpg_usage, &expiry)
+            crate::gpg::rotate_subkey(
+              &master_fp,
+              &old_fp,
+              subkey_type.algo(),
+              subkey_type.usage(),
+              &expiry,
+            )
           }),
           Message::RotateSubkeyDone,
         );

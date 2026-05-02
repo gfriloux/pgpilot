@@ -1,5 +1,47 @@
 use chrono::Utc;
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SubkeyType {
+  Sign,
+  Encr,
+  Auth,
+}
+
+impl SubkeyType {
+  pub fn algo(self) -> &'static str {
+    match self {
+      Self::Sign | Self::Auth => "ed25519",
+      Self::Encr => "cv25519",
+    }
+  }
+
+  pub fn usage(self) -> &'static str {
+    match self {
+      Self::Sign => "sign",
+      Self::Encr => "encr",
+      Self::Auth => "auth",
+    }
+  }
+
+  pub fn usage_char(self) -> char {
+    match self {
+      Self::Sign => 'S',
+      Self::Encr => 'E',
+      Self::Auth => 'A',
+    }
+  }
+
+  pub fn from_usage_flags(flags: &str) -> Self {
+    if flags.contains('E') {
+      Self::Encr
+    } else if flags.contains('A') {
+      Self::Auth
+    } else {
+      Self::Sign
+    }
+  }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub enum KeyExpiry {
   OneYear,

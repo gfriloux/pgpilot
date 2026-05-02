@@ -7,7 +7,7 @@ use iced::{
 
 use crate::app::{KeyserverStatus, Message};
 use crate::gpg::types::SubkeyInfo;
-use crate::gpg::{KeyExpiry, KeyInfo, Keyserver};
+use crate::gpg::{KeyExpiry, KeyInfo, Keyserver, SubkeyType};
 use crate::ui::theme;
 
 pub struct ViewCtx {
@@ -706,28 +706,14 @@ pub fn view(key: &KeyInfo, idx: usize, ctx: ViewCtx) -> Element<'_, Message> {
     return left_col.into();
   }
 
-  // (usage_char, icon, label, color, gpg_algo, gpg_usage)
+  // (subkey_type, icon, label, color)
   let standard_types = [
-    (
-      "S",
-      "\u{f040}",
-      "Signature",
-      theme::ACCENT,
-      "ed25519",
-      "sign",
-    ),
-    (
-      "E",
-      "\u{f023}",
-      "Chiffrement",
-      theme::SUCCESS,
-      "cv25519",
-      "encr",
-    ),
-    ("A", "\u{f084}", "Auth SSH", theme::PEACH, "ed25519", "auth"),
+    (SubkeyType::Sign, "\u{f040}", "Signature", theme::ACCENT),
+    (SubkeyType::Encr, "\u{f023}", "Chiffrement", theme::SUCCESS),
+    (SubkeyType::Auth, "\u{f084}", "Auth SSH", theme::PEACH),
   ];
 
-  let find_subkey = |usage_char: &str| -> Option<(usize, &SubkeyInfo)> {
+  let find_subkey = |usage_char: char| -> Option<(usize, &SubkeyInfo)> {
     key
       .subkeys
       .iter()
@@ -737,115 +723,140 @@ pub fn view(key: &KeyInfo, idx: usize, ctx: ViewCtx) -> Element<'_, Message> {
 
   let subkey_cards: Vec<Element<Message>> = standard_types
     .iter()
-    .filter_map(
-      |(usage_char, icon, type_label, type_color, gpg_algo, gpg_usage)| {
-        let (icon, type_label, type_color, gpg_algo, gpg_usage) =
-          (*icon, *type_label, *type_color, *gpg_algo, *gpg_usage);
+    .filter_map(|(subkey_type, icon, type_label, type_color)| {
+      let (subkey_type, icon, type_label, type_color) =
+        (*subkey_type, *icon, *type_label, *type_color);
 
-        if let Some((sk_idx, sk)) = find_subkey(usage_char) {
-          let header = row![
-            text(icon).font(theme::ICONS).size(12).color(type_color),
-            text(type_label).size(12).font(bold).color(type_color),
-          ]
-          .spacing(6)
-          .align_y(Alignment::Center);
+      if let Some((sk_idx, sk)) = find_subkey(subkey_type.usage_char()) {
+        let header = row![
+          text(icon).font(theme::ICONS).size(12).color(type_color),
+          text(type_label).size(12).font(bold).color(type_color),
+        ]
+        .spacing(6)
+        .align_y(Alignment::Center);
 
-          let body: Element<Message> = if renewing_subkey
+        let body: Element<Message> = if renewing_subkey.as_ref().is_some_and(|(r, _)| *r == sk_idx)
+        {
+          let renewal_expiry = renewing_subkey
             .as_ref()
-            .is_some_and(|(r, _)| *r == sk_idx)
-          {
-            let renewal_expiry = renewing_subkey
-              .as_ref()
-              .map(|(_, e)| e)
-              .unwrap_or(&KeyExpiry::TwoYears);
-            let until = expiry_until_date(renewal_expiry);
+            .map(|(_, e)| e)
+            .unwrap_or(&KeyExpiry::TwoYears);
+          let until = expiry_until_date(renewal_expiry);
 
-            let expiry_btn = |label: &'static str, value: KeyExpiry| {
-              let selected = renewal_expiry == &value;
-              button(text(label).size(11))
-                .on_press(Message::RenewSubkeyExpiryChanged(value))
-                .style(move |_: &iced::Theme, _| button::Style {
-                  background: Some(Background::Color(if selected {
-                    type_color
-                  } else {
+          let expiry_btn = |label: &'static str, value: KeyExpiry| {
+            let selected = renewal_expiry == &value;
+            button(text(label).size(11))
+              .on_press(Message::RenewSubkeyExpiryChanged(value))
+              .style(move |_: &iced::Theme, _| button::Style {
+                background: Some(Background::Color(if selected {
+                  type_color
+                } else {
+                  Color::TRANSPARENT
+                })),
+                text_color: if selected {
+                  theme::TEXT_ON_ACCENT
+                } else {
+                  theme::SIDEBAR_TEXT_MUTED
+                },
+                border: Border {
+                  color: if selected {
                     Color::TRANSPARENT
-                  })),
-                  text_color: if selected {
-                    theme::TEXT_ON_ACCENT
                   } else {
-                    theme::SIDEBAR_TEXT_MUTED
+                    Color {
+                      a: 0.3,
+                      ..theme::SIDEBAR_TEXT_MUTED
+                    }
                   },
+                  width: 1.0,
+                  radius: 4.0.into(),
+                },
+                shadow: Default::default(),
+              })
+          };
+
+          column![
+            text(format!("Valide jusqu'au : {until}"))
+              .size(11)
+              .color(theme::SIDEBAR_TEXT),
+            row![
+              expiry_btn("1 an", KeyExpiry::OneYear),
+              expiry_btn("2 ans", KeyExpiry::TwoYears),
+              expiry_btn("5 ans", KeyExpiry::FiveYears),
+            ]
+            .spacing(4),
+            row![
+              button(text("↺ Renouveler").size(11))
+                .on_press(Message::RenewSubkeyExecute)
+                .width(Length::Fill)
+                .style(
+                  move |_: &iced::Theme, status: button::Status| button::Style {
+                    background: Some(Background::Color(match status {
+                      button::Status::Hovered | button::Status::Pressed => Color {
+                        a: 0.85,
+                        ..type_color
+                      },
+                      _ => type_color,
+                    })),
+                    text_color: theme::TEXT_ON_ACCENT,
+                    border: Border {
+                      color: Color::TRANSPARENT,
+                      width: 0.0,
+                      radius: 4.0.into(),
+                    },
+                    shadow: Default::default(),
+                  }
+                ),
+              button(text("⟲ Remplacer").size(11))
+                .on_press(Message::RotateSubkeyExecute(idx, sk_idx))
+                .width(Length::Fill)
+                .style(|_: &iced::Theme, status: button::Status| button::Style {
+                  background: Some(Background::Color(match status {
+                    button::Status::Hovered | button::Status::Pressed => theme::SIDEBAR_HOVER_BG,
+                    _ => Color::TRANSPARENT,
+                  })),
+                  text_color: theme::SIDEBAR_TEXT_MUTED,
                   border: Border {
-                    color: if selected {
-                      Color::TRANSPARENT
-                    } else {
-                      Color {
-                        a: 0.3,
-                        ..theme::SIDEBAR_TEXT_MUTED
-                      }
+                    color: Color {
+                      a: 0.4,
+                      ..theme::SIDEBAR_TEXT_MUTED
                     },
                     width: 1.0,
                     radius: 4.0.into(),
                   },
                   shadow: Default::default(),
-                })
-            };
-
-            column![
-              text(format!("Valide jusqu'au : {until}"))
-                .size(11)
-                .color(theme::SIDEBAR_TEXT),
-              row![
-                expiry_btn("1 an", KeyExpiry::OneYear),
-                expiry_btn("2 ans", KeyExpiry::TwoYears),
-                expiry_btn("5 ans", KeyExpiry::FiveYears),
+                }),
+            ]
+            .spacing(4),
+            button(text("Annuler").size(11))
+              .on_press(Message::RenewSubkeyCancel)
+              .style(|_: &iced::Theme, status: button::Status| button::Style {
+                background: Some(Background::Color(match status {
+                  button::Status::Hovered | button::Status::Pressed => theme::SIDEBAR_HOVER_BG,
+                  _ => Color::TRANSPARENT,
+                })),
+                text_color: theme::SIDEBAR_TEXT_MUTED,
+                border: Border {
+                  color: Color::TRANSPARENT,
+                  width: 0.0,
+                  radius: 4.0.into(),
+                },
+                shadow: Default::default(),
+              }),
+          ]
+          .spacing(8)
+          .into()
+        } else {
+          let expires_str = sk.expires.as_deref().unwrap_or("Aucune expiration");
+          column![
+            row![
+              column![
+                text(&sk.algo).size(10),
+                text(format_fingerprint(&sk.short_id)).font(mono).size(10),
               ]
-              .spacing(4),
-              row![
-                button(text("↺ Renouveler").size(11))
-                  .on_press(Message::RenewSubkeyExecute)
-                  .width(Length::Fill)
-                  .style(
-                    move |_: &iced::Theme, status: button::Status| button::Style {
-                      background: Some(Background::Color(match status {
-                        button::Status::Hovered | button::Status::Pressed => Color {
-                          a: 0.85,
-                          ..type_color
-                        },
-                        _ => type_color,
-                      })),
-                      text_color: theme::TEXT_ON_ACCENT,
-                      border: Border {
-                        color: Color::TRANSPARENT,
-                        width: 0.0,
-                        radius: 4.0.into(),
-                      },
-                      shadow: Default::default(),
-                    }
-                  ),
-                button(text("⟲ Remplacer").size(11))
-                  .on_press(Message::RotateSubkeyExecute(idx, sk_idx))
-                  .width(Length::Fill)
-                  .style(|_: &iced::Theme, status: button::Status| button::Style {
-                    background: Some(Background::Color(match status {
-                      button::Status::Hovered | button::Status::Pressed => theme::SIDEBAR_HOVER_BG,
-                      _ => Color::TRANSPARENT,
-                    })),
-                    text_color: theme::SIDEBAR_TEXT_MUTED,
-                    border: Border {
-                      color: Color {
-                        a: 0.4,
-                        ..theme::SIDEBAR_TEXT_MUTED
-                      },
-                      width: 1.0,
-                      radius: 4.0.into(),
-                    },
-                    shadow: Default::default(),
-                  }),
-              ]
-              .spacing(4),
-              button(text("Annuler").size(11))
-                .on_press(Message::RenewSubkeyCancel)
+              .spacing(2)
+              .width(Length::Fill),
+              button(text("\u{f0c5}").font(theme::ICONS).size(11))
+                .on_press(Message::CopyToClipboard(sk.fingerprint.clone()))
                 .style(|_: &iced::Theme, status: button::Status| button::Style {
                   background: Some(Background::Color(match status {
                     button::Status::Hovered | button::Status::Pressed => theme::SIDEBAR_HOVER_BG,
@@ -860,20 +871,16 @@ pub fn view(key: &KeyInfo, idx: usize, ctx: ViewCtx) -> Element<'_, Message> {
                   shadow: Default::default(),
                 }),
             ]
-            .spacing(8)
-            .into()
-          } else {
-            let expires_str = sk.expires.as_deref().unwrap_or("Aucune expiration");
-            column![
+            .spacing(4)
+            .align_y(Alignment::Center),
+            if can_edit {
               row![
-                column![
-                  text(&sk.algo).size(10),
-                  text(format_fingerprint(&sk.short_id)).font(mono).size(10),
-                ]
-                .spacing(2)
-                .width(Length::Fill),
-                button(text("\u{f0c5}").font(theme::ICONS).size(11))
-                  .on_press(Message::CopyToClipboard(sk.fingerprint.clone()))
+                text(expires_str)
+                  .size(10)
+                  .color(theme::SIDEBAR_TEXT_MUTED)
+                  .width(Length::Fill),
+                button(text("\u{f021}").font(theme::ICONS).size(10))
+                  .on_press(Message::RenewSubkey(idx, sk_idx))
                   .style(|_: &iced::Theme, status: button::Status| button::Style {
                     background: Some(Background::Color(match status {
                       button::Status::Hovered | button::Status::Pressed => theme::SIDEBAR_HOVER_BG,
@@ -889,133 +896,103 @@ pub fn view(key: &KeyInfo, idx: usize, ctx: ViewCtx) -> Element<'_, Message> {
                   }),
               ]
               .spacing(4)
-              .align_y(Alignment::Center),
-              if can_edit {
-                row![
-                  text(expires_str)
-                    .size(10)
-                    .color(theme::SIDEBAR_TEXT_MUTED)
-                    .width(Length::Fill),
-                  button(text("\u{f021}").font(theme::ICONS).size(10))
-                    .on_press(Message::RenewSubkey(idx, sk_idx))
-                    .style(|_: &iced::Theme, status: button::Status| button::Style {
-                      background: Some(Background::Color(match status {
-                        button::Status::Hovered | button::Status::Pressed =>
-                          theme::SIDEBAR_HOVER_BG,
-                        _ => Color::TRANSPARENT,
-                      })),
-                      text_color: theme::SIDEBAR_TEXT_MUTED,
-                      border: Border {
-                        color: Color::TRANSPARENT,
-                        width: 0.0,
-                        radius: 4.0.into(),
-                      },
-                      shadow: Default::default(),
-                    }),
-                ]
-                .spacing(4)
-                .align_y(Alignment::Center)
-              } else {
-                row![text(expires_str).size(10).color(theme::SIDEBAR_TEXT_MUTED)].spacing(0)
-              },
-            ]
-            .spacing(4)
-            .into()
-          };
+              .align_y(Alignment::Center)
+            } else {
+              row![text(expires_str).size(10).color(theme::SIDEBAR_TEXT_MUTED)].spacing(0)
+            },
+          ]
+          .spacing(4)
+          .into()
+        };
 
-          Some(
-            container(column![header, body].spacing(6))
-              .padding(8)
-              .width(Length::Fill)
-              .style(|_: &iced::Theme| container::Style {
-                background: Some(Background::Color(theme::SIDEBAR_BG)),
-                border: Border {
-                  color: theme::BORDER,
-                  width: 1.0,
-                  radius: 6.0.into(),
-                },
-                text_color: Some(theme::SIDEBAR_TEXT),
-                ..Default::default()
-              })
-              .into(),
-          )
-        } else if can_edit {
-          let dimmed = Color {
-            a: 0.45,
-            ..type_color
-          };
-          Some(
-            container(
-              row![
-                row![
-                  text(icon).font(theme::ICONS).size(12).color(dimmed),
-                  text(type_label).size(12).font(bold).color(dimmed),
-                ]
-                .spacing(6)
-                .align_y(Alignment::Center)
-                .width(Length::Fill),
-                button(
-                  row![
-                    text("\u{f067}").font(theme::ICONS).size(11),
-                    text("Créer").size(11),
-                  ]
-                  .spacing(4)
-                  .align_y(Alignment::Center),
-                )
-                .on_press(Message::AddSubkey(
-                  idx,
-                  gpg_algo.to_string(),
-                  gpg_usage.to_string(),
-                ))
-                .style(
-                  move |_: &iced::Theme, status: button::Status| button::Style {
-                    background: Some(Background::Color(match status {
-                      button::Status::Hovered | button::Status::Pressed => Color {
-                        a: 0.20,
-                        ..type_color
-                      },
-                      _ => Color {
-                        a: 0.10,
-                        ..type_color
-                      },
-                    })),
-                    text_color: type_color,
-                    border: Border {
-                      color: Color {
-                        a: 0.30,
-                        ..type_color
-                      },
-                      width: 1.0,
-                      radius: 4.0.into(),
-                    },
-                    shadow: Default::default(),
-                  }
-                ),
-              ]
-              .spacing(8)
-              .align_y(Alignment::Center),
-            )
+        Some(
+          container(column![header, body].spacing(6))
             .padding(8)
             .width(Length::Fill)
-            .style(move |_: &iced::Theme| container::Style {
+            .style(|_: &iced::Theme| container::Style {
               background: Some(Background::Color(theme::SIDEBAR_BG)),
               border: Border {
-                color: Color {
-                  a: 0.25,
-                  ..type_color
-                },
+                color: theme::BORDER,
                 width: 1.0,
                 radius: 6.0.into(),
               },
+              text_color: Some(theme::SIDEBAR_TEXT),
               ..Default::default()
             })
             .into(),
+        )
+      } else if can_edit {
+        let dimmed = Color {
+          a: 0.45,
+          ..type_color
+        };
+        Some(
+          container(
+            row![
+              row![
+                text(icon).font(theme::ICONS).size(12).color(dimmed),
+                text(type_label).size(12).font(bold).color(dimmed),
+              ]
+              .spacing(6)
+              .align_y(Alignment::Center)
+              .width(Length::Fill),
+              button(
+                row![
+                  text("\u{f067}").font(theme::ICONS).size(11),
+                  text("Créer").size(11),
+                ]
+                .spacing(4)
+                .align_y(Alignment::Center),
+              )
+              .on_press(Message::AddSubkey(idx, subkey_type))
+              .style(
+                move |_: &iced::Theme, status: button::Status| button::Style {
+                  background: Some(Background::Color(match status {
+                    button::Status::Hovered | button::Status::Pressed => Color {
+                      a: 0.20,
+                      ..type_color
+                    },
+                    _ => Color {
+                      a: 0.10,
+                      ..type_color
+                    },
+                  })),
+                  text_color: type_color,
+                  border: Border {
+                    color: Color {
+                      a: 0.30,
+                      ..type_color
+                    },
+                    width: 1.0,
+                    radius: 4.0.into(),
+                  },
+                  shadow: Default::default(),
+                }
+              ),
+            ]
+            .spacing(8)
+            .align_y(Alignment::Center),
           )
-        } else {
-          None
-        }
-      },
-    )
+          .padding(8)
+          .width(Length::Fill)
+          .style(move |_: &iced::Theme| container::Style {
+            background: Some(Background::Color(theme::SIDEBAR_BG)),
+            border: Border {
+              color: Color {
+                a: 0.25,
+                ..type_color
+              },
+              width: 1.0,
+              radius: 6.0.into(),
+            },
+            ..Default::default()
+          })
+          .into(),
+        )
+      } else {
+        None
+      }
+    })
     .collect();
 
   let right_col = Column::with_children(subkey_cards)

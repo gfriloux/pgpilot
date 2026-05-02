@@ -10,4 +10,4 @@ pub use keyring::{
   export_public_key_armored, import_key, import_key_from_keyserver, import_key_from_text,
   import_key_from_url, list_keys, publish_key, renew_subkey, rotate_subkey, upload_public_key,
 };
-pub use types::{KeyExpiry, KeyInfo, Keyserver};
+pub use types::{KeyExpiry, KeyInfo, Keyserver, SubkeyType};
