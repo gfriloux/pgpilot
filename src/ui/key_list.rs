@@ -60,7 +60,7 @@ pub fn view(app: &App) -> Element<'_, Message> {
     row![
       text("Nom / Email").size(11).width(Length::Fill).font(bold),
       text("Expire").size(11).width(80).font(bold),
-      text("").size(11).width(56),
+      text("État").size(11).width(56),
     ]
     .padding([0, 12])
     .spacing(8),
