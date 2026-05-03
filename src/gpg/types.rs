@@ -63,7 +63,7 @@ impl std::fmt::Display for KeyExpiry {
 #[derive(Debug, Clone)]
 pub struct SubkeyInfo {
   pub fingerprint: String,
-  pub short_id: String,
+  pub key_id: String,
   pub algo: String,
   pub usage: String,
   pub expires: Option<String>,
@@ -72,7 +72,7 @@ pub struct SubkeyInfo {
 #[derive(Debug, Clone)]
 pub struct KeyInfo {
   pub fingerprint: String,
-  pub short_id: String,
+  pub key_id: String,
   pub name: String,
   pub email: String,
   pub algo: String,

@@ -96,7 +96,7 @@ pub fn view(app: &App) -> Element<'_, Message> {
       let row_content = row![
         text(name).size(13).width(200),
         text(key.email.clone()).size(13).width(250),
-        text(key.short_id.clone()).size(12).width(120),
+        text(key.key_id.clone()).size(12).width(140),
         text(expires).size(12).width(100),
         text(card_icon).font(theme::ICONS).size(12).width(20),
         text(pub_icon)

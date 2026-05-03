@@ -177,7 +177,7 @@ fn export_key_to_file(fp: String, name: String) -> anyhow::Result<Option<String>
   Ok(Some(filename))
 }
 
-fn backup_key_to_dir(fp: String, short_id: String) -> anyhow::Result<Option<String>> {
+fn backup_key_to_dir(fp: String, key_id: String) -> anyhow::Result<Option<String>> {
   let dir = match rfd::FileDialog::new()
     .set_title("Choisir un dossier de sauvegarde")
     .pick_folder()
@@ -185,7 +185,7 @@ fn backup_key_to_dir(fp: String, short_id: String) -> anyhow::Result<Option<Stri
     None => return Ok(None),
     Some(d) => d,
   };
-  let (key_file, rev_file) = crate::gpg::backup_key(&fp, &dir, &short_id)?;
+  let (key_file, rev_file) = crate::gpg::backup_key(&fp, &dir, &key_id)?;
   let summary = match rev_file {
     Some(rev) => format!("{key_file} + {rev}"),
     None => format!("{key_file} (certificat de révocation introuvable)"),
@@ -516,12 +516,12 @@ impl App {
   }
 
   fn on_backup_key(&mut self, fp: String) -> Task<Message> {
-    let short_id = self
+    let key_id = self
       .key_by_fp(&fp)
-      .map(|k| k.short_id.clone())
+      .map(|k| k.key_id.clone())
       .unwrap_or_default();
     Task::perform(
-      blocking_task(move || backup_key_to_dir(fp, short_id)),
+      blocking_task(move || backup_key_to_dir(fp, key_id)),
       Message::BackupDone,
     )
   }

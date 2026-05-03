@@ -917,7 +917,7 @@ fn subkey_card_body<'a>(
     row![
       column![
         text(&sk.algo).size(10),
-        text(format_fingerprint(&sk.short_id)).font(mono).size(10),
+        text(format_fingerprint(&sk.key_id)).font(mono).size(10),
       ]
       .spacing(2)
       .width(Length::Fill),

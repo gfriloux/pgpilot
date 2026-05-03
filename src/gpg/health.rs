@@ -326,7 +326,7 @@ fn check_revocation_certs(keys: &[KeyInfo]) -> HealthCheck {
     })
     .map(|k| {
       if k.name.is_empty() {
-        k.short_id.clone()
+        k.key_id.clone()
       } else {
         format!("{} <{}>", k.name, k.email)
       }

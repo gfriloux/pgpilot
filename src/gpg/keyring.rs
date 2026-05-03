@@ -183,9 +183,9 @@ fn export_secret_key(fingerprint: &str, path: &std::path::Path) -> Result<()> {
 pub fn backup_key(
   fingerprint: &str,
   dir: &std::path::Path,
-  short_id: &str,
+  key_id: &str,
 ) -> Result<(String, Option<String>)> {
-  let key_filename = format!("{short_id}_secret.asc");
+  let key_filename = format!("{key_id}_secret.asc");
   export_secret_key(fingerprint, &dir.join(&key_filename))?;
 
   let gnupg_dir = super::gnupg_dir();
@@ -195,7 +195,7 @@ pub fn backup_key(
   );
 
   let rev_filename = if std::path::Path::new(&rev_src).exists() {
-    let name = format!("{short_id}_revocation.rev");
+    let name = format!("{key_id}_revocation.rev");
     std::fs::copy(&rev_src, dir.join(&name)).context("failed to copy revocation certificate")?;
     Some(name)
   } else {
@@ -508,7 +508,7 @@ fn cert_to_key_info(
   card_serial: Option<String>,
 ) -> KeyInfo {
   let fp = cert.fingerprint().to_hex();
-  let short_id = fp[fp.len().saturating_sub(8)..].to_string();
+  let key_id = fp[fp.len().saturating_sub(16)..].to_string();
 
   let (name, email) = cert
     .userids()
@@ -539,7 +539,7 @@ fn cert_to_key_info(
         .map(|ka| {
           let k = ka.key();
           let sfp = k.fingerprint().to_hex();
-          let short_id = sfp[sfp.len().saturating_sub(16)..].to_string();
+          let key_id = sfp[sfp.len().saturating_sub(16)..].to_string();
           let usage = ka
             .key_flags()
             .map(|f| {
@@ -558,7 +558,7 @@ fn cert_to_key_info(
             .unwrap_or_default();
           SubkeyInfo {
             fingerprint: sfp,
-            short_id,
+            key_id,
             algo: format!("{}", k.pk_algo()),
             usage,
             expires: ka.key_expiration_time().map(format_date),
@@ -570,7 +570,7 @@ fn cert_to_key_info(
 
   KeyInfo {
     fingerprint: fp,
-    short_id,
+    key_id,
     name,
     email,
     algo,
