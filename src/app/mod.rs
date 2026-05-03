@@ -1,5 +1,6 @@
 mod card;
 mod create;
+mod decrypt;
 mod encrypt;
 mod export;
 mod import;
@@ -25,6 +26,7 @@ pub enum View {
   Import,
   Health,
   Encrypt,
+  Decrypt,
 }
 
 pub struct ImportForm {
@@ -54,6 +56,13 @@ pub struct CreateKeyForm {
   pub subkey_expiry: KeyExpiry,
   pub include_auth: bool,
   pub submitting: bool,
+}
+
+#[derive(Default)]
+pub struct DecryptForm {
+  pub files: Vec<PathBuf>,
+  pub file_statuses: HashMap<PathBuf, crate::gpg::DecryptStatus>,
+  pub decrypting: bool,
 }
 
 #[derive(Default)]
@@ -110,6 +119,7 @@ pub struct App {
   pub create_form: CreateKeyForm,
   pub import_form: ImportForm,
   pub encrypt_form: EncryptForm,
+  pub decrypt_form: DecryptForm,
   pub health_report: Vec<HealthCheck>,
   pub health_loading: bool,
 }
@@ -184,6 +194,12 @@ pub enum Message {
   EncryptTrustPromptCancel,
   SetKeyTrust(String, TrustLevel),
   SetKeyTrustDone(Result<(), String>),
+  DecryptPickFiles,
+  DecryptFilesPicked(Result<Vec<PathBuf>, String>),
+  DecryptFileInspected(PathBuf, Result<crate::gpg::DecryptStatus, String>),
+  DecryptRemoveFile(usize),
+  DecryptExecute,
+  DecryptDone(Result<Vec<String>, String>),
   FileDropped(PathBuf),
 }
 
@@ -413,11 +429,36 @@ impl App {
       }
       Message::SetKeyTrust(fp, trust) => self.on_set_key_trust(fp, trust),
       Message::SetKeyTrustDone(r) => self.on_set_key_trust_done(r),
+      Message::DecryptRemoveFile(idx) => {
+        if idx < self.decrypt_form.files.len() {
+          let path = self.decrypt_form.files.remove(idx);
+          self.decrypt_form.file_statuses.remove(&path);
+        }
+        Task::none()
+      }
+      Message::DecryptPickFiles => self.on_decrypt_pick_files(),
+      Message::DecryptFilesPicked(r) => self.on_decrypt_files_picked(r),
+      Message::DecryptFileInspected(path, r) => self.on_decrypt_file_inspected(path, r),
+      Message::DecryptExecute => self.on_decrypt_execute(),
+      Message::DecryptDone(r) => self.on_decrypt_done(r),
       Message::FileDropped(path) => {
         if self.view == View::Encrypt && !self.encrypt_form.files.contains(&path) {
           self.encrypt_form.files.push(path);
+          Task::none()
+        } else if self.view == View::Decrypt && !self.decrypt_form.files.contains(&path) {
+          self.decrypt_form.files.push(path.clone());
+          self
+            .decrypt_form
+            .file_statuses
+            .insert(path.clone(), crate::gpg::DecryptStatus::Checking);
+          let p = path.clone();
+          Task::perform(
+            blocking_task(move || crate::gpg::inspect_decrypt(&p)),
+            move |r| Message::DecryptFileInspected(path.clone(), r),
+          )
+        } else {
+          Task::none()
         }
-        Task::none()
       }
     }
   }

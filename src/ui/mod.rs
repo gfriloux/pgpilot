@@ -1,4 +1,5 @@
 pub mod create_key;
+pub mod decrypt;
 pub mod encrypt;
 pub mod health;
 pub mod import;
@@ -21,6 +22,7 @@ pub fn root(app: &App) -> Element<'_, Message> {
     View::Import => import::view(&app.import_form),
     View::Health => health::view(&app.health_report, app.health_loading),
     View::Encrypt => encrypt::view(&app.encrypt_form, &app.keys),
+    View::Decrypt => decrypt::view(&app.decrypt_form),
   };
 
   let main: Element<Message> = match &app.status {
@@ -128,6 +130,7 @@ fn sidebar(app: &App) -> Element<'_, Message> {
       nav_btn("\u{f093}", "Importer", View::Import),
       nav_btn("\u{f067}", "Créer une clef", View::CreateKey),
       nav_btn("\u{f023}", "Chiffrer", View::Encrypt),
+      nav_btn("\u{f13e}", "Déchiffrer", View::Decrypt),
     ]
     .spacing(2),
     nav_btn("\u{f132}", "Diagnostic", View::Health),

@@ -706,3 +706,115 @@ pub fn encrypt_files(
 
   Ok(results)
 }
+
+pub fn inspect_decrypt(file: &std::path::Path) -> Result<super::types::DecryptStatus> {
+  use super::types::DecryptStatus;
+  let gnupg = super::gnupg_dir();
+  let out = Command::new("gpg")
+    .args([
+      "--homedir",
+      &gnupg,
+      "--batch",
+      "--status-fd",
+      "1",
+      "--list-only",
+      "--decrypt",
+    ])
+    .arg(file)
+    .output()
+    .context("failed to run gpg --list-only --decrypt")?;
+
+  let stdout = String::from_utf8_lossy(&out.stdout);
+  let stderr = String::from_utf8_lossy(&out.stderr);
+
+  if stdout.contains("[GNUPG:] BEGIN_DECRYPTION") {
+    return Ok(DecryptStatus::CanDecrypt);
+  }
+
+  let enc_to_count = stdout
+    .lines()
+    .filter(|l| l.contains("[GNUPG:] ENC_TO"))
+    .count();
+  let no_seckey_count = stdout
+    .lines()
+    .filter(|l| l.contains("[GNUPG:] NO_SECKEY"))
+    .count();
+
+  if enc_to_count > 0 && no_seckey_count >= enc_to_count {
+    return Ok(DecryptStatus::NoKey);
+  }
+
+  if stderr.contains("No secret key") || stderr.contains("no secret key") {
+    return Ok(DecryptStatus::NoKey);
+  }
+
+  if out.status.success() {
+    Ok(DecryptStatus::CanDecrypt)
+  } else {
+    Ok(DecryptStatus::Unknown)
+  }
+}
+
+pub fn decrypt_files(files: &[PathBuf]) -> Result<Vec<String>> {
+  let gnupg = super::gnupg_dir();
+  let mut results = Vec::new();
+
+  for file in files {
+    let stem = file
+      .file_stem()
+      .unwrap_or_default()
+      .to_string_lossy()
+      .to_string();
+    let ext = file
+      .extension()
+      .unwrap_or_default()
+      .to_string_lossy()
+      .to_lowercase();
+
+    let base_name = if ext == "gpg" || ext == "asc" {
+      stem
+    } else {
+      format!(
+        "{}.decrypted",
+        file.file_name().unwrap_or_default().to_string_lossy()
+      )
+    };
+
+    let dir = file.parent().unwrap_or_else(|| std::path::Path::new("."));
+
+    let mut candidate = dir.join(&base_name);
+    let mut counter = 1u32;
+    while candidate.exists() {
+      candidate = dir.join(format!("{}_{}", base_name, counter));
+      counter += 1;
+    }
+
+    let mut cmd = Command::new("gpg");
+    cmd.arg("--homedir").arg(&gnupg);
+    cmd.arg("--batch");
+    cmd.arg("--yes");
+    cmd.arg("--output").arg(&candidate);
+    cmd.arg("--decrypt");
+    cmd.arg(file);
+
+    let out = cmd.output().context("failed to run gpg --decrypt")?;
+    if !out.status.success() {
+      let stderr = String::from_utf8_lossy(&out.stderr);
+      return Err(anyhow::anyhow!(
+        "Échec du déchiffrement de {} : {}",
+        file.file_name().unwrap_or_default().to_string_lossy(),
+        stderr.trim()
+      ));
+    }
+
+    results.push(
+      candidate
+        .file_name()
+        .unwrap_or_default()
+        .to_string_lossy()
+        .to_string(),
+    );
+  }
+
+  Ok(results)
+}

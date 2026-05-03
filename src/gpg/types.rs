@@ -1,5 +1,13 @@
 use chrono::Utc;
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum DecryptStatus {
+  CanDecrypt,
+  NoKey,
+  Checking,
+  Unknown,
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SubkeyType {
   Sign,

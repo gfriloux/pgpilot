@@ -46,6 +46,7 @@ impl App {
     self.view = view;
     self.selected = None;
     self.reset_pending_ops();
+    self.decrypt_form = crate::app::DecryptForm::default();
     if is_health {
       self.health_loading = true;
       let keys = self.keys.clone();
