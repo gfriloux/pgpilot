@@ -120,7 +120,7 @@ pub enum Message {
   ImportPastedKeyChanged(text_editor::Action),
   ImportFromPaste,
   ImportFromPasteDone(Result<(), String>),
-  HealthChecksLoaded(Vec<HealthCheck>),
+  HealthChecksLoaded(Result<Vec<HealthCheck>, String>),
   MoveToCard(String),
   MoveToCardCancel,
   MoveToCardExecute(String),
@@ -296,8 +296,13 @@ impl App {
         }
         Task::none()
       }
-      Message::HealthChecksLoaded(checks) => {
+      Message::HealthChecksLoaded(Ok(checks)) => {
         self.health_report = checks;
+        self.health_loading = false;
+        Task::none()
+      }
+      Message::HealthChecksLoaded(Err(e)) => {
+        self.status = Some((StatusKind::Error, format!("Erreur diagnostic : {e}")));
         self.health_loading = false;
         Task::none()
       }
@@ -394,7 +399,7 @@ impl App {
       let keys = self.keys.clone();
       return Task::perform(
         blocking_task(move || Ok(crate::gpg::run_all_checks(&keys))),
-        |r| Message::HealthChecksLoaded(r.unwrap_or_default()),
+        Message::HealthChecksLoaded,
       );
     }
     Task::none()
