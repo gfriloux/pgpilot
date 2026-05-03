@@ -1,7 +1,7 @@
 use iced::{
   font,
-  widget::{column, container, horizontal_rule, mouse_area, row, rule, scrollable, text, Column},
-  Background, Border, Element, Font, Length,
+  widget::{column, container, mouse_area, row, rule, scrollable, text, vertical_rule, Column},
+  Alignment, Background, Border, Element, Font, Length,
 };
 
 use crate::app::{App, KeyserverStatus, Message, View};
@@ -32,8 +32,7 @@ pub fn view(app: &App) -> Element<'_, Message> {
   let keys: Vec<_> = app
     .keys
     .iter()
-    .enumerate()
-    .filter(|(_, k)| match app.view {
+    .filter(|k| match app.view {
       View::MyKeys => k.has_secret,
       View::PublicKeys => !k.has_secret,
       _ => false,
@@ -57,11 +56,9 @@ pub fn view(app: &App) -> Element<'_, Message> {
 
   let header = container(
     row![
-      text("Nom").size(11).width(200).font(bold),
-      text("Email").size(11).width(250).font(bold),
-      text("ID").size(11).width(120).font(bold),
-      text("Expire").size(11).width(100).font(bold),
-      text("").size(11).width(60),
+      text("Nom / Email").size(11).width(Length::Fill).font(bold),
+      text("Expire").size(11).width(80).font(bold),
+      text("").size(11).width(56),
     ]
     .padding([0, 12])
     .spacing(8),
@@ -76,10 +73,9 @@ pub fn view(app: &App) -> Element<'_, Message> {
 
   let key_rows: Vec<Element<Message>> = keys
     .iter()
-    .map(|(_, key)| {
+    .map(|key| {
       let selected = app.selected.as_deref() == Some(key.fingerprint.as_str());
 
-      let name = key.name.clone();
       let expires = key.expires.as_deref().unwrap_or("—");
       let card_icon = if key.on_card { "\u{f283}" } else { "" };
 
@@ -102,24 +98,36 @@ pub fn view(app: &App) -> Element<'_, Message> {
         ("\u{f071}", theme::PEACH)
       };
 
-      let row_content = row![
-        text(name).size(13).width(200),
-        text(key.email.clone()).size(13).width(250),
-        text(key.key_id.clone()).size(12).width(140),
-        text(expires).size(12).width(100),
-        text(card_icon).font(theme::ICONS).size(12).width(20),
+      let name_col = column![
+        text(key.name.clone()).size(13),
+        text(key.email.clone()).size(11).style(|_: &iced::Theme| {
+          iced::widget::text::Style {
+            color: Some(theme::TEXT_MUTED),
+          }
+        }),
+      ]
+      .spacing(1)
+      .width(Length::Fill);
+
+      let icons = row![
+        text(card_icon).font(theme::ICONS).size(11).width(16),
         text(pub_icon)
           .font(theme::ICONS)
           .size(11)
           .color(pub_color)
-          .width(20),
+          .width(16),
         text(trust_icon)
           .font(theme::ICONS)
           .size(11)
           .color(trust_color)
-          .width(20),
+          .width(16),
       ]
-      .spacing(8);
+      .spacing(4)
+      .width(56);
+
+      let row_content = row![name_col, text(expires).size(11).width(80), icons,]
+        .spacing(8)
+        .align_y(Alignment::Center);
 
       let styled = container(row_content)
         .padding([7, 12])
@@ -148,59 +156,78 @@ pub fn view(app: &App) -> Element<'_, Message> {
 
   let list_scrollable = scrollable(Column::with_children(key_rows).spacing(2).padding([4, 8]));
 
-  let list_view = column![header, list_scrollable.height(Length::Fill)]
+  let list_panel = column![header, list_scrollable.height(Length::Fill)]
     .spacing(0)
-    .width(Length::Fill);
+    .width(Length::Fixed(320.0))
+    .height(Length::Fill);
 
   let selected_key = app
     .selected
     .as_ref()
     .and_then(|fp| app.keys.iter().find(|k| &k.fingerprint == fp));
 
-  if let Some(key) = selected_key {
+  let detail_panel: Element<'_, Message> = if let Some(key) = selected_key {
     let key_fp = &key.fingerprint;
-    column![
-      list_view.height(Length::Fill),
-      horizontal_rule(1).style(|_: &iced::Theme| rule::Style {
-        color: theme::BORDER,
-        width: 1,
-        radius: 0.0.into(),
-        fill_mode: rule::FillMode::Full,
-      }),
-      container(key_detail::view(
-        key,
-        ViewCtx {
-          card_connected: app.card_connected,
-          confirming: matches!(&app.pending, Some(crate::app::PendingOp::Migration(fp)) if fp == key_fp),
-          delete_confirming: matches!(&app.pending, Some(crate::app::PendingOp::Delete(fp)) if fp == key_fp),
-          export_pub_menu: matches!(&app.pending, Some(crate::app::PendingOp::ExportPubMenu(fp)) if fp == key_fp),
-          renewing_subkey: match &app.pending {
-            Some(crate::app::PendingOp::Renewal(r)) if r.key_fp == *key_fp => {
-              Some((r.subkey_fp.clone(), r.expiry.clone()))
-            }
-            _ => None,
-          },
-          publish_confirming: match &app.pending {
-            Some(crate::app::PendingOp::Publish(ks)) => Some(ks.clone()),
-            _ => None,
-          },
-          keyserver_status: app
-            .keyserver_statuses
-            .get(key_fp)
-            .copied()
-            .unwrap_or_default(),
+    container(key_detail::view(
+      key,
+      ViewCtx {
+        card_connected: app.card_connected,
+        confirming: matches!(&app.pending, Some(crate::app::PendingOp::Migration(fp)) if fp == key_fp),
+        delete_confirming: matches!(&app.pending, Some(crate::app::PendingOp::Delete(fp)) if fp == key_fp),
+        export_pub_menu: matches!(&app.pending, Some(crate::app::PendingOp::ExportPubMenu(fp)) if fp == key_fp),
+        renewing_subkey: match &app.pending {
+          Some(crate::app::PendingOp::Renewal(r)) if r.key_fp == *key_fp => {
+            Some((r.subkey_fp.clone(), r.expiry.clone()))
+          }
+          _ => None,
         },
-      ))
-      .width(Length::Fill)
-      .style(|_: &iced::Theme| container::Style {
-        background: Some(Background::Color(theme::DETAIL_BG)),
-        ..Default::default()
-      }),
-    ]
+        publish_confirming: match &app.pending {
+          Some(crate::app::PendingOp::Publish(ks)) => Some(ks.clone()),
+          _ => None,
+        },
+        keyserver_status: app
+          .keyserver_statuses
+          .get(key_fp)
+          .copied()
+          .unwrap_or_default(),
+      },
+    ))
     .width(Length::Fill)
     .height(Length::Fill)
+    .style(|_: &iced::Theme| container::Style {
+      background: Some(Background::Color(theme::DETAIL_BG)),
+      ..Default::default()
+    })
     .into()
   } else {
-    list_view.height(Length::Fill).into()
-  }
+    container(
+      text("Sélectionnez une clef pour voir les détails.")
+        .size(13)
+        .style(|_: &iced::Theme| iced::widget::text::Style {
+          color: Some(theme::TEXT_MUTED),
+        }),
+    )
+    .padding(24)
+    .width(Length::Fill)
+    .height(Length::Fill)
+    .style(|_: &iced::Theme| container::Style {
+      background: Some(Background::Color(theme::DETAIL_BG)),
+      ..Default::default()
+    })
+    .into()
+  };
+
+  row![
+    list_panel,
+    vertical_rule(1).style(|_: &iced::Theme| rule::Style {
+      color: theme::BORDER,
+      width: 1,
+      radius: 0.0.into(),
+      fill_mode: rule::FillMode::Full,
+    }),
+    detail_panel,
+  ]
+  .width(Length::Fill)
+  .height(Length::Fill)
+  .into()
 }

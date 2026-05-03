@@ -75,18 +75,19 @@ pub fn view(key: &KeyInfo, ctx: ViewCtx) -> Element<'_, Message> {
   .into()
 }
 
-fn action_buttons(
-  key: &KeyInfo,
+fn action_buttons<'a>(
+  key: &'a KeyInfo,
   keyserver_status: KeyserverStatus,
   card_connected: bool,
-) -> Vec<Element<'_, Message>> {
-  let icon_row = |icon: &'static str, label: &'static str| {
-    row![text(icon).font(theme::ICONS).size(12), text(label).size(12),]
+) -> Element<'a, Message> {
+  let icon_btn = |icon: &'static str, label: &'static str| {
+    row![text(icon).font(theme::ICONS).size(12), text(label).size(12)]
       .spacing(6)
       .align_y(Alignment::Center)
   };
 
-  let mut btns: Vec<Element<Message>> = vec![button(icon_row("\u{f019}", "Exporter pub"))
+  // Ligne 1 : actions non-destructives (export + backup)
+  let mut row1: Vec<Element<Message>> = vec![button(icon_btn("\u{f019}", "Exporter pub"))
     .on_press(Message::ExportPublicKeyMenu(key.fingerprint.clone()))
     .style(|_: &iced::Theme, status: button::Status| button::Style {
       background: Some(Background::Color(match status {
@@ -104,8 +105,8 @@ fn action_buttons(
     .into()];
 
   if key.has_secret {
-    btns.push(
-      button(icon_row("\u{f0c7}", "Sauvegarder"))
+    row1.push(
+      button(icon_btn("\u{f0c7}", "Sauvegarder"))
         .on_press(Message::BackupKey(key.fingerprint.clone()))
         .style(|_: &iced::Theme, status: button::Status| button::Style {
           background: Some(Background::Color(match status {
@@ -122,39 +123,44 @@ fn action_buttons(
         })
         .into(),
     );
+  }
 
-    if !key.on_card {
-      let migrate_btn = button(icon_row("\u{f287}", "Migrer vers YubiKey")).style(
-        |_: &iced::Theme, status: button::Status| button::Style {
-          background: Some(Background::Color(match status {
-            button::Status::Hovered | button::Status::Pressed => theme::ACCENT_HOVER,
-            button::Status::Disabled => theme::DISABLED_BG,
-            _ => theme::ACCENT,
-          })),
-          text_color: match status {
-            button::Status::Disabled => theme::TEXT_MUTED,
-            _ => theme::TEXT_ON_ACCENT,
-          },
-          border: Border {
-            color: Color::TRANSPARENT,
-            width: 0.0,
-            radius: 6.0.into(),
-          },
-          shadow: Default::default(),
+  // Ligne 2 : actions spéciales + suppression
+  let mut row2: Vec<Element<Message>> = vec![];
+
+  if key.has_secret && !key.on_card {
+    let migrate_btn = button(icon_btn("\u{f287}", "Migrer vers YubiKey")).style(
+      |_: &iced::Theme, status: button::Status| button::Style {
+        background: Some(Background::Color(match status {
+          button::Status::Hovered | button::Status::Pressed => theme::ACCENT_HOVER,
+          button::Status::Disabled => theme::DISABLED_BG,
+          _ => theme::ACCENT,
+        })),
+        text_color: match status {
+          button::Status::Disabled => theme::TEXT_MUTED,
+          _ => theme::TEXT_ON_ACCENT,
         },
-      );
-      let migrate_btn = if card_connected {
+        border: Border {
+          color: Color::TRANSPARENT,
+          width: 0.0,
+          radius: 6.0.into(),
+        },
+        shadow: Default::default(),
+      },
+    );
+    row2.push(
+      if card_connected {
         migrate_btn.on_press(Message::MoveToCard(key.fingerprint.clone()))
       } else {
         migrate_btn
-      };
-      btns.push(migrate_btn.into());
-    }
+      }
+      .into(),
+    );
   }
 
   if keyserver_status != KeyserverStatus::Published {
-    btns.push(
-      button(icon_row("\u{f1d8}", "Publier"))
+    row2.push(
+      button(icon_btn("\u{f1d8}", "Publier"))
         .on_press(Message::PublishKey)
         .style(|_: &iced::Theme, status: button::Status| button::Style {
           background: Some(Background::Color(match status {
@@ -173,8 +179,8 @@ fn action_buttons(
     );
   }
 
-  btns.push(
-    button(icon_row("\u{f1f8}", "Supprimer"))
+  row2.push(
+    button(icon_btn("\u{f1f8}", "Supprimer"))
       .on_press(Message::DeleteKey(key.fingerprint.clone()))
       .style(|_: &iced::Theme, status: button::Status| button::Style {
         background: Some(Background::Color(match status {
@@ -192,7 +198,12 @@ fn action_buttons(
       .into(),
   );
 
-  btns
+  column![
+    Row::with_children(row1).spacing(8),
+    Row::with_children(row2).spacing(8),
+  ]
+  .spacing(8)
+  .into()
 }
 
 fn keyserver_badge(status: KeyserverStatus, fingerprint: &str) -> Element<'_, Message> {
@@ -279,9 +290,10 @@ fn migration_modal(key: &KeyInfo, bold: Font) -> Element<'_, Message> {
          les données chiffrées seront irrécupérables.",
       )
       .size(12),
-      row![
+      column![
         button(icon_row("\u{f0c7}", "Sauvegarder d'abord"))
           .on_press(Message::BackupKey(key.fingerprint.clone()))
+          .width(Length::Fill)
           .style(|_: &iced::Theme, status: button::Status| button::Style {
             background: Some(Background::Color(match status {
               button::Status::Hovered | button::Status::Pressed => theme::ACCENT_HOVER,
@@ -297,6 +309,7 @@ fn migration_modal(key: &KeyInfo, bold: Font) -> Element<'_, Message> {
           }),
         button(icon_row("\u{f00c}", "J'ai un backup \u{2192} Continuer"))
           .on_press(Message::MoveToCardExecute(key.fingerprint.clone()))
+          .width(Length::Fill)
           .style(|_: &iced::Theme, status: button::Status| button::Style {
             background: Some(Background::Color(match status {
               button::Status::Hovered | button::Status::Pressed => Color {
@@ -317,6 +330,7 @@ fn migration_modal(key: &KeyInfo, bold: Font) -> Element<'_, Message> {
           }),
         button(icon_row("\u{f00d}", "Annuler"))
           .on_press(Message::MoveToCardCancel)
+          .width(Length::Fill)
           .style(|_: &iced::Theme, status: button::Status| button::Style {
             background: Some(Background::Color(match status {
               button::Status::Hovered | button::Status::Pressed => Color {
@@ -334,7 +348,7 @@ fn migration_modal(key: &KeyInfo, bold: Font) -> Element<'_, Message> {
             shadow: Default::default(),
           }),
       ]
-      .spacing(8),
+      .spacing(6),
     ]
     .spacing(8),
   )
@@ -381,6 +395,7 @@ fn delete_modal(key: &KeyInfo, bold: Font) -> Element<'_, Message> {
     del_btns.push(
       button(icon_row("\u{f019}", "Exporter d'abord"))
         .on_press(Message::BackupKey(key.fingerprint.clone()))
+        .width(Length::Fill)
         .style(|_: &iced::Theme, status: button::Status| button::Style {
           background: Some(Background::Color(match status {
             button::Status::Hovered | button::Status::Pressed => theme::ACCENT_HOVER,
@@ -400,6 +415,7 @@ fn delete_modal(key: &KeyInfo, bold: Font) -> Element<'_, Message> {
   del_btns.push(
     button(icon_row("\u{f1f8}", "Confirmer la suppression"))
       .on_press(Message::DeleteKeyExecute(key.fingerprint.clone()))
+      .width(Length::Fill)
       .style(|_: &iced::Theme, status: button::Status| button::Style {
         background: Some(Background::Color(match status {
           button::Status::Hovered | button::Status::Pressed => theme::DESTRUCTIVE_HOVER_BG,
@@ -418,6 +434,7 @@ fn delete_modal(key: &KeyInfo, bold: Font) -> Element<'_, Message> {
   del_btns.push(
     button(icon_row("\u{f00d}", "Annuler"))
       .on_press(Message::DeleteKeyCancel)
+      .width(Length::Fill)
       .style(|_: &iced::Theme, status: button::Status| button::Style {
         background: Some(Background::Color(match status {
           button::Status::Hovered | button::Status::Pressed => Color {
@@ -441,7 +458,7 @@ fn delete_modal(key: &KeyInfo, bold: Font) -> Element<'_, Message> {
     column![
       text(warn_title).size(12).font(bold),
       text(warn_body).size(12),
-      Row::with_children(del_btns).spacing(8),
+      Column::with_children(del_btns).spacing(6),
     ]
     .spacing(8),
   )
@@ -538,9 +555,10 @@ fn publish_modal(key: &KeyInfo, selected_ks: Keyserver, bold: Font) -> Element<'
           text_color: Some(theme::TEXT_SECONDARY),
           ..Default::default()
         }),
-      row![
+      column![
         button(icon_row("\u{f1d8}", "Publier"))
           .on_press(Message::PublishKeyExecute(key.fingerprint.clone()))
+          .width(Length::Fill)
           .style(|_: &iced::Theme, status: button::Status| button::Style {
             background: Some(Background::Color(match status {
               button::Status::Hovered | button::Status::Pressed => theme::ACCENT_HOVER,
@@ -556,6 +574,7 @@ fn publish_modal(key: &KeyInfo, selected_ks: Keyserver, bold: Font) -> Element<'
           }),
         button(icon_row("\u{f00d}", "Annuler"))
           .on_press(Message::PublishKeyCancel)
+          .width(Length::Fill)
           .style(|_: &iced::Theme, status: button::Status| button::Style {
             background: Some(Background::Color(match status {
               button::Status::Hovered | button::Status::Pressed => Color {
@@ -573,7 +592,7 @@ fn publish_modal(key: &KeyInfo, selected_ks: Keyserver, bold: Font) -> Element<'
             shadow: Default::default(),
           }),
       ]
-      .spacing(8),
+      .spacing(6),
     ]
     .spacing(10),
   )
@@ -700,11 +719,15 @@ fn left_column_items(
 
   let mut items: Vec<Element<Message>> = vec![
     container(
-      row![
+      column![
         text(&key.name).size(15).font(bold),
-        text(format!("<{}>", key.email)).size(13),
+        text(key.email.as_str()).size(12).style(|_: &iced::Theme| {
+          iced::widget::text::Style {
+            color: Some(theme::TEXT_SECONDARY),
+          }
+        }),
       ]
-      .spacing(6),
+      .spacing(2),
     )
     .style(|_: &iced::Theme| container::Style {
       text_color: Some(theme::TEXT_STRONG),
@@ -857,11 +880,7 @@ fn left_column_items(
   } else if export_pub_menu {
     items.push(export_pub_modal(key, bold));
   } else {
-    items.push(
-      Row::with_children(action_buttons(key, keyserver_status, card_connected))
-        .spacing(8)
-        .into(),
-    );
+    items.push(action_buttons(key, keyserver_status, card_connected));
   }
 
   Column::with_children(items)
