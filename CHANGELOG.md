@@ -3,6 +3,31 @@
 All notable changes to pgpilot are documented here.
 Releases follow [Semantic Versioning](https://semver.org/).
 
+## [0.4.0] — 2026-05-03
+
+### Bug Fixes
+
+- **gpg**: prevent output overwrite and add collision counters ([`918a339`](https://github.com/gfriloux/pgpilot/commit/918a339c996f4672a3109cbfe7c4e4539ff38a2d))
+- **errors**: sanitize gpg stderr and truncate long error messages ([`25c10a0`](https://github.com/gfriloux/pgpilot/commit/25c10a05dbd96b91baddf8a6fc0a0473b50159ac))
+- **gpg**: rewrite revoke_subkey_at_pos with token-driven dialogue ([`00fa1d4`](https://github.com/gfriloux/pgpilot/commit/00fa1d498aa7e876995bbed2474392d9e6bd6466))
+- **gpg**: rollback rotate_subkey keyring if revocation fails ([`9506609`](https://github.com/gfriloux/pgpilot/commit/9506609b803d628c36c21feaa98760e03d3bebf2))
+- **gpg**: add SAFETY comment on NullPolicy unsafe block ([`0d194c4`](https://github.com/gfriloux/pgpilot/commit/0d194c44217f059f73742ab5c6ead3744801d077))
+
+### Documentation
+
+- **security**: add threat model (THREAT_MODEL.md) ([`0f33eb1`](https://github.com/gfriloux/pgpilot/commit/0f33eb12e9c5577a0ade383afeda9c0bf10e45ea))
+- **readme**: update roadmap ([`4a6fde7`](https://github.com/gfriloux/pgpilot/commit/4a6fde7d3b2c89272d6768abfc619c4169f7f723))
+
+### Features
+
+- **all**: bump version to v0.4.0 ([`6ae7ec9`](https://github.com/gfriloux/pgpilot/commit/6ae7ec972e63341d067bdc014d7ee7de0f3df45d))
+- **verify**: show signer trust level in signature result ([`968256d`](https://github.com/gfriloux/pgpilot/commit/968256d55e9fbe1fe4800d3e0f9df182f7769ddb))
+- **all**: enforce https-only, redirect cap, and 1MiB body limit ([`4916fa2`](https://github.com/gfriloux/pgpilot/commit/4916fa2272521f9abbc3ccc2b28845269dca4bac))
+- **security**: validate fingerprints and keyserver queries at gpg layer ([`74c65cc`](https://github.com/gfriloux/pgpilot/commit/74c65ccad34db85e24ee458c54c7f79bc6c7c32c))
+
+### Refactoring
+
+- **gpg**: isolate env and add --homedir to all gpg calls ([`f2b355b`](https://github.com/gfriloux/pgpilot/commit/f2b355bdb5f116a58733af22222e8a64cdc5eb85))
 ## [0.3.0] — 2026-05-03
 
 ### Bug Fixes
