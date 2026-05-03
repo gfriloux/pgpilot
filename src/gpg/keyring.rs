@@ -680,16 +680,27 @@ pub fn encrypt_files(
   force_trust: bool,
 ) -> Result<Vec<String>> {
   let gnupg = super::gnupg_dir();
-  let ext = if armor { "asc" } else { "gpg" };
+  let ext_str = if armor { "asc" } else { "gpg" };
   let mut results = Vec::new();
 
   for file in files {
-    let output = PathBuf::from(format!("{}.{}", file.display(), ext));
+    let orig_ext = file.extension().and_then(|e| e.to_str()).unwrap_or("");
+    let new_ext = if orig_ext.is_empty() {
+      ext_str.to_string()
+    } else {
+      format!("{orig_ext}.{ext_str}")
+    };
+    let mut output = file.with_extension(&new_ext);
+    let mut counter = 1u32;
+    while output.exists() {
+      let stem = file.file_stem().and_then(|s| s.to_str()).unwrap_or("file");
+      output = file.with_file_name(format!("{stem}_{counter}.{new_ext}"));
+      counter += 1;
+    }
 
     let mut cmd = Command::new("gpg");
     cmd.arg("--homedir").arg(&gnupg);
     cmd.arg("--batch");
-    cmd.arg("--yes");
     if force_trust {
       cmd.arg("--trust-model").arg("always");
     }
@@ -701,6 +712,7 @@ pub fn encrypt_files(
       cmd.arg("--recipient").arg(fp);
     }
     cmd.arg("--output").arg(&output);
+    cmd.arg("--");
     cmd.arg(file);
 
     let out = cmd.output().context("failed to run gpg --encrypt")?;
@@ -727,15 +739,22 @@ pub fn encrypt_files(
 
 pub fn sign_file(file: PathBuf, signer_fp: &str) -> Result<PathBuf> {
   let gnupg = super::gnupg_dir();
-  let sig_path = PathBuf::from(format!("{}.sig", file.display()));
+  let mut sig_path = file.with_extension("sig");
+  let mut counter = 1u32;
+  while sig_path.exists() {
+    let stem = file.file_stem().and_then(|s| s.to_str()).unwrap_or("file");
+    sig_path = file.with_file_name(format!("{stem}_{counter}.sig"));
+    counter += 1;
+  }
 
   let out = Command::new("gpg")
     .arg("--homedir")
     .arg(&gnupg)
-    .args(["--batch", "--yes", "--detach-sign", "--armor"])
+    .args(["--batch", "--detach-sign", "--armor"])
     .args(["--local-user", signer_fp])
     .arg("--output")
     .arg(&sig_path)
+    .arg("--")
     .arg(&file)
     .output()
     .context("failed to run gpg --detach-sign")?;
