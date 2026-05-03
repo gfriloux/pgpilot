@@ -15,6 +15,30 @@ use sequoia_openpgp::{
 use super::card::card_status;
 use super::types::{format_date, KeyExpiry, KeyInfo, SubkeyInfo, TrustLevel};
 
+const MAX_RESPONSE_BYTES: u64 = 1 << 20; // 1 MiB
+
+fn safe_get(url: &str) -> Result<String> {
+  if !url.starts_with("https://") {
+    anyhow::bail!("URL non sécurisée : seul https:// est autorisé");
+  }
+  let agent = ureq::Agent::config_builder()
+    .max_redirects(3)
+    .max_redirects_will_error(true)
+    .build()
+    .new_agent();
+  let mut resp = agent
+    .get(url)
+    .header("User-Agent", "pgpilot/1.0")
+    .call()
+    .map_err(|e| anyhow::anyhow!("{e}"))?;
+  resp
+    .body_mut()
+    .with_config()
+    .limit(MAX_RESPONSE_BYTES)
+    .read_to_string()
+    .map_err(|e| anyhow::anyhow!("{e}"))
+}
+
 fn expiry_to_str(expiry: &KeyExpiry) -> &'static str {
   match expiry {
     KeyExpiry::OneYear => "1y",
@@ -126,8 +150,15 @@ pub fn export_public_key_armored(fingerprint: &str) -> Result<String> {
 }
 
 pub fn upload_public_key(fingerprint: &str) -> Result<String> {
+  const PASTE_URL: &str = "https://paste.rs/";
   let armored = export_public_key_armored(fingerprint)?;
-  let mut resp = ureq::post("https://paste.rs/")
+  let agent = ureq::Agent::config_builder()
+    .max_redirects(3)
+    .max_redirects_will_error(true)
+    .build()
+    .new_agent();
+  let mut resp = agent
+    .post(PASTE_URL)
     .header("Content-Type", "text/plain")
     .header("User-Agent", "pgpilot/1.0")
     .send(&armored)
@@ -139,6 +170,8 @@ pub fn upload_public_key(fingerprint: &str) -> Result<String> {
     })?;
   let url = resp
     .body_mut()
+    .with_config()
+    .limit(MAX_RESPONSE_BYTES)
     .read_to_string()
     .context("impossible de lire la réponse")?
     .trim()
@@ -215,12 +248,9 @@ pub fn check_keyserver(fingerprint: &str) -> Result<(String, bool)> {
     "https://keys.openpgp.org/vks/v1/by-fingerprint/{}",
     fingerprint.to_uppercase()
   );
-  match ureq::get(&url).call() {
+  match safe_get(&url) {
     Ok(_) => Ok((fingerprint.to_string(), true)),
-    Err(ureq::Error::StatusCode(404)) => Ok((fingerprint.to_string(), false)),
-    Err(e) => Err(anyhow::anyhow!(
-      "Impossible de joindre keys.openpgp.org : {e}"
-    )),
+    Err(_) => Ok((fingerprint.to_string(), false)),
   }
 }
 
@@ -392,14 +422,7 @@ pub fn import_key_from_text(content: &str) -> Result<()> {
 }
 
 pub fn import_key_from_url(url: &str) -> Result<()> {
-  let mut resp = ureq::get(url)
-    .header("User-Agent", "pgpilot/1.0")
-    .call()
-    .map_err(|e| anyhow::anyhow!("Impossible de charger l'URL : {e}"))?;
-  let content = resp
-    .body_mut()
-    .read_to_string()
-    .context("impossible de lire le contenu")?;
+  let content = safe_get(url).map_err(|e| anyhow::anyhow!("Impossible de charger l'URL : {e}"))?;
   import_key_from_text(&content)
 }
 
@@ -407,20 +430,8 @@ pub fn import_key_from_keyserver(query: &str, keyserver_url: &str) -> Result<()>
   if query.contains('@') {
     let encoded = query.replace('@', "%40");
     let url = format!("https://{keyserver_url}/pks/lookup?op=get&search={encoded}");
-    let mut resp = ureq::get(&url)
-      .header("User-Agent", "pgpilot/1.0")
-      .call()
-      .map_err(|e| match e {
-        ureq::Error::StatusCode(404) => {
-          anyhow::anyhow!("Aucune clef trouvée pour '{query}'")
-        }
-        ureq::Error::StatusCode(code) => anyhow::anyhow!("Keyserver : HTTP {code}"),
-        other => anyhow::anyhow!("Impossible de joindre le keyserver : {other}"),
-      })?;
-    let content = resp
-      .body_mut()
-      .read_to_string()
-      .context("impossible de lire la réponse")?;
+    let content =
+      safe_get(&url).map_err(|e| anyhow::anyhow!("Impossible de joindre le keyserver : {e}"))?;
     import_key_from_text(&content)
   } else {
     let output = Command::new("gpg")
