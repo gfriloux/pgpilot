@@ -1,5 +1,5 @@
 use std::collections::HashSet;
-use std::io::Write;
+use std::io::{BufRead, BufReader, Write};
 use std::path::PathBuf;
 use std::process::Stdio;
 
@@ -350,30 +350,103 @@ fn subkey_position(master_fp: &str, subkey_fp: &str) -> Result<usize> {
 
 fn revoke_subkey_at_pos(master_fp: &str, pos: usize) -> Result<()> {
   let homedir = gnupg_dir()?;
-  let cmds = format!("key {pos}\nrevkey\ny\n2\n\ny\nsave\n");
 
   let mut child = gpg_command(&homedir)
-    .args(["--no-tty", "--command-fd", "0", "--edit-key", master_fp])
+    .args([
+      "--no-tty",
+      "--status-fd",
+      "2",
+      "--command-fd",
+      "0",
+      "--edit-key",
+      master_fp,
+    ])
     .stdin(Stdio::piped())
     .stdout(Stdio::piped())
     .stderr(Stdio::piped())
     .spawn()
     .context("failed to spawn gpg --edit-key")?;
 
-  {
-    let stdin = child.stdin.as_mut().context("failed to open gpg stdin")?;
-    stdin
-      .write_all(cmds.as_bytes())
-      .context("failed to write to gpg stdin")?;
+  let mut stdin = child.stdin.take().context("failed to open gpg stdin")?;
+  let stderr = child.stderr.take().context("failed to open gpg stderr")?;
+  let reader = BufReader::new(stderr);
+
+  // prompt_count tracks how many times GET_LINE keyedit.prompt has been seen:
+  //   0 → respond with "key {pos}"
+  //   1 → respond with "revkey"
+  //   2 → respond with "save"
+  let mut prompt_count: usize = 0;
+
+  for raw in reader.lines() {
+    let line = raw.context("failed to read gpg stderr")?;
+
+    if !line.contains("[GNUPG:]") {
+      continue;
+    }
+
+    if line.contains("KEY_CONSIDERED") || line.contains("GOT_IT") {
+      continue;
+    }
+
+    if line.contains("GET_LINE keyedit.prompt") {
+      let cmd = match prompt_count {
+        0 => format!("key {pos}\n"),
+        1 => "revkey\n".to_string(),
+        _ => "save\n".to_string(),
+      };
+      stdin
+        .write_all(cmd.as_bytes())
+        .context("failed to write to gpg stdin")?;
+      prompt_count += 1;
+      if prompt_count > 2 {
+        break;
+      }
+      continue;
+    }
+
+    if line.contains("GET_BOOL keyedit.revoke.subkey") {
+      stdin
+        .write_all(b"y\n")
+        .context("failed to write to gpg stdin")?;
+      continue;
+    }
+
+    if line.contains("GET_LINE ask_revocation_reason.code") {
+      stdin
+        .write_all(b"2\n")
+        .context("failed to write to gpg stdin")?;
+      continue;
+    }
+
+    if line.contains("GET_LINE ask_revocation_reason.text") {
+      stdin
+        .write_all(b"\n")
+        .context("failed to write to gpg stdin")?;
+      continue;
+    }
+
+    if line.contains("GET_BOOL ask_revocation_reason.okay") {
+      stdin
+        .write_all(b"y\n")
+        .context("failed to write to gpg stdin")?;
+      continue;
+    }
+
+    if line.contains("GET_") {
+      let _ = stdin.write_all(b"quit\n");
+      drop(stdin);
+      let _ = child.wait();
+      return Err(anyhow::anyhow!(
+        "Révocation échouée : token gpg inattendu : {line}"
+      ));
+    }
   }
 
-  let output = child.wait_with_output().context("failed to wait for gpg")?;
-
-  if !output.status.success() {
-    let stderr = String::from_utf8_lossy(&output.stderr);
+  drop(stdin);
+  let status = child.wait().context("failed to wait for gpg")?;
+  if !status.success() {
     return Err(anyhow::anyhow!(
-      "Révocation échouée : {}",
-      sanitize_gpg_stderr(&stderr)
+      "Révocation échouée : gpg a terminé avec un code d'erreur"
     ));
   }
   Ok(())
