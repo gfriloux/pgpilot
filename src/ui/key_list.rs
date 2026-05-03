@@ -157,17 +157,19 @@ pub fn view(app: &App) -> Element<'_, Message> {
         key,
         ViewCtx {
           card_connected: app.card_connected,
-          confirming: app.pending_migration.as_deref() == Some(key_fp),
-          delete_confirming: app.pending_delete.as_deref() == Some(key_fp),
-          export_pub_menu: app.pending_export_pub.as_deref() == Some(key_fp),
-          renewing_subkey: app.pending_renewal.as_ref().and_then(|r| {
-            if r.key_fp == *key_fp {
+          confirming: matches!(&app.pending, Some(crate::app::PendingOp::Migration(fp)) if fp == key_fp),
+          delete_confirming: matches!(&app.pending, Some(crate::app::PendingOp::Delete(fp)) if fp == key_fp),
+          export_pub_menu: matches!(&app.pending, Some(crate::app::PendingOp::ExportPubMenu(fp)) if fp == key_fp),
+          renewing_subkey: match &app.pending {
+            Some(crate::app::PendingOp::Renewal(r)) if r.key_fp == *key_fp => {
               Some((r.subkey_fp.clone(), r.expiry.clone()))
-            } else {
-              None
             }
-          }),
-          publish_confirming: app.pending_publish.clone(),
+            _ => None,
+          },
+          publish_confirming: match &app.pending {
+            Some(crate::app::PendingOp::Publish(ks)) => Some(ks.clone()),
+            _ => None,
+          },
           keyserver_status: app
             .keyserver_statuses
             .get(key_fp)

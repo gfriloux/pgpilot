@@ -54,10 +54,20 @@ pub enum KeyserverStatus {
   NotPublished,
 }
 
+#[derive(Debug, Clone)]
 pub struct PendingRenewal {
   pub key_fp: String,
   pub subkey_fp: String,
   pub expiry: KeyExpiry,
+}
+
+#[derive(Debug, Clone)]
+pub enum PendingOp {
+  Migration(String),
+  Delete(String),
+  Renewal(PendingRenewal),
+  ExportPubMenu(String),
+  Publish(Keyserver),
 }
 
 #[derive(Debug, Clone)]
@@ -75,11 +85,7 @@ pub struct App {
   pub status: Option<(StatusKind, String)>,
   pub loading: bool,
   pub card_connected: bool,
-  pub pending_migration: Option<String>,
-  pub pending_delete: Option<String>,
-  pub pending_renewal: Option<PendingRenewal>,
-  pub pending_export_pub: Option<String>,
-  pub pending_publish: Option<Keyserver>,
+  pub pending: Option<PendingOp>,
   pub keyserver_statuses: HashMap<String, KeyserverStatus>,
   pub create_form: CreateKeyForm,
   pub import_form: ImportForm,
@@ -212,11 +218,7 @@ impl App {
 
   fn reset_pending_ops(&mut self) {
     self.status = None;
-    self.pending_migration = None;
-    self.pending_delete = None;
-    self.pending_renewal = None;
-    self.pending_export_pub = None;
-    self.pending_publish = None;
+    self.pending = None;
   }
 
   fn key_by_fp(&self, fp: &str) -> Option<&KeyInfo> {
@@ -271,27 +273,27 @@ impl App {
         Task::none()
       }
       Message::PublishKeyserverChanged(ks) => {
-        self.pending_publish = Some(ks);
+        self.pending = Some(PendingOp::Publish(ks));
         Task::none()
       }
       Message::ExportPublicKeyMenuCancel => {
-        self.pending_export_pub = None;
+        self.pending = None;
         Task::none()
       }
       Message::MoveToCardCancel => {
-        self.pending_migration = None;
+        self.pending = None;
         Task::none()
       }
       Message::DeleteKeyCancel => {
-        self.pending_delete = None;
+        self.pending = None;
         Task::none()
       }
       Message::RenewSubkeyCancel => {
-        self.pending_renewal = None;
+        self.pending = None;
         Task::none()
       }
       Message::RenewSubkeyExpiryChanged(e) => {
-        if let Some(ref mut r) = self.pending_renewal {
+        if let Some(PendingOp::Renewal(ref mut r)) = self.pending {
           r.expiry = e;
         }
         Task::none()
@@ -454,12 +456,12 @@ impl App {
 
   fn on_export_pub_menu(&mut self, fp: String) -> Task<Message> {
     self.reset_pending_ops();
-    self.pending_export_pub = Some(fp);
+    self.pending = Some(PendingOp::ExportPubMenu(fp));
     Task::none()
   }
 
   fn on_export_public(&mut self, fp: String) -> Task<Message> {
-    self.pending_export_pub = None;
+    self.pending = None;
     let name = self
       .key_by_fp(&fp)
       .map(|k| k.name.replace(' ', "_"))
@@ -471,7 +473,7 @@ impl App {
   }
 
   fn on_export_clipboard(&mut self, fp: String) -> Task<Message> {
-    self.pending_export_pub = None;
+    self.pending = None;
     Task::perform(
       blocking_task(move || crate::gpg::export_public_key_armored(&fp)),
       Message::ExportPublicKeyClipboardDone,
@@ -495,7 +497,7 @@ impl App {
   }
 
   fn on_export_upload(&mut self, fp: String) -> Task<Message> {
-    self.pending_export_pub = None;
+    self.pending = None;
     Task::perform(
       blocking_task(move || crate::gpg::upload_public_key(&fp)),
       Message::ExportPublicKeyUploadDone,
@@ -701,12 +703,12 @@ impl App {
 
   fn on_move_to_card(&mut self, fp: String) -> Task<Message> {
     self.reset_pending_ops();
-    self.pending_migration = Some(fp);
+    self.pending = Some(PendingOp::Migration(fp));
     Task::none()
   }
 
   fn on_move_to_card_execute(&mut self, fp: String) -> Task<Message> {
-    self.pending_migration = None;
+    self.pending = None;
     Task::perform(
       blocking_task(move || crate::gpg::move_key_to_card(&fp)),
       Message::MoveToCardDone,
@@ -732,12 +734,12 @@ impl App {
 
   fn on_delete_key(&mut self, fp: String) -> Task<Message> {
     self.reset_pending_ops();
-    self.pending_delete = Some(fp);
+    self.pending = Some(PendingOp::Delete(fp));
     Task::none()
   }
 
   fn on_delete_key_execute(&mut self, fp: String) -> Task<Message> {
-    self.pending_delete = None;
+    self.pending = None;
     let Some(key) = self.key_by_fp(&fp) else {
       return Task::none();
     };
@@ -774,16 +776,16 @@ impl App {
 
   fn on_renew_subkey(&mut self, key_fp: String, subkey_fp: String) -> Task<Message> {
     self.reset_pending_ops();
-    self.pending_renewal = Some(PendingRenewal {
+    self.pending = Some(PendingOp::Renewal(PendingRenewal {
       key_fp,
       subkey_fp,
       expiry: KeyExpiry::TwoYears,
-    });
+    }));
     Task::none()
   }
 
   fn on_renew_subkey_execute(&mut self) -> Task<Message> {
-    if let Some(renewal) = self.pending_renewal.take() {
+    if let Some(PendingOp::Renewal(renewal)) = self.pending.take() {
       let master_fp = renewal.key_fp;
       let subkey_fp = renewal.subkey_fp;
       let expiry = renewal.expiry;
@@ -855,11 +857,10 @@ impl App {
   }
 
   fn on_rotate_subkey_execute(&mut self, key_fp: String, subkey_fp: String) -> Task<Message> {
-    let expiry = self
-      .pending_renewal
-      .take()
-      .map(|r| r.expiry)
-      .unwrap_or_default();
+    let expiry = match self.pending.take() {
+      Some(PendingOp::Renewal(r)) => r.expiry,
+      _ => KeyExpiry::default(),
+    };
     let Some(key) = self.key_by_fp(&key_fp) else {
       return Task::none();
     };
@@ -910,12 +911,15 @@ impl App {
 
   fn on_publish_key(&mut self) -> Task<Message> {
     self.reset_pending_ops();
-    self.pending_publish = Some(Keyserver::default());
+    self.pending = Some(PendingOp::Publish(Keyserver::default()));
     Task::none()
   }
 
   fn on_publish_key_execute(&mut self, fp: String) -> Task<Message> {
-    let keyserver = self.pending_publish.take().unwrap_or_default();
+    let keyserver = match self.pending.take() {
+      Some(PendingOp::Publish(ks)) => ks,
+      _ => Keyserver::default(),
+    };
     let url = keyserver.url().to_string();
     Task::perform(
       blocking_task(move || crate::gpg::publish_key(&fp, &url)),
@@ -924,8 +928,7 @@ impl App {
   }
 
   fn on_publish_key_cancel(&mut self) -> Task<Message> {
-    self.pending_export_pub = None;
-    self.pending_publish = None;
+    self.pending = None;
     Task::none()
   }
 
