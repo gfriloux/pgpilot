@@ -5,9 +5,10 @@ use std::process::{Command, Stdio};
 
 use anyhow::{Context, Result};
 use sequoia_openpgp::{
-  cert::CertParser,
+  cert::{amalgamation::ValidAmalgamation, CertParser},
   parse::Parse,
   policy::{NullPolicy, StandardPolicy},
+  types::RevocationStatus,
   Cert,
 };
 
@@ -270,7 +271,7 @@ fn subkey_position(master_fp: &str, subkey_fp: &str) -> Result<usize> {
 }
 
 fn revoke_subkey_at_pos(master_fp: &str, pos: usize) -> Result<()> {
-  let cmds = format!("key {pos}\nrevkey\n2\n\ny\nsave\n");
+  let cmds = format!("key {pos}\nrevkey\ny\n2\n\ny\nsave\n");
 
   let mut child = Command::new("gpg")
     .args(["--no-tty", "--command-fd", "0", "--edit-key", master_fp])
@@ -552,8 +553,8 @@ fn cert_to_key_info(
     .next()
     .map(|ua| {
       let uid = ua.userid();
-      let name = uid.name2().ok().flatten().unwrap_or_default().to_string();
-      let email = uid.email2().ok().flatten().unwrap_or_default().to_string();
+      let name = uid.name().ok().flatten().unwrap_or_default().to_string();
+      let email = uid.email().ok().flatten().unwrap_or_default().to_string();
       (name, email)
     })
     .unwrap_or_default();
@@ -569,10 +570,11 @@ fn cert_to_key_info(
     .map(format_date);
 
   let subkeys = cert
-    .with_policy(&NullPolicy::new(), None)
+    .with_policy(unsafe { &NullPolicy::new() }, None)
     .map(|vc| {
       vc.keys()
         .subkeys()
+        .filter(|ka| !matches!(ka.revocation_status(), RevocationStatus::Revoked(_)))
         .map(|ka| {
           let k = ka.key();
           let sfp = k.fingerprint().to_hex();
