@@ -61,6 +61,7 @@ pub fn view(app: &App) -> Element<'_, Message> {
       text("Email").size(11).width(250).font(bold),
       text("ID").size(11).width(120).font(bold),
       text("Expire").size(11).width(100).font(bold),
+      text("").size(11).width(60),
     ]
     .padding([0, 12])
     .spacing(8),
@@ -93,6 +94,14 @@ pub fn view(app: &App) -> Element<'_, Message> {
         _ => ("", theme::TEXT_MUTED),
       };
 
+      let (trust_icon, trust_color) = if key.has_secret || key.on_card {
+        ("", theme::TEXT_MUTED)
+      } else if key.trust.is_sufficient() {
+        ("\u{f058}", theme::SUCCESS)
+      } else {
+        ("\u{f071}", theme::PEACH)
+      };
+
       let row_content = row![
         text(name).size(13).width(200),
         text(key.email.clone()).size(13).width(250),
@@ -103,6 +112,11 @@ pub fn view(app: &App) -> Element<'_, Message> {
           .font(theme::ICONS)
           .size(11)
           .color(pub_color)
+          .width(20),
+        text(trust_icon)
+          .font(theme::ICONS)
+          .size(11)
+          .color(trust_color)
           .width(20),
       ]
       .spacing(8);

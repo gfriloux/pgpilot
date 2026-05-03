@@ -7,7 +7,7 @@ use iced::{
 
 use crate::app::{KeyserverStatus, Message};
 use crate::gpg::types::SubkeyInfo;
-use crate::gpg::{KeyExpiry, KeyInfo, Keyserver, SubkeyType};
+use crate::gpg::{KeyExpiry, KeyInfo, Keyserver, SubkeyType, TrustLevel};
 use crate::ui::theme;
 
 pub struct ViewCtx {
@@ -747,6 +747,88 @@ fn left_column_items(
     })
     .into(),
   ];
+
+  if !key.has_secret && !key.on_card {
+    let (trust_icon, trust_color, trust_label) = match &key.trust {
+      TrustLevel::Ultimate | TrustLevel::Full => ("\u{f058}", theme::SUCCESS, "Vérifiée"),
+      TrustLevel::Marginal => ("\u{f06a}", theme::PEACH, "Marginale"),
+      TrustLevel::Undefined => ("\u{f071}", theme::PEACH, "Non vérifiée"),
+    };
+
+    let trust_btn = |label: &'static str, level: TrustLevel, active: bool| {
+      let fp = key.fingerprint.clone();
+      button(text(label).size(11))
+        .on_press(Message::SetKeyTrust(fp, level))
+        .padding([3, 8])
+        .style(
+          move |_: &iced::Theme, status: button::Status| button::Style {
+            background: Some(Background::Color(if active {
+              theme::ACCENT
+            } else {
+              match status {
+                button::Status::Hovered | button::Status::Pressed => theme::HEADER_BG,
+                _ => Color::TRANSPARENT,
+              }
+            })),
+            text_color: if active {
+              theme::TEXT_ON_ACCENT
+            } else {
+              theme::TEXT_SECONDARY
+            },
+            border: Border {
+              color: if active {
+                Color::TRANSPARENT
+              } else {
+                theme::BORDER
+              },
+              width: 1.0,
+              radius: 4.0.into(),
+            },
+            shadow: Default::default(),
+          },
+        )
+    };
+
+    items.push(
+      column![
+        container(
+          row![
+            text(trust_icon)
+              .font(theme::ICONS)
+              .size(11)
+              .color(trust_color),
+            text(format!("Confiance : {trust_label}")).size(12),
+          ]
+          .spacing(6)
+          .align_y(Alignment::Center),
+        )
+        .style(|_: &iced::Theme| container::Style {
+          text_color: Some(theme::TEXT_SECONDARY),
+          ..Default::default()
+        }),
+        row![
+          trust_btn(
+            "Non définie",
+            TrustLevel::Undefined,
+            key.trust == TrustLevel::Undefined
+          ),
+          trust_btn(
+            "Marginale",
+            TrustLevel::Marginal,
+            key.trust == TrustLevel::Marginal
+          ),
+          trust_btn(
+            "Pleine confiance",
+            TrustLevel::Full,
+            key.trust == TrustLevel::Full
+          ),
+        ]
+        .spacing(4),
+      ]
+      .spacing(6)
+      .into(),
+    );
+  }
 
   if let (true, Some(serial)) = (key.on_card, &key.card_serial) {
     items.push(

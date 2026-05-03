@@ -7,5 +7,6 @@ use app::App;
 fn main() -> iced::Result {
   iced::application("pgpilot", App::update, App::view)
     .font(include_bytes!("../assets/SymbolsNerdFontMono-Regular.ttf").as_slice())
+    .subscription(App::subscription)
     .run_with(App::new)
 }

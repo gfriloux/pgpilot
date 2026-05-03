@@ -1,9 +1,10 @@
 use std::collections::HashMap;
+use std::path::PathBuf;
 
 use iced::widget::text_editor;
 use iced::Task;
 
-use crate::gpg::{HealthCheck, KeyExpiry, KeyInfo, Keyserver};
+use crate::gpg::{HealthCheck, KeyExpiry, KeyInfo, Keyserver, TrustLevel};
 use crate::ui;
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
@@ -14,6 +15,7 @@ pub enum View {
   CreateKey,
   Import,
   Health,
+  Encrypt,
 }
 
 pub struct ImportForm {
@@ -43,6 +45,15 @@ pub struct CreateKeyForm {
   pub subkey_expiry: KeyExpiry,
   pub include_auth: bool,
   pub submitting: bool,
+}
+
+#[derive(Default)]
+pub struct EncryptForm {
+  pub recipients: Vec<String>,
+  pub files: Vec<PathBuf>,
+  pub armor: bool,
+  pub encrypting: bool,
+  pub trust_prompt: Option<Vec<String>>,
 }
 
 #[derive(Default, Clone, Copy, PartialEq)]
@@ -89,6 +100,7 @@ pub struct App {
   pub keyserver_statuses: HashMap<String, KeyserverStatus>,
   pub create_form: CreateKeyForm,
   pub import_form: ImportForm,
+  pub encrypt_form: EncryptForm,
   pub health_report: Vec<HealthCheck>,
   pub health_loading: bool,
 }
@@ -152,6 +164,18 @@ pub enum Message {
   RenewSubkeyExecute,
   RenewSubkeyCancel,
   RenewSubkeyDone(Result<(), String>),
+  EncryptToggleRecipient(String),
+  EncryptPickFiles,
+  EncryptFilesPicked(Result<Vec<PathBuf>, String>),
+  EncryptRemoveFile(usize),
+  EncryptSetArmor(bool),
+  EncryptExecute,
+  EncryptDone(Result<Vec<String>, String>),
+  EncryptTrustPromptConfirm,
+  EncryptTrustPromptCancel,
+  SetKeyTrust(String, TrustLevel),
+  SetKeyTrustDone(Result<(), String>),
+  FileDropped(PathBuf),
 }
 
 async fn blocking_task<T, F>(f: F) -> Result<T, String>
@@ -351,6 +375,41 @@ impl App {
       Message::PublishKeyCancel => self.on_publish_key_cancel(),
       Message::PublishKeyDone(r) => self.on_publish_key_done(r),
       Message::AutoRepublishDone(r) => self.on_auto_republish_done(r),
+      Message::EncryptToggleRecipient(fp) => {
+        if let Some(pos) = self.encrypt_form.recipients.iter().position(|r| r == &fp) {
+          self.encrypt_form.recipients.remove(pos);
+        } else {
+          self.encrypt_form.recipients.push(fp);
+        }
+        Task::none()
+      }
+      Message::EncryptRemoveFile(idx) => {
+        if idx < self.encrypt_form.files.len() {
+          self.encrypt_form.files.remove(idx);
+        }
+        Task::none()
+      }
+      Message::EncryptSetArmor(v) => {
+        self.encrypt_form.armor = v;
+        Task::none()
+      }
+      Message::EncryptPickFiles => self.on_encrypt_pick_files(),
+      Message::EncryptFilesPicked(r) => self.on_encrypt_files_picked(r),
+      Message::EncryptExecute => self.on_encrypt_execute(),
+      Message::EncryptDone(r) => self.on_encrypt_done(r),
+      Message::EncryptTrustPromptConfirm => self.on_encrypt_trust_confirm(),
+      Message::EncryptTrustPromptCancel => {
+        self.encrypt_form.trust_prompt = None;
+        Task::none()
+      }
+      Message::SetKeyTrust(fp, trust) => self.on_set_key_trust(fp, trust),
+      Message::SetKeyTrustDone(r) => self.on_set_key_trust_done(r),
+      Message::FileDropped(path) => {
+        if self.view == View::Encrypt && !self.encrypt_form.files.contains(&path) {
+          self.encrypt_form.files.push(path);
+        }
+        Task::none()
+      }
     }
   }
 
@@ -983,6 +1042,124 @@ impl App {
         Task::none()
       }
     }
+  }
+
+  // --- Encrypt ---
+
+  // --- Key trust ---
+
+  fn on_set_key_trust(&mut self, fp: String, trust: TrustLevel) -> Task<Message> {
+    Task::perform(
+      blocking_task(move || crate::gpg::set_key_trust(&fp, &trust)),
+      Message::SetKeyTrustDone,
+    )
+  }
+
+  fn on_set_key_trust_done(&mut self, result: Result<(), String>) -> Task<Message> {
+    match result {
+      Ok(()) => {
+        self.status = Some((
+          StatusKind::Success,
+          "Niveau de confiance mis à jour".to_string(),
+        ));
+        self.reload_keys()
+      }
+      Err(e) => {
+        self.status = Some((StatusKind::Error, format!("Erreur : {e}")));
+        Task::none()
+      }
+    }
+  }
+
+  // --- Encrypt ---
+
+  fn on_encrypt_pick_files(&mut self) -> Task<Message> {
+    Task::perform(
+      blocking_task(|| {
+        Ok(
+          rfd::FileDialog::new()
+            .set_title("Choisir des fichiers à chiffrer")
+            .pick_files()
+            .unwrap_or_default(),
+        )
+      }),
+      Message::EncryptFilesPicked,
+    )
+  }
+
+  fn on_encrypt_files_picked(&mut self, result: Result<Vec<PathBuf>, String>) -> Task<Message> {
+    match result {
+      Ok(files) => {
+        for f in files {
+          if !self.encrypt_form.files.contains(&f) {
+            self.encrypt_form.files.push(f);
+          }
+        }
+      }
+      Err(e) => self.status = Some((StatusKind::Error, e)),
+    }
+    Task::none()
+  }
+
+  fn on_encrypt_execute(&mut self) -> Task<Message> {
+    let untrusted: Vec<String> = self
+      .encrypt_form
+      .recipients
+      .iter()
+      .filter_map(|fp| self.key_by_fp(fp))
+      .filter(|k| !k.trust.is_sufficient())
+      .map(|k| k.fingerprint.clone())
+      .collect();
+
+    if !untrusted.is_empty() {
+      self.encrypt_form.trust_prompt = Some(untrusted);
+      return Task::none();
+    }
+
+    self.do_encrypt(false)
+  }
+
+  fn on_encrypt_trust_confirm(&mut self) -> Task<Message> {
+    self.encrypt_form.trust_prompt = None;
+    self.do_encrypt(true)
+  }
+
+  fn do_encrypt(&mut self, force_trust: bool) -> Task<Message> {
+    let files = self.encrypt_form.files.clone();
+    let recipients = self.encrypt_form.recipients.clone();
+    let armor = self.encrypt_form.armor;
+    self.encrypt_form.encrypting = true;
+    self.status = None;
+    Task::perform(
+      blocking_task(move || crate::gpg::encrypt_files(&files, &recipients, armor, force_trust)),
+      Message::EncryptDone,
+    )
+  }
+
+  fn on_encrypt_done(&mut self, result: Result<Vec<String>, String>) -> Task<Message> {
+    self.encrypt_form.encrypting = false;
+    match result {
+      Ok(names) => {
+        let summary = if names.len() == 1 {
+          format!("Chiffré : {}", names[0])
+        } else {
+          format!("{} fichiers chiffrés", names.len())
+        };
+        self.status = Some((StatusKind::Success, summary));
+        self.encrypt_form.files.clear();
+      }
+      Err(e) => self.status = Some((StatusKind::Error, format!("Erreur chiffrement : {e}"))),
+    }
+    Task::none()
+  }
+
+  pub fn subscription(&self) -> iced::Subscription<Message> {
+    iced::event::listen_with(|event, _, _| match event {
+      iced::Event::Window(iced::window::Event::FileDropped(path)) => {
+        Some(Message::FileDropped(path))
+      }
+      _ => None,
+    })
   }
 
   pub fn view(&self) -> iced::Element<'_, Message> {

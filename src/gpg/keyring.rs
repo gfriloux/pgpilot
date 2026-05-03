@@ -1,5 +1,6 @@
 use std::collections::HashSet;
 use std::io::Write;
+use std::path::PathBuf;
 use std::process::{Command, Stdio};
 
 use anyhow::{Context, Result};
@@ -11,7 +12,7 @@ use sequoia_openpgp::{
 };
 
 use super::card::card_status;
-use super::types::{format_date, KeyExpiry, KeyInfo, SubkeyInfo};
+use super::types::{format_date, KeyExpiry, KeyInfo, SubkeyInfo, TrustLevel};
 
 fn expiry_to_str(expiry: &KeyExpiry) -> &'static str {
   match expiry {
@@ -441,6 +442,39 @@ pub fn import_key(path: &std::path::Path) -> Result<()> {
   Ok(())
 }
 
+fn key_ownertrusts() -> Result<std::collections::HashMap<String, TrustLevel>> {
+  let gnupg = super::gnupg_dir();
+  let output = Command::new("gpg")
+    .arg("--homedir")
+    .arg(&gnupg)
+    .args(["--list-keys", "--with-colons"])
+    .output()
+    .context("failed to run gpg --list-keys")?;
+
+  let mut trusts = std::collections::HashMap::new();
+  let mut pending: Option<TrustLevel> = None;
+
+  for line in String::from_utf8(output.stdout)?.lines() {
+    let fields: Vec<&str> = line.split(':').collect();
+    match fields.first().copied() {
+      Some("pub") if fields.len() > 8 => {
+        pending = Some(TrustLevel::from_char(
+          fields[8].chars().next().unwrap_or('-'),
+        ));
+      }
+      Some("fpr") if fields.len() > 9 => {
+        if let Some(trust) = pending.take() {
+          trusts.insert(fields[9].to_string(), trust);
+        }
+      }
+      Some("sub") => pending = None,
+      _ => {}
+    }
+  }
+
+  Ok(trusts)
+}
+
 pub fn list_keys() -> Result<(Vec<KeyInfo>, bool)> {
   let pub_bytes = Command::new("gpg")
     .args(["--export"])
@@ -449,6 +483,7 @@ pub fn list_keys() -> Result<(Vec<KeyInfo>, bool)> {
     .stdout;
 
   let secret_fps = secret_key_fingerprints()?;
+  let trusts = key_ownertrusts().unwrap_or_default();
   let card = card_status();
   let card_connected = card.is_some();
 
@@ -469,11 +504,12 @@ pub fn list_keys() -> Result<(Vec<KeyInfo>, bool)> {
     .map(|cert| {
       let fp = cert.fingerprint().to_hex();
       let has_secret = secret_fps.contains(&fp);
+      let trust = trusts.get(&fp).cloned().unwrap_or_default();
       let on_card = cert
         .keys()
         .any(|ka| card_fps.contains(&ka.key().fingerprint().to_hex()));
       let serial = if on_card { card_serial.clone() } else { None };
-      cert_to_key_info(cert, has_secret, on_card, serial)
+      cert_to_key_info(cert, has_secret, on_card, serial, trust)
     })
     .collect();
 
@@ -506,6 +542,7 @@ fn cert_to_key_info(
   has_secret: bool,
   on_card: bool,
   card_serial: Option<String>,
+  trust: TrustLevel,
 ) -> KeyInfo {
   let fp = cert.fingerprint().to_hex();
   let key_id = fp[fp.len().saturating_sub(16)..].to_string();
@@ -580,5 +617,92 @@ fn cert_to_key_info(
     on_card,
     card_serial,
     subkeys,
+    trust,
   }
+}
+
+pub fn set_key_trust(fingerprint: &str, trust: &TrustLevel) -> Result<()> {
+  let level: u8 = match trust {
+    TrustLevel::Undefined => 2,
+    TrustLevel::Marginal => 4,
+    TrustLevel::Full => 5,
+    TrustLevel::Ultimate => 6,
+  };
+  let gnupg = super::gnupg_dir();
+  let input = format!("{fingerprint}:{level}:\n");
+
+  let mut child = Command::new("gpg")
+    .arg("--homedir")
+    .arg(&gnupg)
+    .arg("--import-ownertrust")
+    .stdin(Stdio::piped())
+    .spawn()
+    .context("failed to spawn gpg --import-ownertrust")?;
+
+  child
+    .stdin
+    .take()
+    .context("failed to open stdin")?
+    .write_all(input.as_bytes())
+    .context("failed to write to gpg stdin")?;
+
+  let status = child.wait().context("failed to wait for gpg")?;
+  if !status.success() {
+    return Err(anyhow::anyhow!(
+      "Impossible de modifier le niveau de confiance"
+    ));
+  }
+  Ok(())
+}
+
+pub fn encrypt_files(
+  files: &[PathBuf],
+  recipients: &[String],
+  armor: bool,
+  force_trust: bool,
+) -> Result<Vec<String>> {
+  let gnupg = super::gnupg_dir();
+  let ext = if armor { "asc" } else { "gpg" };
+  let mut results = Vec::new();
+
+  for file in files {
+    let output = PathBuf::from(format!("{}.{}", file.display(), ext));
+
+    let mut cmd = Command::new("gpg");
+    cmd.arg("--homedir").arg(&gnupg);
+    cmd.arg("--batch");
+    cmd.arg("--yes");
+    if force_trust {
+      cmd.arg("--trust-model").arg("always");
+    }
+    if armor {
+      cmd.arg("--armor");
+    }
+    cmd.arg("--encrypt");
+    for fp in recipients {
+      cmd.arg("--recipient").arg(fp);
+    }
+    cmd.arg("--output").arg(&output);
+    cmd.arg(file);
+
+    let out = cmd.output().context("failed to run gpg --encrypt")?;
+    if !out.status.success() {
+      let stderr = String::from_utf8_lossy(&out.stderr);
+      return Err(anyhow::anyhow!(
+        "Échec du chiffrement de {} : {}",
+        file.file_name().unwrap_or_default().to_string_lossy(),
+        stderr.trim()
+      ));
+    }
+
+    results.push(
+      output
+        .file_name()
+        .unwrap_or_default()
+        .to_string_lossy()
+        .to_string(),
+    );
+  }
+
+  Ok(results)
 }

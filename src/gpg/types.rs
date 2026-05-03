@@ -69,6 +69,30 @@ pub struct SubkeyInfo {
   pub expires: Option<String>,
 }
 
+#[derive(Debug, Clone, PartialEq, Default)]
+pub enum TrustLevel {
+  #[default]
+  Undefined,
+  Marginal,
+  Full,
+  Ultimate,
+}
+
+impl TrustLevel {
+  pub fn is_sufficient(&self) -> bool {
+    matches!(self, TrustLevel::Full | TrustLevel::Ultimate)
+  }
+
+  pub(crate) fn from_char(c: char) -> Self {
+    match c {
+      'u' => TrustLevel::Ultimate,
+      'f' => TrustLevel::Full,
+      'm' => TrustLevel::Marginal,
+      _ => TrustLevel::Undefined,
+    }
+  }
+}
+
 #[derive(Debug, Clone)]
 pub struct KeyInfo {
   pub fingerprint: String,
@@ -82,6 +106,7 @@ pub struct KeyInfo {
   pub on_card: bool,
   pub card_serial: Option<String>,
   pub subkeys: Vec<SubkeyInfo>,
+  pub trust: TrustLevel,
 }
 
 #[derive(Debug, Clone)]
