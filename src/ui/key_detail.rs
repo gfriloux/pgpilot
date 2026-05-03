@@ -319,12 +319,7 @@ fn migration_modal(key: &KeyInfo, bold: Font) -> Element<'_, Message> {
           .width(Length::Fill)
           .style(|_: &iced::Theme, status: button::Status| button::Style {
             background: Some(Background::Color(match status {
-              button::Status::Hovered | button::Status::Pressed => Color {
-                r: theme::SUCCESS.r * 0.8,
-                g: theme::SUCCESS.g * 0.8,
-                b: theme::SUCCESS.b * 0.8,
-                a: 1.0,
-              },
+              button::Status::Hovered | button::Status::Pressed => theme::SUCCESS_HOVER,
               _ => theme::SUCCESS,
             })),
             text_color: theme::TEXT_ON_ACCENT,
@@ -928,7 +923,7 @@ fn subkey_renewal_form<'a>(
         text_color: if selected {
           theme::TEXT_ON_ACCENT
         } else {
-          theme::SIDEBAR_TEXT_MUTED
+          theme::TEXT_SECONDARY
         },
         border: Border {
           color: if selected {
@@ -936,7 +931,7 @@ fn subkey_renewal_form<'a>(
           } else {
             Color {
               a: 0.3,
-              ..theme::SIDEBAR_TEXT_MUTED
+              ..theme::TEXT_SECONDARY
             }
           },
           width: 1.0,
@@ -953,7 +948,7 @@ fn subkey_renewal_form<'a>(
   column![
     text(format!("Valide jusqu'au : {until}"))
       .size(11)
-      .color(theme::SIDEBAR_TEXT),
+      .color(theme::TEXT_STRONG),
     row![
       expiry_btn("1 an", KeyExpiry::OneYear),
       expiry_btn("2 ans", KeyExpiry::TwoYears),
@@ -991,14 +986,14 @@ fn subkey_renewal_form<'a>(
         .width(Length::Fill)
         .style(|_: &iced::Theme, status: button::Status| button::Style {
           background: Some(Background::Color(match status {
-            button::Status::Hovered | button::Status::Pressed => theme::SIDEBAR_HOVER_BG,
+            button::Status::Hovered | button::Status::Pressed => theme::HEADER_BG,
             _ => Color::TRANSPARENT,
           })),
-          text_color: theme::SIDEBAR_TEXT_MUTED,
+          text_color: theme::TEXT_SECONDARY,
           border: Border {
             color: Color {
               a: 0.4,
-              ..theme::SIDEBAR_TEXT_MUTED
+              ..theme::TEXT_SECONDARY
             },
             width: 1.0,
             radius: 4.0.into(),
@@ -1012,10 +1007,10 @@ fn subkey_renewal_form<'a>(
       .on_press(Message::RenewSubkeyCancel)
       .style(|_: &iced::Theme, status: button::Status| button::Style {
         background: Some(Background::Color(match status {
-          button::Status::Hovered | button::Status::Pressed => theme::SIDEBAR_HOVER_BG,
+          button::Status::Hovered | button::Status::Pressed => theme::HEADER_BG,
           _ => Color::TRANSPARENT,
         })),
-        text_color: theme::SIDEBAR_TEXT_MUTED,
+        text_color: theme::TEXT_SECONDARY,
         border: Border {
           color: Color::TRANSPARENT,
           width: 0.0,
@@ -1048,10 +1043,10 @@ fn subkey_card_body<'a>(
         .on_press(Message::CopyToClipboard(sk.fingerprint.clone()))
         .style(|_: &iced::Theme, status: button::Status| button::Style {
           background: Some(Background::Color(match status {
-            button::Status::Hovered | button::Status::Pressed => theme::SIDEBAR_HOVER_BG,
+            button::Status::Hovered | button::Status::Pressed => theme::HEADER_BG,
             _ => Color::TRANSPARENT,
           })),
-          text_color: theme::SIDEBAR_TEXT_MUTED,
+          text_color: theme::TEXT_SECONDARY,
           border: Border {
             color: Color::TRANSPARENT,
             width: 0.0,
@@ -1067,7 +1062,7 @@ fn subkey_card_body<'a>(
       row![
         text(expires_str)
           .size(10)
-          .color(theme::SIDEBAR_TEXT_MUTED)
+          .color(theme::TEXT_SECONDARY)
           .width(Length::Fill),
         button(text("\u{f021}").font(theme::ICONS).size(10))
           .on_press(Message::RenewSubkey(
@@ -1076,10 +1071,10 @@ fn subkey_card_body<'a>(
           ))
           .style(|_: &iced::Theme, status: button::Status| button::Style {
             background: Some(Background::Color(match status {
-              button::Status::Hovered | button::Status::Pressed => theme::SIDEBAR_HOVER_BG,
+              button::Status::Hovered | button::Status::Pressed => theme::HEADER_BG,
               _ => Color::TRANSPARENT,
             })),
-            text_color: theme::SIDEBAR_TEXT_MUTED,
+            text_color: theme::TEXT_SECONDARY,
             border: Border {
               color: Color::TRANSPARENT,
               width: 0.0,
@@ -1092,7 +1087,7 @@ fn subkey_card_body<'a>(
       .spacing(4)
       .align_y(Alignment::Center)
     } else {
-      row![text(expires_str).size(10).color(theme::SIDEBAR_TEXT_MUTED)].spacing(0)
+      row![text(expires_str).size(10).color(theme::TEXT_SECONDARY)].spacing(0)
     },
   ]
   .spacing(4)
@@ -1234,7 +1229,7 @@ fn subkey_column(
                 width: 1.0,
                 radius: 6.0.into(),
               },
-              text_color: Some(theme::SIDEBAR_TEXT),
+              text_color: Some(theme::TEXT_STRONG),
               ..Default::default()
             })
             .into(),

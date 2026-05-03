@@ -257,7 +257,7 @@ pub fn view<'a>(form: &'a SignForm) -> Element<'a, Message> {
         bold,
         "\u{f071}",
         theme::PEACH,
-        theme::ERROR_BG,
+        theme::WARNING_BG,
         "Clef de signature inconnue",
         "La clef publique du signataire n'est pas dans votre trousseau. \
          Importez-la pour vérifier l'identité du signataire.",
@@ -267,7 +267,7 @@ pub fn view<'a>(form: &'a SignForm) -> Element<'a, Message> {
         bold,
         "\u{f071}",
         theme::PEACH,
-        theme::ERROR_BG,
+        theme::WARNING_BG,
         "Clef expirée",
         "La signature est mathématiquement valide, mais la clef du signataire \
          était expirée au moment de la vérification.",

@@ -17,12 +17,6 @@ pub const SIDEBAR_TEXT: Color = Color {
   b: 0.961,
   a: 1.0,
 };
-pub const SIDEBAR_TEXT_MUTED: Color = Color {
-  r: 0.647,
-  g: 0.678,
-  b: 0.808,
-  a: 1.0,
-};
 pub const SIDEBAR_HOVER_BG: Color = Color {
   r: 1.0,
   g: 1.0,
@@ -101,6 +95,12 @@ pub const SUCCESS_BG: Color = Color {
   b: 0.537,
   a: 0.12,
 };
+pub const SUCCESS_HOVER: Color = Color {
+  r: 0.521,
+  g: 0.656,
+  b: 0.430,
+  a: 1.0,
+};
 pub const ERROR: Color = Color {
   r: 0.906,
   g: 0.510,
@@ -142,9 +142,9 @@ pub const CARD_BG: Color = Color {
 
 // Destructive (Red #e78284)
 pub const DESTRUCTIVE: Color = Color {
-  r: 0.906,
-  g: 0.510,
-  b: 0.518,
+  r: 0.85,
+  g: 0.40,
+  b: 0.41,
   a: 1.0,
 };
 pub const DESTRUCTIVE_HOVER_BG: Color = Color {
@@ -168,4 +168,10 @@ pub const PEACH: Color = Color {
   g: 0.624,
   b: 0.463,
   a: 1.0,
+};
+pub const WARNING_BG: Color = Color {
+  r: 0.937,
+  g: 0.624,
+  b: 0.463,
+  a: 0.12,
 };
