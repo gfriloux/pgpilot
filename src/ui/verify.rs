@@ -1,73 +1,12 @@
 use iced::{
   font,
-  widget::{button, column, container, row, scrollable, text},
-  Alignment, Background, Border, Color, Element, Font, Length, Shadow,
+  widget::{column, container, row, scrollable, text},
+  Alignment, Background, Border, Color, Element, Font, Length,
 };
 
 use crate::app::{Message, SignForm};
 use crate::gpg::VerifyOutcome;
-use crate::ui::theme;
-
-fn pick_btn<'a>(
-  icon: &'static str,
-  label: &'static str,
-  on_press: Message,
-) -> Element<'a, Message> {
-  button(
-    row![text(icon).font(theme::ICONS).size(12), text(label).size(13),]
-      .spacing(6)
-      .align_y(Alignment::Center),
-  )
-  .on_press(on_press)
-  .padding([8, 12])
-  .style(|_: &iced::Theme, status| button::Style {
-    background: Some(Background::Color(match status {
-      button::Status::Hovered | button::Status::Pressed => theme::ACCENT_SUBTLE,
-      _ => Color::TRANSPARENT,
-    })),
-    text_color: theme::TEXT_STRONG,
-    border: Border {
-      color: theme::BORDER,
-      width: 1.0,
-      radius: 6.0.into(),
-    },
-    shadow: Shadow::default(),
-    snap: false,
-  })
-  .into()
-}
-
-fn action_btn<'a>(label: &'static str, enabled: bool, on_press: Message) -> Element<'a, Message> {
-  let btn = button(text(label).size(13))
-    .padding([8, 16])
-    .style(move |_: &iced::Theme, status| button::Style {
-      background: Some(Background::Color(if enabled {
-        match status {
-          button::Status::Hovered | button::Status::Pressed => theme::ACCENT_HOVER,
-          _ => theme::ACCENT,
-        }
-      } else {
-        theme::DISABLED_BG
-      })),
-      text_color: if enabled {
-        theme::TEXT_ON_ACCENT
-      } else {
-        theme::TEXT_MUTED
-      },
-      border: Border {
-        color: Color::TRANSPARENT,
-        width: 0.0,
-        radius: 6.0.into(),
-      },
-      shadow: Shadow::default(),
-      snap: false,
-    });
-  if enabled {
-    btn.on_press(on_press).into()
-  } else {
-    btn.into()
-  }
-}
+use crate::ui::{common, theme};
 
 fn result_card<'a>(
   bold: Font,
@@ -147,7 +86,7 @@ pub fn view<'a>(form: &'a SignForm) -> Element<'a, Message> {
   };
 
   let file_row: Element<'_, Message> = row![
-    pick_btn("\u{f15b}", "Fichier à vérifier...", Message::VerifyPickFile),
+    common::pick_btn("\u{f15b}", "Fichier à vérifier...", Message::VerifyPickFile),
     verify_file_label,
   ]
   .spacing(12)
@@ -188,7 +127,7 @@ pub fn view<'a>(form: &'a SignForm) -> Element<'a, Message> {
   };
 
   let sig_row: Element<'_, Message> = row![
-    pick_btn("\u{f0c1}", "Fichier .sig...", Message::VerifyPickSig),
+    common::pick_btn("\u{f0c1}", "Fichier .sig...", Message::VerifyPickSig),
     verify_sig_label,
   ]
   .spacing(12)
@@ -385,7 +324,7 @@ pub fn view<'a>(form: &'a SignForm) -> Element<'a, Message> {
       {
         let verify_action: Element<'_, Message> = row![
           iced::widget::Space::new().width(Length::Fill),
-          action_btn("Vérifier", can_verify, Message::VerifyExecute)
+          common::action_btn("Vérifier", can_verify, Message::VerifyExecute)
         ]
         .into();
         verify_action
