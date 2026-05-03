@@ -7,13 +7,15 @@ use super::{blocking_task, App, Message, StatusKind, VerifyResult};
 impl App {
   pub(super) fn on_sign_pick_file(&mut self) -> Task<Message> {
     Task::perform(
-      blocking_task(|| {
+      async {
         Ok(
-          rfd::FileDialog::new()
+          rfd::AsyncFileDialog::new()
             .set_title("Choisir un fichier à signer")
-            .pick_file(),
+            .pick_file()
+            .await
+            .map(|h| h.path().to_path_buf()),
         )
-      }),
+      },
       Message::SignFilePicked,
     )
   }
@@ -69,13 +71,15 @@ impl App {
 
   pub(super) fn on_verify_pick_file(&mut self) -> Task<Message> {
     Task::perform(
-      blocking_task(|| {
+      async {
         Ok(
-          rfd::FileDialog::new()
+          rfd::AsyncFileDialog::new()
             .set_title("Choisir le fichier à vérifier")
-            .pick_file(),
+            .pick_file()
+            .await
+            .map(|h| h.path().to_path_buf()),
         )
-      }),
+      },
       Message::VerifyFilePicked,
     )
   }
@@ -98,14 +102,16 @@ impl App {
 
   pub(super) fn on_verify_pick_sig(&mut self) -> Task<Message> {
     Task::perform(
-      blocking_task(|| {
+      async {
         Ok(
-          rfd::FileDialog::new()
+          rfd::AsyncFileDialog::new()
             .set_title("Choisir le fichier de signature (.sig)")
             .add_filter("Signature", &["sig", "asc"])
-            .pick_file(),
+            .pick_file()
+            .await
+            .map(|h| h.path().to_path_buf()),
         )
-      }),
+      },
       Message::VerifySigPicked,
     )
   }

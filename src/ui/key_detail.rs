@@ -1,7 +1,7 @@
 use chrono::{Duration, Utc};
 use iced::{
   font,
-  widget::{button, column, container, row, rule, text, vertical_rule, Column, Row},
+  widget::{button, column, container, row, rule, text, Column, Row},
   Alignment, Background, Border, Color, Element, Font, Length,
 };
 
@@ -63,11 +63,11 @@ pub fn view(key: &KeyInfo, ctx: ViewCtx) -> Element<'_, Message> {
 
   row![
     left_col,
-    vertical_rule(1).style(|_: &iced::Theme| rule::Style {
+    rule::vertical(1).style(|_: &iced::Theme| rule::Style {
       color: theme::BORDER,
-      width: 1,
       radius: 0.0.into(),
       fill_mode: rule::FillMode::Full,
+      snap: false,
     }),
     right_col,
   ]
@@ -101,6 +101,7 @@ fn action_buttons<'a>(
         radius: 6.0.into(),
       },
       shadow: Default::default(),
+      snap: false,
     })
     .into()];
 
@@ -120,6 +121,7 @@ fn action_buttons<'a>(
             radius: 6.0.into(),
           },
           shadow: Default::default(),
+          snap: false,
         })
         .into(),
     );
@@ -146,6 +148,7 @@ fn action_buttons<'a>(
           radius: 6.0.into(),
         },
         shadow: Default::default(),
+        snap: false,
       },
     );
     row2.push(
@@ -174,6 +177,7 @@ fn action_buttons<'a>(
             radius: 6.0.into(),
           },
           shadow: Default::default(),
+          snap: false,
         })
         .into(),
     );
@@ -194,6 +198,7 @@ fn action_buttons<'a>(
           radius: 6.0.into(),
         },
         shadow: Default::default(),
+        snap: false,
       })
       .into(),
   );
@@ -244,6 +249,7 @@ fn keyserver_badge(status: KeyserverStatus, fingerprint: &str) -> Element<'_, Me
               radius: 4.0.into(),
             },
             shadow: Default::default(),
+            snap: false,
           }),
         ]
         .spacing(5)
@@ -306,6 +312,7 @@ fn migration_modal(key: &KeyInfo, bold: Font) -> Element<'_, Message> {
               radius: 6.0.into(),
             },
             shadow: Default::default(),
+            snap: false,
           }),
         button(icon_row("\u{f00c}", "J'ai un backup \u{2192} Continuer"))
           .on_press(Message::MoveToCardExecute(key.fingerprint.clone()))
@@ -327,6 +334,7 @@ fn migration_modal(key: &KeyInfo, bold: Font) -> Element<'_, Message> {
               radius: 6.0.into(),
             },
             shadow: Default::default(),
+            snap: false,
           }),
         button(icon_row("\u{f00d}", "Annuler"))
           .on_press(Message::MoveToCardCancel)
@@ -346,6 +354,7 @@ fn migration_modal(key: &KeyInfo, bold: Font) -> Element<'_, Message> {
               radius: 6.0.into(),
             },
             shadow: Default::default(),
+            snap: false,
           }),
       ]
       .spacing(6),
@@ -408,6 +417,7 @@ fn delete_modal(key: &KeyInfo, bold: Font) -> Element<'_, Message> {
             radius: 6.0.into(),
           },
           shadow: Default::default(),
+          snap: false,
         })
         .into(),
     );
@@ -428,6 +438,7 @@ fn delete_modal(key: &KeyInfo, bold: Font) -> Element<'_, Message> {
           radius: 6.0.into(),
         },
         shadow: Default::default(),
+        snap: false,
       })
       .into(),
   );
@@ -450,6 +461,7 @@ fn delete_modal(key: &KeyInfo, bold: Font) -> Element<'_, Message> {
           radius: 6.0.into(),
         },
         shadow: Default::default(),
+        snap: false,
       })
       .into(),
   );
@@ -521,6 +533,7 @@ fn publish_modal(key: &KeyInfo, selected_ks: Keyserver, bold: Font) -> Element<'
           radius: 4.0.into(),
         },
         shadow: Default::default(),
+        snap: false,
       })
   };
 
@@ -571,6 +584,7 @@ fn publish_modal(key: &KeyInfo, selected_ks: Keyserver, bold: Font) -> Element<'
               radius: 6.0.into(),
             },
             shadow: Default::default(),
+            snap: false,
           }),
         button(icon_row("\u{f00d}", "Annuler"))
           .on_press(Message::PublishKeyCancel)
@@ -590,6 +604,7 @@ fn publish_modal(key: &KeyInfo, selected_ks: Keyserver, bold: Font) -> Element<'
               radius: 6.0.into(),
             },
             shadow: Default::default(),
+            snap: false,
           }),
       ]
       .spacing(6),
@@ -630,6 +645,7 @@ fn export_pub_modal(key: &KeyInfo, bold: Font) -> Element<'_, Message> {
         radius: 6.0.into(),
       },
       shadow: Default::default(),
+      snap: false,
     })
   };
 
@@ -679,6 +695,7 @@ fn export_pub_modal(key: &KeyInfo, bold: Font) -> Element<'_, Message> {
             radius: 6.0.into(),
           },
           shadow: Default::default(),
+          snap: false,
         }),
     ]
     .spacing(6),
@@ -808,6 +825,7 @@ fn left_column_items(
               radius: 4.0.into(),
             },
             shadow: Default::default(),
+            snap: false,
           },
         )
     };
@@ -925,6 +943,7 @@ fn subkey_renewal_form<'a>(
           radius: 4.0.into(),
         },
         shadow: Default::default(),
+        snap: false,
       })
   };
 
@@ -961,6 +980,7 @@ fn subkey_renewal_form<'a>(
               radius: 4.0.into(),
             },
             shadow: Default::default(),
+            snap: false,
           }
         ),
       button(text("⟲ Remplacer").size(11))
@@ -984,6 +1004,7 @@ fn subkey_renewal_form<'a>(
             radius: 4.0.into(),
           },
           shadow: Default::default(),
+          snap: false,
         }),
     ]
     .spacing(4),
@@ -1001,6 +1022,7 @@ fn subkey_renewal_form<'a>(
           radius: 4.0.into(),
         },
         shadow: Default::default(),
+        snap: false,
       }),
   ]
   .spacing(8)
@@ -1036,6 +1058,7 @@ fn subkey_card_body<'a>(
             radius: 4.0.into(),
           },
           shadow: Default::default(),
+          snap: false,
         }),
     ]
     .spacing(4)
@@ -1063,6 +1086,7 @@ fn subkey_card_body<'a>(
               radius: 4.0.into(),
             },
             shadow: Default::default(),
+            snap: false,
           }),
       ]
       .spacing(4)
@@ -1127,6 +1151,7 @@ fn subkey_ghost_card<'a>(
             radius: 4.0.into(),
           },
           shadow: Default::default(),
+          snap: false,
         }
       ),
     ]
@@ -1232,7 +1257,7 @@ fn subkey_column(
   Column::with_children(subkey_cards)
     .spacing(8)
     .padding([16, 12])
-    .width(220)
+    .width(260)
 }
 
 fn expiry_until_date(expiry: &KeyExpiry) -> String {

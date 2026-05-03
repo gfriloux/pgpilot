@@ -5,22 +5,28 @@ use super::{blocking_task, App, ImportForm, Message, StatusKind, View};
 impl App {
   pub(super) fn on_import_key(&mut self) -> Task<Message> {
     Task::perform(
-      blocking_task(|| {
-        let path = match rfd::FileDialog::new()
+      async {
+        let handle = rfd::AsyncFileDialog::new()
           .add_filter("PGP Key", &["asc", "gpg", "key"])
           .pick_file()
-        {
+          .await;
+        let path = match handle {
           None => return Ok(None),
-          Some(p) => p,
+          Some(h) => h.path().to_path_buf(),
         };
         let filename = path
           .file_name()
           .and_then(|n| n.to_str())
           .unwrap_or("fichier")
           .to_string();
-        crate::gpg::import_key(&path)?;
-        Ok(Some(filename))
-      }),
+        tokio::task::spawn_blocking(move || -> anyhow::Result<Option<String>> {
+          crate::gpg::import_key(&path)?;
+          Ok(Some(filename))
+        })
+        .await
+        .unwrap_or_else(|e| Err(anyhow::anyhow!(e)))
+        .map_err(|e| e.to_string())
+      },
       Message::ImportKeyDone,
     )
   }

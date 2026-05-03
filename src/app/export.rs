@@ -17,10 +17,7 @@ impl App {
       .key_by_fp(&fp)
       .map(|k| k.name.replace(' ', "_"))
       .unwrap_or_default();
-    Task::perform(
-      blocking_task(move || export_key_to_file(fp, name)),
-      Message::ExportDone,
-    )
+    Task::perform(export_key_to_file(fp, name), Message::ExportDone)
   }
 
   pub(super) fn on_export_clipboard(&mut self, fp: String) -> Task<Message> {
@@ -71,10 +68,7 @@ impl App {
       .key_by_fp(&fp)
       .map(|k| k.key_id.clone())
       .unwrap_or_default();
-    Task::perform(
-      blocking_task(move || backup_key_to_dir(fp, key_id)),
-      Message::BackupDone,
-    )
+    Task::perform(backup_key_to_dir(fp, key_id), Message::BackupDone)
   }
 
   pub(super) fn on_backup_done(&mut self, result: Result<Option<String>, String>) -> Task<Message> {

@@ -1,6 +1,6 @@
 use iced::{
   font,
-  widget::{button, column, container, horizontal_rule, row, rule, scrollable, text},
+  widget::{button, column, container, row, rule, scrollable, text},
   Alignment, Background, Border, Color, Element, Font, Length, Shadow,
 };
 
@@ -15,11 +15,11 @@ pub fn view<'a>(form: &'a DecryptForm) -> Element<'a, Message> {
   };
 
   let separator = || {
-    horizontal_rule(1).style(|_: &iced::Theme| rule::Style {
+    rule::horizontal(1).style(|_: &iced::Theme| rule::Style {
       color: theme::BORDER,
-      width: 1,
       radius: 0.0.into(),
       fill_mode: rule::FillMode::Full,
+      snap: false,
     })
   };
 
@@ -108,6 +108,7 @@ pub fn view<'a>(form: &'a DecryptForm) -> Element<'a, Message> {
                 radius: 4.0.into(),
               },
               shadow: Shadow::default(),
+              snap: false,
             }),
         ]
         .spacing(6)
@@ -141,6 +142,7 @@ pub fn view<'a>(form: &'a DecryptForm) -> Element<'a, Message> {
       radius: 6.0.into(),
     },
     shadow: Shadow::default(),
+    snap: false,
   });
 
   let mut files_section_children: Vec<Element<'_, Message>> = vec![
@@ -229,6 +231,7 @@ pub fn view<'a>(form: &'a DecryptForm) -> Element<'a, Message> {
           radius: 6.0.into(),
         },
         shadow: Shadow::default(),
+        snap: false,
       },
     );
     if can_decrypt {
@@ -238,9 +241,10 @@ pub fn view<'a>(form: &'a DecryptForm) -> Element<'a, Message> {
     }
   };
 
-  let action_bar: Element<'_, Message> = row![iced::widget::horizontal_space(), decrypt_btn,]
-    .align_y(Alignment::Center)
-    .into();
+  let action_bar: Element<'_, Message> =
+    row![iced::widget::Space::new().width(Length::Fill), decrypt_btn,]
+      .align_y(Alignment::Center)
+      .into();
 
   let card = container(
     column![

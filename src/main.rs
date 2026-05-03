@@ -5,12 +5,13 @@ mod ui;
 use app::App;
 
 fn main() -> iced::Result {
-  iced::application("pgpilot", App::update, App::view)
+  iced::application(App::new, App::update, App::view)
+    .title("pgpilot")
     .font(include_bytes!("../assets/SymbolsNerdFontMono-Regular.ttf").as_slice())
     .subscription(App::subscription)
     .window(iced::window::Settings {
-      min_size: Some(iced::Size::new(960.0, 540.0)),
+      min_size: Some(iced::Size::new(1000.0, 540.0)),
       ..Default::default()
     })
-    .run_with(App::new)
+    .run()
 }

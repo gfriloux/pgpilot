@@ -6,7 +6,7 @@ edition = "2021"
 [dependencies]
 anyhow = "1"
 chrono = "0.4"
-iced = { version = "0.13", features = ["tokio"] }
+iced = { version = "0.14", features = ["tokio"] }
 rfd = "0.17"
 sequoia-openpgp = { version = "2", default-features = false, features = ["crypto-nettle"] }
 ureq = "3"

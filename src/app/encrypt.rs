@@ -7,14 +7,19 @@ use super::{blocking_task, App, Message, StatusKind};
 impl App {
   pub(super) fn on_encrypt_pick_files(&mut self) -> Task<Message> {
     Task::perform(
-      blocking_task(|| {
+      async {
+        let handles = rfd::AsyncFileDialog::new()
+          .set_title("Choisir des fichiers à chiffrer")
+          .pick_files()
+          .await
+          .unwrap_or_default();
         Ok(
-          rfd::FileDialog::new()
-            .set_title("Choisir des fichiers à chiffrer")
-            .pick_files()
-            .unwrap_or_default(),
+          handles
+            .iter()
+            .map(|h| h.path().to_path_buf())
+            .collect::<Vec<_>>(),
         )
-      }),
+      },
       Message::EncryptFilesPicked,
     )
   }

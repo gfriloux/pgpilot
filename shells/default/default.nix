@@ -37,6 +37,7 @@ mkShell {
       pkgs.libxkbcommon
       pkgs.libGL
       pkgs.vulkan-loader
+      pkgs.dbus
     ]}:$LD_LIBRARY_PATH
 
         echo "[pgpilot] Ready."

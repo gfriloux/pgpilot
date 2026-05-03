@@ -1,6 +1,6 @@
 use iced::{
   font,
-  widget::{button, column, container, horizontal_space, row, scrollable, text},
+  widget::{button, column, container, row, scrollable, text},
   Alignment, Background, Border, Color, Element, Font, Length, Shadow,
 };
 
@@ -32,6 +32,7 @@ fn pick_btn<'a>(
       radius: 6.0.into(),
     },
     shadow: Shadow::default(),
+    snap: false,
   })
   .into()
 }
@@ -59,6 +60,7 @@ fn action_btn<'a>(label: &'static str, enabled: bool, on_press: Message) -> Elem
         radius: 6.0.into(),
       },
       shadow: Shadow::default(),
+      snap: false,
     });
   if enabled {
     btn.on_press(on_press).into()
@@ -182,6 +184,7 @@ pub fn view<'a>(form: &'a SignForm, keys: &'a [KeyInfo]) -> Element<'a, Message>
             radius: 6.0.into(),
           },
           shadow: Shadow::default(),
+          snap: false,
         })
         .into()
       })
@@ -236,7 +239,7 @@ pub fn view<'a>(form: &'a SignForm, keys: &'a [KeyInfo]) -> Element<'a, Message>
       })
       .into()
   } else {
-    iced::widget::Space::with_height(0).into()
+    iced::widget::Space::new().into()
   };
 
   let can_sign = form.file.is_some() && form.signer_fp.is_some() && !form.signing;
@@ -277,7 +280,7 @@ pub fn view<'a>(form: &'a SignForm, keys: &'a [KeyInfo]) -> Element<'a, Message>
       .spacing(6),
       {
         let sign_action: Element<'_, Message> = row![
-          horizontal_space(),
+          iced::widget::Space::new().width(Length::Fill),
           action_btn("Signer", can_sign, Message::SignExecute)
         ]
         .into();

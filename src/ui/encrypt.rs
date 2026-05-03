@@ -1,9 +1,6 @@
 use iced::{
   font,
-  widget::{
-    button, column, container, horizontal_rule, horizontal_space, row, rule, scrollable, text,
-    vertical_rule,
-  },
+  widget::{button, column, container, row, rule, scrollable, text},
   Alignment, Background, Border, Color, Element, Font, Length, Shadow,
 };
 
@@ -74,6 +71,7 @@ fn key_row(key: &KeyInfo, selected: bool) -> Element<'static, Message> {
       radius: 6.0.into(),
     },
     shadow: Shadow::default(),
+    snap: false,
   })
   .into()
 }
@@ -85,11 +83,11 @@ pub fn view<'a>(form: &'a EncryptForm, keys: &'a [KeyInfo]) -> Element<'a, Messa
   };
 
   let separator = || {
-    horizontal_rule(1).style(|_: &iced::Theme| rule::Style {
+    rule::horizontal(1).style(|_: &iced::Theme| rule::Style {
       color: theme::BORDER,
-      width: 1,
       radius: 0.0.into(),
       fill_mode: rule::FillMode::Full,
+      snap: false,
     })
   };
 
@@ -128,11 +126,11 @@ pub fn view<'a>(form: &'a EncryptForm, keys: &'a [KeyInfo]) -> Element<'a, Messa
   if !public_keys.is_empty() {
     if !own_keys.is_empty() {
       recipient_items.push(
-        container(horizontal_rule(1).style(|_: &iced::Theme| rule::Style {
+        container(rule::horizontal(1).style(|_: &iced::Theme| rule::Style {
           color: theme::BORDER,
-          width: 1,
           radius: 0.0.into(),
           fill_mode: rule::FillMode::Full,
+          snap: false,
         }))
         .padding([4, 0])
         .into(),
@@ -199,6 +197,7 @@ pub fn view<'a>(form: &'a EncryptForm, keys: &'a [KeyInfo]) -> Element<'a, Messa
               radius: 4.0.into()
             },
             shadow: Shadow::default(),
+            snap: false,
           }),
       ]
       .spacing(6)
@@ -231,6 +230,7 @@ pub fn view<'a>(form: &'a EncryptForm, keys: &'a [KeyInfo]) -> Element<'a, Messa
       radius: 6.0.into(),
     },
     shadow: Shadow::default(),
+    snap: false,
   });
 
   let files_col: Element<'_, Message> = column![
@@ -291,6 +291,7 @@ pub fn view<'a>(form: &'a EncryptForm, keys: &'a [KeyInfo]) -> Element<'a, Messa
           radius: 4.0.into(),
         },
         shadow: Shadow::default(),
+        snap: false,
       })
   };
 
@@ -317,6 +318,7 @@ pub fn view<'a>(form: &'a EncryptForm, keys: &'a [KeyInfo]) -> Element<'a, Messa
           radius: 6.0.into(),
         },
         shadow: Shadow::default(),
+        snap: false,
       },
     );
     if can_encrypt {
@@ -345,7 +347,7 @@ pub fn view<'a>(form: &'a EncryptForm, keys: &'a [KeyInfo]) -> Element<'a, Messa
       }),
     ]
     .spacing(4),
-    horizontal_space(),
+    iced::widget::Space::new().width(Length::Fill),
     encrypt_btn,
   ]
   .align_y(Alignment::Center)
@@ -386,6 +388,7 @@ pub fn view<'a>(form: &'a EncryptForm, keys: &'a [KeyInfo]) -> Element<'a, Messa
           radius: 6.0.into(),
         },
         shadow: Shadow::default(),
+        snap: false,
       });
 
     let confirm_btn = button(text("Chiffrer quand même").size(13))
@@ -403,6 +406,7 @@ pub fn view<'a>(form: &'a EncryptForm, keys: &'a [KeyInfo]) -> Element<'a, Messa
           radius: 6.0.into(),
         },
         shadow: Shadow::default(),
+        snap: false,
       });
 
     container(
@@ -479,11 +483,11 @@ pub fn view<'a>(form: &'a EncryptForm, keys: &'a [KeyInfo]) -> Element<'a, Messa
   })
   .into();
 
-  let vsep = vertical_rule(1).style(|_: &iced::Theme| rule::Style {
+  let vsep = rule::vertical(1).style(|_: &iced::Theme| rule::Style {
     color: theme::BORDER,
-    width: 1,
     radius: 0.0.into(),
     fill_mode: rule::FillMode::Full,
+    snap: false,
   });
 
   let card = container(

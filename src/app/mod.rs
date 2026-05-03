@@ -243,38 +243,53 @@ where
     .map_err(|e| e.to_string())
 }
 
-pub(crate) fn export_key_to_file(fp: String, name: String) -> anyhow::Result<Option<String>> {
-  let path = match rfd::FileDialog::new()
+pub(crate) async fn export_key_to_file(fp: String, name: String) -> Result<Option<String>, String> {
+  let handle = rfd::AsyncFileDialog::new()
     .set_file_name(format!("{name}.pub.asc"))
     .add_filter("PGP Key", &["asc"])
     .save_file()
-  {
+    .await;
+  let path = match handle {
     None => return Ok(None),
-    Some(p) => p,
+    Some(h) => h.path().to_path_buf(),
   };
   let filename = path
     .file_name()
     .and_then(|n| n.to_str())
     .unwrap_or("key.asc")
     .to_string();
-  crate::gpg::export_public_key(&fp, &path)?;
-  Ok(Some(filename))
+  tokio::task::spawn_blocking(move || -> anyhow::Result<Option<String>> {
+    crate::gpg::export_public_key(&fp, &path)?;
+    Ok(Some(filename))
+  })
+  .await
+  .unwrap_or_else(|e| Err(anyhow::anyhow!(e)))
+  .map_err(|e| e.to_string())
 }
 
-pub(crate) fn backup_key_to_dir(fp: String, key_id: String) -> anyhow::Result<Option<String>> {
-  let dir = match rfd::FileDialog::new()
+pub(crate) async fn backup_key_to_dir(
+  fp: String,
+  key_id: String,
+) -> Result<Option<String>, String> {
+  let handle = rfd::AsyncFileDialog::new()
     .set_title("Choisir un dossier de sauvegarde")
     .pick_folder()
-  {
+    .await;
+  let dir = match handle {
     None => return Ok(None),
-    Some(d) => d,
+    Some(h) => h.path().to_path_buf(),
   };
-  let (key_file, rev_file) = crate::gpg::backup_key(&fp, &dir, &key_id)?;
-  let summary = match rev_file {
-    Some(rev) => format!("{key_file} + {rev}"),
-    None => format!("{key_file} (certificat de révocation introuvable)"),
-  };
-  Ok(Some(summary))
+  tokio::task::spawn_blocking(move || -> anyhow::Result<Option<String>> {
+    let (key_file, rev_file) = crate::gpg::backup_key(&fp, &dir, &key_id)?;
+    let summary = match rev_file {
+      Some(rev) => format!("{key_file} + {rev}"),
+      None => format!("{key_file} (certificat de révocation introuvable)"),
+    };
+    Ok(Some(summary))
+  })
+  .await
+  .unwrap_or_else(|e| Err(anyhow::anyhow!(e)))
+  .map_err(|e| e.to_string())
 }
 
 impl App {

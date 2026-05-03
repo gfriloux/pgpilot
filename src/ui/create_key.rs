@@ -1,8 +1,7 @@
 use iced::{
   font,
   widget::{
-    button, checkbox, column, container, horizontal_rule, pick_list, row, rule, scrollable, text,
-    text_input,
+    button, checkbox, column, container, pick_list, row, rule, scrollable, text, text_input,
   },
   Background, Border, Color, Element, Font, Length,
 };
@@ -18,11 +17,11 @@ pub fn view(form: &CreateKeyForm) -> Element<'_, Message> {
   };
 
   let separator = || {
-    horizontal_rule(1).style(|_: &iced::Theme| rule::Style {
+    rule::horizontal(1).style(|_: &iced::Theme| rule::Style {
       color: theme::BORDER,
-      width: 1,
       radius: 0.0.into(),
       fill_mode: rule::FillMode::Full,
+      snap: false,
     })
   };
 
@@ -38,7 +37,7 @@ pub fn view(form: &CreateKeyForm) -> Element<'_, Message> {
   .width(Length::Fill)
   .style(|_: &iced::Theme, status| {
     let border = match status {
-      pick_list::Status::Opened => theme::ACCENT,
+      pick_list::Status::Opened { .. } => theme::ACCENT,
       pick_list::Status::Hovered => theme::ACCENT_BORDER,
       _ => theme::BORDER,
     };
@@ -64,6 +63,7 @@ pub fn view(form: &CreateKeyForm) -> Element<'_, Message> {
     },
     selected_text_color: theme::TEXT_ON_ACCENT,
     selected_background: Background::Color(theme::ACCENT),
+    shadow: iced::Shadow::default(),
   });
 
   let label = if form.submitting {
@@ -95,6 +95,7 @@ pub fn view(form: &CreateKeyForm) -> Element<'_, Message> {
           radius: 6.0.into(),
         },
         shadow: Default::default(),
+        snap: false,
       }
     });
     if can_submit {
@@ -118,6 +119,7 @@ pub fn view(form: &CreateKeyForm) -> Element<'_, Message> {
         radius: 6.0.into(),
       },
       shadow: Default::default(),
+      snap: false,
     });
 
   let hint = |s: &'static str| {
@@ -150,7 +152,7 @@ pub fn view(form: &CreateKeyForm) -> Element<'_, Message> {
             .width(Length::Fill)
             .style(|_: &iced::Theme, status| {
               let border = match status {
-                text_input::Status::Focused => theme::ACCENT,
+                text_input::Status::Focused { .. } => theme::ACCENT,
                 text_input::Status::Hovered => theme::ACCENT_BORDER,
                 _ => theme::BORDER,
               };
@@ -177,7 +179,7 @@ pub fn view(form: &CreateKeyForm) -> Element<'_, Message> {
             .width(Length::Fill)
             .style(|_: &iced::Theme, status| {
               let border = match status {
-                text_input::Status::Focused => theme::ACCENT,
+                text_input::Status::Focused { .. } => theme::ACCENT,
                 text_input::Status::Hovered => theme::ACCENT_BORDER,
                 _ => theme::BORDER,
               };
@@ -212,7 +214,8 @@ pub fn view(form: &CreateKeyForm) -> Element<'_, Message> {
         ]
         .spacing(6),
         column![
-          checkbox("Inclure une clef d'authentification SSH", form.include_auth,)
+          checkbox(form.include_auth)
+            .label("Inclure une clef d'authentification SSH")
             .on_toggle(Message::CreateKeyIncludeAuthToggled)
             .text_size(13)
             .size(16)

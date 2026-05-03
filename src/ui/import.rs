@@ -1,8 +1,7 @@
 use iced::{
   font,
   widget::{
-    button, column, container, horizontal_rule, pick_list, row, rule, scrollable, text,
-    text_editor, text_input,
+    button, column, container, pick_list, row, rule, scrollable, text, text_editor, text_input,
   },
   Background, Border, Color, Element, Font, Length,
 };
@@ -18,11 +17,11 @@ pub fn view(form: &ImportForm) -> Element<'_, Message> {
   };
 
   let separator = || {
-    horizontal_rule(1).style(|_: &iced::Theme| rule::Style {
+    rule::horizontal(1).style(|_: &iced::Theme| rule::Style {
       color: theme::BORDER,
-      width: 1,
       radius: 0.0.into(),
       fill_mode: rule::FillMode::Full,
+      snap: false,
     })
   };
 
@@ -57,6 +56,7 @@ pub fn view(form: &ImportForm) -> Element<'_, Message> {
           radius: 6.0.into(),
         },
         shadow: Default::default(),
+        snap: false,
       }
     });
     if enabled {
@@ -80,6 +80,7 @@ pub fn view(form: &ImportForm) -> Element<'_, Message> {
         radius: 6.0.into(),
       },
       shadow: Default::default(),
+      snap: false,
     });
 
   let file_btn = button(
@@ -103,6 +104,7 @@ pub fn view(form: &ImportForm) -> Element<'_, Message> {
       radius: 6.0.into(),
     },
     shadow: Default::default(),
+    snap: false,
   });
 
   let url_ready = !form.url.is_empty() && !form.submitting;
@@ -117,7 +119,7 @@ pub fn view(form: &ImportForm) -> Element<'_, Message> {
   .width(Length::Fill)
   .style(|_: &iced::Theme, status| {
     let border = match status {
-      pick_list::Status::Opened => theme::ACCENT,
+      pick_list::Status::Opened { .. } => theme::ACCENT,
       pick_list::Status::Hovered => theme::ACCENT_BORDER,
       _ => theme::BORDER,
     };
@@ -143,6 +145,7 @@ pub fn view(form: &ImportForm) -> Element<'_, Message> {
     },
     selected_text_color: theme::TEXT_ON_ACCENT,
     selected_background: Background::Color(theme::ACCENT),
+    shadow: iced::Shadow::default(),
   });
 
   let card = container(
@@ -169,7 +172,7 @@ pub fn view(form: &ImportForm) -> Element<'_, Message> {
           .width(Length::Fill)
           .style(|_: &iced::Theme, status| {
             let border = match status {
-              text_input::Status::Focused => theme::ACCENT,
+              text_input::Status::Focused { .. } => theme::ACCENT,
               text_input::Status::Hovered => theme::ACCENT_BORDER,
               _ => theme::BORDER,
             };
@@ -199,7 +202,7 @@ pub fn view(form: &ImportForm) -> Element<'_, Message> {
           .width(Length::Fill)
           .style(|_: &iced::Theme, status| {
             let border = match status {
-              text_input::Status::Focused => theme::ACCENT,
+              text_input::Status::Focused { .. } => theme::ACCENT,
               text_input::Status::Hovered => theme::ACCENT_BORDER,
               _ => theme::BORDER,
             };
@@ -233,7 +236,7 @@ pub fn view(form: &ImportForm) -> Element<'_, Message> {
           .height(120)
           .style(|_: &iced::Theme, status| {
             let border = match status {
-              text_editor::Status::Focused => theme::ACCENT,
+              text_editor::Status::Focused { .. } => theme::ACCENT,
               text_editor::Status::Hovered => theme::ACCENT_BORDER,
               _ => theme::BORDER,
             };
@@ -244,7 +247,6 @@ pub fn view(form: &ImportForm) -> Element<'_, Message> {
                 width: 1.0,
                 radius: 6.0.into(),
               },
-              icon: theme::TEXT_MUTED,
               placeholder: theme::TEXT_MUTED,
               value: theme::TEXT_STRONG,
               selection: theme::ACCENT_SUBTLE,

@@ -1,6 +1,6 @@
 use iced::{
   font,
-  widget::{column, container, mouse_area, row, rule, scrollable, text, vertical_rule, Column},
+  widget::{column, container, mouse_area, row, rule, scrollable, text, Column},
   Alignment, Background, Border, Element, Font, Length,
 };
 
@@ -219,11 +219,11 @@ pub fn view(app: &App) -> Element<'_, Message> {
 
   row![
     list_panel,
-    vertical_rule(1).style(|_: &iced::Theme| rule::Style {
+    rule::vertical(1).style(|_: &iced::Theme| rule::Style {
       color: theme::BORDER,
-      width: 1,
       radius: 0.0.into(),
       fill_mode: rule::FillMode::Full,
+      snap: false,
     }),
     detail_panel,
   ]

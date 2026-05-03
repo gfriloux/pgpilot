@@ -11,7 +11,7 @@ pub mod verify;
 
 use iced::{
   font,
-  widget::{button, column, container, horizontal_space, row, text},
+  widget::{button, column, container, row, text},
   Alignment, Background, Border, Color, Element, Font, Length, Shadow,
 };
 
@@ -41,7 +41,7 @@ pub fn root(app: &App) -> Element<'_, Message> {
         container(
           row![
             text(msg.as_str()).size(12),
-            horizontal_space(),
+            iced::widget::Space::new().width(Length::Fill),
             button(text("×").size(12))
               .on_press(Message::DismissStatus(gen))
               .padding([2, 8])
@@ -50,6 +50,7 @@ pub fn root(app: &App) -> Element<'_, Message> {
                 text_color: fg,
                 border: Border::default(),
                 shadow: Shadow::default(),
+                snap: false,
               }),
           ]
           .align_y(Alignment::Center),
@@ -125,6 +126,7 @@ fn sidebar(app: &App) -> Element<'_, Message> {
           radius: 6.0.into(),
         },
         shadow: Default::default(),
+        snap: false,
       },
     )
   };
