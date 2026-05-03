@@ -183,7 +183,7 @@ On NixOS, `pkgs.dbus` must be present in `LD_LIBRARY_PATH` for the native file d
 
 ## Roadmap
 
-The following items are implemented in the current release (v0.2.0):
+The following items are implemented in the current release (v0.4.0):
 
 - Key listing and detail panel
 - Export, backup, import, delete
