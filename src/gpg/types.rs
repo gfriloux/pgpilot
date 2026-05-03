@@ -151,3 +151,12 @@ pub fn format_date(t: std::time::SystemTime) -> String {
   let dt: chrono::DateTime<Utc> = t.into();
   dt.format("%Y-%m-%d").to_string()
 }
+
+#[derive(Debug, Clone)]
+pub struct VerifyResult {
+  pub valid: bool,
+  pub signer_name: Option<String>,
+  pub signer_fp: Option<String>,
+  pub signed_at: Option<String>,
+  pub detail: String,
+}

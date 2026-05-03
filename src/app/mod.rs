@@ -6,6 +6,7 @@ mod export;
 mod import;
 mod keyserver;
 mod nav;
+mod sign;
 mod subkeys;
 
 use std::collections::HashMap;
@@ -14,7 +15,7 @@ use std::path::PathBuf;
 use iced::widget::text_editor;
 use iced::Task;
 
-use crate::gpg::{HealthCheck, KeyExpiry, KeyInfo, Keyserver, TrustLevel};
+use crate::gpg::{HealthCheck, KeyExpiry, KeyInfo, Keyserver, TrustLevel, VerifyResult};
 use crate::ui;
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
@@ -27,6 +28,7 @@ pub enum View {
   Health,
   Encrypt,
   Decrypt,
+  Sign,
 }
 
 pub struct ImportForm {
@@ -106,6 +108,18 @@ pub enum StatusKind {
 }
 
 #[derive(Default)]
+pub struct SignForm {
+  pub file: Option<PathBuf>,
+  pub signer_fp: Option<String>,
+  pub sign_result: Option<PathBuf>,
+  pub verify_file: Option<PathBuf>,
+  pub verify_sig_file: Option<PathBuf>,
+  pub verify_result: Option<Result<VerifyResult, String>>,
+  pub signing: bool,
+  pub verifying: bool,
+}
+
+#[derive(Default)]
 pub struct App {
   pub view: View,
   pub keys: Vec<KeyInfo>,
@@ -122,6 +136,7 @@ pub struct App {
   pub decrypt_form: DecryptForm,
   pub health_report: Vec<HealthCheck>,
   pub health_loading: bool,
+  pub sign_form: SignForm,
 }
 
 #[derive(Debug, Clone)]
@@ -201,6 +216,17 @@ pub enum Message {
   DecryptExecute,
   DecryptDone(Result<Vec<String>, String>),
   FileDropped(PathBuf),
+  SignPickFile,
+  SignFilePicked(Result<Option<PathBuf>, String>),
+  SignSelectSigner(String),
+  SignExecute,
+  SignDone(Result<PathBuf, String>),
+  VerifyPickFile,
+  VerifyFilePicked(Result<Option<PathBuf>, String>),
+  VerifyPickSig,
+  VerifySigPicked(Result<Option<PathBuf>, String>),
+  VerifyExecute,
+  VerifyDone(Result<VerifyResult, String>),
 }
 
 pub(crate) async fn blocking_task<T, F>(f: F) -> Result<T, String>
@@ -441,6 +467,17 @@ impl App {
       Message::DecryptFileInspected(path, r) => self.on_decrypt_file_inspected(path, r),
       Message::DecryptExecute => self.on_decrypt_execute(),
       Message::DecryptDone(r) => self.on_decrypt_done(r),
+      Message::SignPickFile => self.on_sign_pick_file(),
+      Message::SignFilePicked(r) => self.on_sign_file_picked(r),
+      Message::SignSelectSigner(fp) => self.on_sign_select_signer(fp),
+      Message::SignExecute => self.on_sign_execute(),
+      Message::SignDone(r) => self.on_sign_done(r),
+      Message::VerifyPickFile => self.on_verify_pick_file(),
+      Message::VerifyFilePicked(r) => self.on_verify_file_picked(r),
+      Message::VerifyPickSig => self.on_verify_pick_sig(),
+      Message::VerifySigPicked(r) => self.on_verify_sig_picked(r),
+      Message::VerifyExecute => self.on_verify_execute(),
+      Message::VerifyDone(r) => self.on_verify_done(r),
       Message::FileDropped(path) => {
         if self.view == View::Encrypt && !self.encrypt_form.files.contains(&path) {
           self.encrypt_form.files.push(path);

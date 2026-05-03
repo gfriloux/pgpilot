@@ -707,6 +707,107 @@ pub fn encrypt_files(
   Ok(results)
 }
 
+pub fn sign_file(file: PathBuf, signer_fp: &str) -> Result<PathBuf> {
+  let gnupg = super::gnupg_dir();
+  let sig_path = PathBuf::from(format!("{}.sig", file.display()));
+
+  let out = Command::new("gpg")
+    .arg("--homedir")
+    .arg(&gnupg)
+    .args(["--batch", "--yes", "--detach-sign", "--armor"])
+    .args(["--local-user", signer_fp])
+    .arg("--output")
+    .arg(&sig_path)
+    .arg(&file)
+    .output()
+    .context("failed to run gpg --detach-sign")?;
+
+  if !out.status.success() {
+    let stderr = String::from_utf8_lossy(&out.stderr);
+    return Err(anyhow::anyhow!(
+      "Échec de la signature de {} : {}",
+      file.file_name().unwrap_or_default().to_string_lossy(),
+      stderr.trim()
+    ));
+  }
+  Ok(sig_path)
+}
+
+pub fn verify_signature(
+  file: PathBuf,
+  sig_file: Option<PathBuf>,
+) -> Result<super::types::VerifyResult> {
+  use super::types::VerifyResult;
+
+  let gnupg = super::gnupg_dir();
+  let sig = match sig_file {
+    Some(s) => s,
+    None => PathBuf::from(format!("{}.sig", file.display())),
+  };
+
+  if !sig.exists() {
+    return Err(anyhow::anyhow!(
+      "Fichier de signature introuvable : {}",
+      sig.display()
+    ));
+  }
+
+  let out = Command::new("gpg")
+    .arg("--homedir")
+    .arg(&gnupg)
+    .args(["--batch", "--status-fd", "1", "--verify"])
+    .arg(&sig)
+    .arg(&file)
+    .output()
+    .context("failed to run gpg --verify")?;
+
+  let stdout = String::from_utf8_lossy(&out.stdout).to_string();
+  let stderr = String::from_utf8_lossy(&out.stderr).to_string();
+  let detail = format!("{stdout}{stderr}").trim().to_string();
+
+  let valid = out.status.success()
+    && (stdout.contains("[GNUPG:] GOODSIG") || stdout.contains("[GNUPG:] VALIDSIG"));
+
+  let signer_fp = stdout.lines().find_map(|line| {
+    let fields: Vec<&str> = line.split_whitespace().collect();
+    if fields.len() >= 3 && fields[0] == "[GNUPG:]" && fields[1] == "VALIDSIG" {
+      Some(fields[2].to_string())
+    } else {
+      None
+    }
+  });
+
+  let signer_name = stdout.lines().find_map(|line| {
+    if let Some(rest) = line.strip_prefix("[GNUPG:] GOODSIG ") {
+      let parts: Vec<&str> = rest.splitn(2, ' ').collect();
+      if parts.len() == 2 {
+        return Some(parts[1].to_string());
+      }
+    }
+    None
+  });
+
+  let signed_at = stdout.lines().find_map(|line| {
+    let fields: Vec<&str> = line.split_whitespace().collect();
+    if fields.len() >= 4 && fields[0] == "[GNUPG:]" && fields[1] == "VALIDSIG" {
+      if let Ok(ts) = fields[3].parse::<i64>() {
+        use chrono::TimeZone;
+        let dt = chrono::Utc.timestamp_opt(ts, 0).single()?;
+        return Some(dt.format("%Y-%m-%d %H:%M UTC").to_string());
+      }
+    }
+    None
+  });
+
+  Ok(VerifyResult {
+    valid,
+    signer_name,
+    signer_fp,
+    signed_at,
+    detail,
+  })
+}
+
 pub fn inspect_decrypt(file: &std::path::Path) -> Result<super::types::DecryptStatus> {
   use super::types::DecryptStatus;
   let gnupg = super::gnupg_dir();

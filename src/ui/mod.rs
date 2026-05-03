@@ -5,6 +5,7 @@ pub mod health;
 pub mod import;
 pub mod key_detail;
 pub mod key_list;
+pub mod sign;
 pub mod theme;
 
 use iced::{
@@ -23,6 +24,7 @@ pub fn root(app: &App) -> Element<'_, Message> {
     View::Health => health::view(&app.health_report, app.health_loading),
     View::Encrypt => encrypt::view(&app.encrypt_form, &app.keys),
     View::Decrypt => decrypt::view(&app.decrypt_form),
+    View::Sign => sign::view(&app.sign_form, &app.keys),
   };
 
   let main: Element<Message> = match &app.status {
@@ -131,6 +133,7 @@ fn sidebar(app: &App) -> Element<'_, Message> {
       nav_btn("\u{f067}", "Créer une clef", View::CreateKey),
       nav_btn("\u{f023}", "Chiffrer", View::Encrypt),
       nav_btn("\u{f13e}", "Déchiffrer", View::Decrypt),
+      nav_btn("\u{f14b}", "Signer / Vérifier", View::Sign),
     ]
     .spacing(2),
     nav_btn("\u{f132}", "Diagnostic", View::Health),
