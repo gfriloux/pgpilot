@@ -275,7 +275,7 @@ fn keyserver_badge(status: KeyserverStatus, fingerprint: &str) -> Element<'_, Me
         .color(theme::TEXT_MUTED),
     )
     .into(),
-    KeyserverStatus::Unknown => container(text("").size(0)).into(),
+    KeyserverStatus::Unknown => iced::widget::Space::new().into(),
   }
 }
 
@@ -765,16 +765,21 @@ fn left_column_items(
     .into(),
     keyserver_badge(keyserver_status, &key.fingerprint),
     container(
-      row![
-        text(key.algo.clone()).size(12),
-        text("·").size(12),
-        text(format!("Créée : {}", key.created)).size(12),
-        text("·").size(12),
-        text(format!("Expire : {expires}")).size(12),
-        text("·").size(12),
-        text(key_type).size(12),
+      column![
+        row![
+          text(key.algo.clone()).size(12),
+          text("·").size(12),
+          text(key_type).size(12),
+        ]
+        .spacing(6),
+        row![
+          text(format!("Créée : {}", key.created)).size(12),
+          text("·").size(12),
+          text(format!("Expire : {expires}")).size(12),
+        ]
+        .spacing(6),
       ]
-      .spacing(6),
+      .spacing(2),
     )
     .style(|_: &iced::Theme| container::Style {
       text_color: Some(theme::TEXT_SECONDARY),

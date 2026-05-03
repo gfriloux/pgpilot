@@ -1,6 +1,6 @@
 use iced::{
   font,
-  widget::{column, container, row, scrollable, text},
+  widget::{column, container, row, rule, scrollable, text},
   Alignment, Background, Border, Color, Element, Font, Length,
 };
 
@@ -297,6 +297,15 @@ pub fn view<'a>(form: &'a SignForm) -> Element<'a, Message> {
 
   let can_verify = form.verify_file.is_some() && !form.verifying;
 
+  let rule_sep = || {
+    rule::horizontal(1).style(|_: &iced::Theme| rule::Style {
+      color: theme::BORDER,
+      radius: 0.0.into(),
+      fill_mode: rule::FillMode::Full,
+      snap: true,
+    })
+  };
+
   let card = container(
     column![
       column![
@@ -319,8 +328,11 @@ pub fn view<'a>(form: &'a SignForm) -> Element<'a, Message> {
         }),
       ]
       .spacing(6),
+      rule_sep(),
       file_row,
+      rule_sep(),
       sig_row,
+      rule_sep(),
       {
         let verify_action: Element<'_, Message> = row![
           iced::widget::Space::new().width(Length::Fill),
@@ -329,6 +341,7 @@ pub fn view<'a>(form: &'a SignForm) -> Element<'a, Message> {
         .into();
         verify_action
       },
+      rule_sep(),
       result_el,
     ]
     .spacing(16),

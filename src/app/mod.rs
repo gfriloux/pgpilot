@@ -139,6 +139,7 @@ pub struct App {
   pub health_report: Vec<HealthCheck>,
   pub health_loading: bool,
   pub sign_form: SignForm,
+  pub previous_view: Option<View>,
 }
 
 #[derive(Debug, Clone)]
@@ -230,6 +231,7 @@ pub enum Message {
   VerifyExecute,
   VerifyDone(Result<VerifyResult, String>),
   DismissStatus(u32),
+  NavBack,
 }
 
 pub(crate) async fn blocking_task<T, F>(f: F) -> Result<T, String>
@@ -415,6 +417,7 @@ impl App {
       // Delegated handlers
       Message::KeysLoaded(r) => self.on_keys_loaded(r),
       Message::NavChanged(v) => self.on_nav_changed(v),
+      Message::NavBack => self.on_nav_back(),
       Message::KeySelected(fp) => self.on_key_selected(fp),
       Message::KeyserverStatusLoaded(r) => self.on_keyserver_status_loaded(r),
       Message::ExportPublicKeyMenu(fp) => self.on_export_pub_menu(fp),

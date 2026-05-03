@@ -41,7 +41,15 @@ impl App {
     }
   }
 
+  pub(super) fn on_nav_back(&mut self) -> Task<Message> {
+    let dest = self.previous_view.take().unwrap_or(View::MyKeys);
+    self.on_nav_changed(dest)
+  }
+
   pub(super) fn on_nav_changed(&mut self, view: View) -> Task<Message> {
+    if matches!(view, View::CreateKey | View::Import) {
+      self.previous_view = Some(self.view.clone());
+    }
     let is_health = view == View::Health;
     self.view = view;
     self.selected = None;

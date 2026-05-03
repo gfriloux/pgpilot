@@ -13,7 +13,7 @@ pub mod verify;
 
 use iced::{
   font,
-  widget::{button, column, container, row, text},
+  widget::{button, column, container, row, rule, text, Space},
   Alignment, Background, Border, Color, Element, Font, Length, Shadow,
 };
 
@@ -138,30 +138,57 @@ fn sidebar(app: &App) -> Element<'_, Message> {
     ..Font::DEFAULT
   };
 
+  let section_label = |label: &'static str| {
+    text(label)
+      .size(10)
+      .style(|_: &iced::Theme| iced::widget::text::Style {
+        color: Some(theme::TEXT_MUTED),
+      })
+  };
+
+  let sep = || {
+    rule::horizontal(1).style(|_: &iced::Theme| rule::Style {
+      color: theme::BORDER,
+      radius: 0.0.into(),
+      fill_mode: rule::FillMode::Full,
+      snap: true,
+    })
+  };
+
   column![
     row![
-      text("\u{f084}").font(theme::ICONS).size(18),
+      text("\u{f21b}").font(theme::ICONS).size(18),
       text("pgpilot").size(20).font(title_font),
     ]
     .spacing(8)
     .align_y(Alignment::Center),
+    sep(),
     column![
+      section_label("CLEFS"),
       nav_btn("\u{f084}", "Mes clefs", View::MyKeys),
       nav_btn("\u{f0c0}", "Clefs publiques", View::PublicKeys),
     ]
     .spacing(2),
+    sep(),
     column![
-      nav_btn("\u{f093}", "Importer", View::Import),
-      nav_btn("\u{f067}", "Créer une clef", View::CreateKey),
+      section_label("OPÉRATIONS"),
       nav_btn("\u{f023}", "Chiffrer", View::Encrypt),
       nav_btn("\u{f13e}", "Déchiffrer", View::Decrypt),
       nav_btn("\u{f14b}", "Signer", View::Sign),
       nav_btn("\u{f00c}", "Vérifier", View::Verify),
     ]
     .spacing(2),
-    nav_btn("\u{f132}", "Diagnostic", View::Health),
+    sep(),
+    Space::new().height(Length::Fill),
+    column![
+      section_label("OUTILS"),
+      nav_btn("\u{f093}", "Importer", View::Import),
+      nav_btn("\u{f067}", "Créer une clef", View::CreateKey),
+      nav_btn("\u{f132}", "Diagnostic", View::Health),
+    ]
+    .spacing(2),
   ]
-  .spacing(16)
+  .spacing(8)
   .padding(12)
   .width(180)
   .height(Length::Fill)

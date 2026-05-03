@@ -6,7 +6,7 @@ use iced::{
   Background, Border, Color, Element, Font, Length,
 };
 
-use crate::app::{CreateKeyForm, Message, View};
+use crate::app::{CreateKeyForm, Message};
 use crate::gpg::KeyExpiry;
 use crate::ui::theme;
 
@@ -106,7 +106,7 @@ pub fn view(form: &CreateKeyForm) -> Element<'_, Message> {
   };
 
   let cancel_btn = button(text("Annuler").size(13))
-    .on_press(Message::NavChanged(View::MyKeys))
+    .on_press(Message::NavBack)
     .style(|_: &iced::Theme, status: button::Status| button::Style {
       background: Some(Background::Color(match status {
         button::Status::Hovered | button::Status::Pressed => theme::HEADER_BG,

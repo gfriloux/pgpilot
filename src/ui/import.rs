@@ -6,7 +6,7 @@ use iced::{
   Background, Border, Color, Element, Font, Length,
 };
 
-use crate::app::{ImportForm, Message, View};
+use crate::app::{ImportForm, Message};
 use crate::gpg::Keyserver;
 use crate::ui::theme;
 
@@ -67,7 +67,7 @@ pub fn view(form: &ImportForm) -> Element<'_, Message> {
   };
 
   let cancel_btn = button(text("Annuler").size(13))
-    .on_press(Message::NavChanged(View::MyKeys))
+    .on_press(Message::NavBack)
     .style(|_: &iced::Theme, status: button::Status| button::Style {
       background: Some(Background::Color(match status {
         button::Status::Hovered | button::Status::Pressed => theme::HEADER_BG,

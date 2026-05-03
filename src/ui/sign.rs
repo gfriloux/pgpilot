@@ -1,6 +1,6 @@
 use iced::{
   font,
-  widget::{button, column, container, row, scrollable, text},
+  widget::{button, column, container, row, rule, scrollable, text},
   Alignment, Background, Border, Color, Element, Font, Length, Shadow,
 };
 
@@ -183,6 +183,15 @@ pub fn view<'a>(form: &'a SignForm, keys: &'a [KeyInfo]) -> Element<'a, Message>
 
   let can_sign = form.file.is_some() && form.signer_fp.is_some() && !form.signing;
 
+  let rule_sep = || {
+    rule::horizontal(1).style(|_: &iced::Theme| rule::Style {
+      color: theme::BORDER,
+      radius: 0.0.into(),
+      fill_mode: rule::FillMode::Full,
+      snap: true,
+    })
+  };
+
   let card = container(
     column![
       column![
@@ -206,7 +215,9 @@ pub fn view<'a>(form: &'a SignForm, keys: &'a [KeyInfo]) -> Element<'a, Message>
         }),
       ]
       .spacing(6),
+      rule_sep(),
       file_row,
+      rule_sep(),
       column![
         container(text("Clef signataire").size(12).font(bold)).style(|_: &iced::Theme| {
           container::Style {
@@ -214,9 +225,20 @@ pub fn view<'a>(form: &'a SignForm, keys: &'a [KeyInfo]) -> Element<'a, Message>
             ..Default::default()
           }
         }),
-        scrollable(column(signer_items).spacing(2).padding([0, 2])).height(140),
+        container(scrollable(column(signer_items).spacing(2).padding([0, 2])).height(140))
+          .padding(4)
+          .style(|_: &iced::Theme| container::Style {
+            background: Some(Background::Color(theme::HEADER_BG)),
+            border: Border {
+              color: theme::BORDER,
+              width: 1.0,
+              radius: 4.0.into(),
+            },
+            ..Default::default()
+          }),
       ]
       .spacing(6),
+      rule_sep(),
       {
         let sign_action: Element<'_, Message> = row![
           iced::widget::Space::new().width(Length::Fill),
@@ -225,6 +247,7 @@ pub fn view<'a>(form: &'a SignForm, keys: &'a [KeyInfo]) -> Element<'a, Message>
         .into();
         sign_action
       },
+      rule_sep(),
       result_el,
     ]
     .spacing(16),
