@@ -17,5 +17,5 @@ pub use keyring::{
   rotate_subkey, set_key_trust, sign_file, upload_public_key, verify_signature,
 };
 pub use types::{
-  DecryptStatus, KeyExpiry, KeyInfo, Keyserver, SubkeyType, TrustLevel, VerifyResult,
+  DecryptStatus, KeyExpiry, KeyInfo, Keyserver, SubkeyType, TrustLevel, VerifyOutcome, VerifyResult,
 };

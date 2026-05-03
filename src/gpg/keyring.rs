@@ -744,7 +744,7 @@ pub fn verify_signature(
   file: PathBuf,
   sig_file: Option<PathBuf>,
 ) -> Result<super::types::VerifyResult> {
-  use super::types::VerifyResult;
+  use super::types::{VerifyOutcome, VerifyResult};
 
   let gnupg = super::gnupg_dir();
   let sig = match sig_file {
@@ -772,9 +772,43 @@ pub fn verify_signature(
   let stderr = String::from_utf8_lossy(&out.stderr).to_string();
   let detail = format!("{stdout}{stderr}").trim().to_string();
 
-  let valid = out.status.success()
-    && (stdout.contains("[GNUPG:] GOODSIG") || stdout.contains("[GNUPG:] VALIDSIG"));
+  let has_goodsig = stdout.lines().any(|l| {
+    let mut f = l.split_whitespace();
+    f.next() == Some("[GNUPG:]") && f.next() == Some("GOODSIG")
+  });
+  let has_validsig = stdout.lines().any(|l| {
+    let mut f = l.split_whitespace();
+    f.next() == Some("[GNUPG:]") && f.next() == Some("VALIDSIG")
+  });
 
+  let outcome = if has_goodsig && has_validsig {
+    VerifyOutcome::Valid
+  } else if stdout.lines().any(|l| {
+    let mut f = l.split_whitespace();
+    f.next() == Some("[GNUPG:]") && matches!(f.next(), Some("NO_PUBKEY") | Some("ERRSIG"))
+  }) {
+    VerifyOutcome::UnknownKey
+  } else if stdout.lines().any(|l| {
+    let mut f = l.split_whitespace();
+    f.next() == Some("[GNUPG:]") && f.next() == Some("EXPKEYSIG")
+  }) {
+    VerifyOutcome::ExpiredKey
+  } else if stdout.lines().any(|l| {
+    let mut f = l.split_whitespace();
+    f.next() == Some("[GNUPG:]") && f.next() == Some("REVKEYSIG")
+  }) {
+    VerifyOutcome::RevokedKey
+  } else if stdout.lines().any(|l| {
+    let mut f = l.split_whitespace();
+    f.next() == Some("[GNUPG:]") && f.next() == Some("BADSIG")
+  }) {
+    VerifyOutcome::BadSig
+  } else {
+    VerifyOutcome::Error(detail.clone())
+  };
+
+  // VALIDSIG émet le fingerprint 40 hex en champ 2 (fingerprint complet de la sous-clef).
+  // BADSIG/EXPKEYSIG/REVKEYSIG/GOODSIG émettent seulement le key ID 16 hex en champ 2.
   let signer_fp = stdout.lines().find_map(|line| {
     let fields: Vec<&str> = line.split_whitespace().collect();
     if fields.len() >= 3 && fields[0] == "[GNUPG:]" && fields[1] == "VALIDSIG" {
@@ -784,11 +818,15 @@ pub fn verify_signature(
     }
   });
 
+  // Tokens GOODSIG, BADSIG, EXPKEYSIG, REVKEYSIG : `[GNUPG:] <TOKEN> <keyid> <name...>`
   let signer_name = stdout.lines().find_map(|line| {
-    if let Some(rest) = line.strip_prefix("[GNUPG:] GOODSIG ") {
-      let parts: Vec<&str> = rest.splitn(2, ' ').collect();
-      if parts.len() == 2 {
-        return Some(parts[1].to_string());
+    let tokens = ["GOODSIG", "BADSIG", "EXPKEYSIG", "REVKEYSIG"];
+    for token in tokens {
+      let prefix = format!("[GNUPG:] {token} ");
+      if let Some(rest) = line.strip_prefix(&prefix) {
+        let mut parts = rest.splitn(2, ' ');
+        parts.next();
+        return parts.next().map(str::to_string);
       }
     }
     None
@@ -807,7 +845,7 @@ pub fn verify_signature(
   });
 
   Ok(VerifyResult {
-    valid,
+    outcome,
     signer_name,
     signer_fp,
     signed_at,

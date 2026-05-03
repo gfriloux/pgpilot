@@ -153,8 +153,18 @@ pub fn format_date(t: std::time::SystemTime) -> String {
 }
 
 #[derive(Debug, Clone)]
+pub enum VerifyOutcome {
+  Valid,
+  BadSig,
+  UnknownKey,
+  ExpiredKey,
+  RevokedKey,
+  Error(String),
+}
+
+#[derive(Debug, Clone)]
 pub struct VerifyResult {
-  pub valid: bool,
+  pub outcome: VerifyOutcome,
   pub signer_name: Option<String>,
   pub signer_fp: Option<String>,
   pub signed_at: Option<String>,

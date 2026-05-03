@@ -5,6 +5,7 @@ use iced::{
 };
 
 use crate::app::{Message, SignForm};
+use crate::gpg::VerifyOutcome;
 use crate::ui::theme;
 
 fn pick_btn<'a>(
@@ -66,6 +67,56 @@ fn action_btn<'a>(label: &'static str, enabled: bool, on_press: Message) -> Elem
   } else {
     btn.into()
   }
+}
+
+fn result_card<'a>(
+  bold: Font,
+  icon: &'static str,
+  accent: Color,
+  bg: Color,
+  title: &'static str,
+  message: &'a str,
+  detail: &'a str,
+) -> Element<'a, Message> {
+  container(
+    column![
+      row![
+        text(icon)
+          .font(theme::ICONS)
+          .size(16)
+          .style(move |_: &iced::Theme| iced::widget::text::Style {
+            color: Some(accent),
+          }),
+        text(title).size(16).font(bold),
+      ]
+      .spacing(8)
+      .align_y(Alignment::Center),
+      container(text(message).size(12)).style(|_: &iced::Theme| container::Style {
+        text_color: Some(theme::TEXT_SECONDARY),
+        ..Default::default()
+      }),
+      container(text(detail).size(11).font(Font::MONOSPACE)).style(|_: &iced::Theme| {
+        container::Style {
+          text_color: Some(theme::TEXT_MUTED),
+          ..Default::default()
+        }
+      }),
+    ]
+    .spacing(8),
+  )
+  .padding([12, 14])
+  .width(Length::Fill)
+  .style(move |_: &iced::Theme| container::Style {
+    background: Some(Background::Color(bg)),
+    border: Border {
+      color: accent,
+      width: 1.0,
+      radius: 8.0.into(),
+    },
+    text_color: Some(theme::TEXT_STRONG),
+    ..Default::default()
+  })
+  .into()
 }
 
 pub fn view<'a>(form: &'a SignForm) -> Element<'a, Message> {
@@ -178,193 +229,131 @@ pub fn view<'a>(form: &'a SignForm) -> Element<'a, Message> {
       ..Default::default()
     })
     .into(),
-    Some(Ok(vr)) if vr.valid => {
-      let mut details: Vec<Element<'_, Message>> = vec![row![
-        text("\u{f058}")
-          .font(theme::ICONS)
-          .size(20)
-          .style(|_: &iced::Theme| iced::widget::text::Style {
-            color: Some(theme::SUCCESS),
-          }),
-        text("Signature valide").size(18).font(bold),
-      ]
-      .spacing(10)
-      .align_y(Alignment::Center)
-      .into()];
-      if let Some(name) = &vr.signer_name {
-        details.push(
-          row![
-            text("Signataire :").size(12).style(|_: &iced::Theme| {
-              iced::widget::text::Style {
-                color: Some(theme::TEXT_MUTED),
-              }
+    Some(Ok(vr)) => match &vr.outcome {
+      VerifyOutcome::Valid => {
+        let mut details: Vec<Element<'_, Message>> = vec![row![
+          text("\u{f058}")
+            .font(theme::ICONS)
+            .size(20)
+            .style(|_: &iced::Theme| iced::widget::text::Style {
+              color: Some(theme::SUCCESS),
             }),
-            text(name.as_str()).size(13),
-          ]
-          .spacing(8)
-          .align_y(Alignment::Center)
-          .into(),
-        );
-      }
-      if let Some(fp) = &vr.signer_fp {
-        let short_fp = &fp[fp.len().saturating_sub(16)..];
-        details.push(
-          row![
-            text("Fingerprint :").size(12).style(|_: &iced::Theme| {
-              iced::widget::text::Style {
-                color: Some(theme::TEXT_MUTED),
-              }
-            }),
-            text(short_fp.to_string()).size(12).font(Font::MONOSPACE),
-          ]
-          .spacing(8)
-          .align_y(Alignment::Center)
-          .into(),
-        );
-      }
-      if let Some(date) = &vr.signed_at {
-        details.push(
-          row![
-            text("Signé le :").size(12).style(|_: &iced::Theme| {
-              iced::widget::text::Style {
-                color: Some(theme::TEXT_MUTED),
-              }
-            }),
-            text(date.as_str()).size(13),
-          ]
-          .spacing(8)
-          .align_y(Alignment::Center)
-          .into(),
-        );
-      }
-      container(column(details).spacing(6))
-        .padding([12, 14])
-        .width(Length::Fill)
-        .style(|_: &iced::Theme| container::Style {
-          background: Some(Background::Color(theme::SUCCESS_BG)),
-          border: Border {
-            color: theme::SUCCESS,
-            width: 1.0,
-            radius: 8.0.into(),
-          },
-          text_color: Some(theme::TEXT_STRONG),
-          ..Default::default()
-        })
-        .into()
-    }
-    Some(Ok(vr)) => {
-      let unknown_key = vr.detail.contains("No public key")
-        || vr.detail.contains("public key not found")
-        || vr.detail.contains("BAD_DATA")
-        || vr.signer_fp.is_none() && !vr.valid;
-
-      if unknown_key || (vr.signer_fp.is_some() && !vr.valid) {
-        let (bg, border_c, icon, msg, sub) = if vr.signer_fp.is_none()
-          || vr.detail.contains("No public key")
-          || vr.detail.contains("public key not found")
-        {
-          (
-            theme::ERROR_BG,
-            theme::PEACH,
-            "\u{f071}",
-            "Clef de signature inconnue",
-            "La signature est présente mais la clef publique du signataire \
-             n'est pas dans votre trousseau. Importez sa clef pour vérifier l'identité.",
-          )
-        } else {
-          (
-            theme::ERROR_BG,
-            theme::ERROR,
-            "\u{f057}",
-            "Signature INVALIDE",
-            "Ce fichier a peut-être été modifié ou la signature ne correspond pas.",
-          )
-        };
-        container(
-          column![
+          text("Signature valide").size(18).font(bold),
+        ]
+        .spacing(10)
+        .align_y(Alignment::Center)
+        .into()];
+        if let Some(name) = &vr.signer_name {
+          details.push(
             row![
-              text(icon)
-                .font(theme::ICONS)
-                .size(16)
-                .style(move |_: &iced::Theme| iced::widget::text::Style {
-                  color: Some(border_c),
-                }),
-              text(msg).size(16).font(bold),
+              text("Signataire :").size(12).style(|_: &iced::Theme| {
+                iced::widget::text::Style {
+                  color: Some(theme::TEXT_MUTED),
+                }
+              }),
+              text(name.as_str()).size(13),
             ]
             .spacing(8)
-            .align_y(Alignment::Center),
-            container(text(sub).size(12)).style(|_: &iced::Theme| container::Style {
-              text_color: Some(theme::TEXT_SECONDARY),
-              ..Default::default()
-            }),
-            container(text(vr.detail.as_str()).size(11).font(Font::MONOSPACE)).style(
-              |_: &iced::Theme| container::Style {
-                text_color: Some(theme::TEXT_MUTED),
-                ..Default::default()
-              }
-            ),
-          ]
-          .spacing(8),
-        )
-        .padding([12, 14])
-        .width(Length::Fill)
-        .style(move |_: &iced::Theme| container::Style {
-          background: Some(Background::Color(bg)),
-          border: Border {
-            color: border_c,
-            width: 1.0,
-            radius: 8.0.into(),
-          },
-          text_color: Some(theme::TEXT_STRONG),
-          ..Default::default()
-        })
-        .into()
-      } else {
-        container(
-          column![
+            .align_y(Alignment::Center)
+            .into(),
+          );
+        }
+        if let Some(fp) = &vr.signer_fp {
+          let short_fp = &fp[fp.len().saturating_sub(16)..];
+          details.push(
             row![
-              text("\u{f057}")
-                .font(theme::ICONS)
-                .size(16)
-                .style(|_: &iced::Theme| iced::widget::text::Style {
-                  color: Some(theme::ERROR),
-                }),
-              text("Signature INVALIDE").size(16).font(bold),
+              text("Fingerprint :").size(12).style(|_: &iced::Theme| {
+                iced::widget::text::Style {
+                  color: Some(theme::TEXT_MUTED),
+                }
+              }),
+              text(short_fp.to_string()).size(12).font(Font::MONOSPACE),
             ]
             .spacing(8)
-            .align_y(Alignment::Center),
-            container(
-              text("Ce fichier a peut-être été modifié ou la signature ne correspond pas.")
-                .size(12)
-            )
-            .style(|_: &iced::Theme| container::Style {
-              text_color: Some(theme::TEXT_SECONDARY),
-              ..Default::default()
-            }),
-            container(text(vr.detail.as_str()).size(11).font(Font::MONOSPACE)).style(
-              |_: &iced::Theme| container::Style {
-                text_color: Some(theme::TEXT_MUTED),
-                ..Default::default()
-              }
-            ),
-          ]
-          .spacing(8),
-        )
-        .padding([12, 14])
-        .width(Length::Fill)
-        .style(|_: &iced::Theme| container::Style {
-          background: Some(Background::Color(theme::ERROR_BG)),
-          border: Border {
-            color: theme::ERROR,
-            width: 1.0,
-            radius: 8.0.into(),
-          },
-          text_color: Some(theme::TEXT_STRONG),
-          ..Default::default()
-        })
-        .into()
+            .align_y(Alignment::Center)
+            .into(),
+          );
+        }
+        if let Some(date) = &vr.signed_at {
+          details.push(
+            row![
+              text("Signé le :").size(12).style(|_: &iced::Theme| {
+                iced::widget::text::Style {
+                  color: Some(theme::TEXT_MUTED),
+                }
+              }),
+              text(date.as_str()).size(13),
+            ]
+            .spacing(8)
+            .align_y(Alignment::Center)
+            .into(),
+          );
+        }
+        container(column(details).spacing(6))
+          .padding([12, 14])
+          .width(Length::Fill)
+          .style(|_: &iced::Theme| container::Style {
+            background: Some(Background::Color(theme::SUCCESS_BG)),
+            border: Border {
+              color: theme::SUCCESS,
+              width: 1.0,
+              radius: 8.0.into(),
+            },
+            text_color: Some(theme::TEXT_STRONG),
+            ..Default::default()
+          })
+          .into()
       }
-    }
+      VerifyOutcome::BadSig => result_card(
+        bold,
+        "\u{f057}",
+        theme::ERROR,
+        theme::ERROR_BG,
+        "Signature incorrecte",
+        "La signature ne correspond pas à ce fichier. \
+         Vérifiez que vous avez sélectionné le bon fichier et la bonne signature.",
+        &vr.detail,
+      ),
+      VerifyOutcome::UnknownKey => result_card(
+        bold,
+        "\u{f071}",
+        theme::PEACH,
+        theme::ERROR_BG,
+        "Clef de signature inconnue",
+        "La clef publique du signataire n'est pas dans votre trousseau. \
+         Importez-la pour vérifier l'identité du signataire.",
+        &vr.detail,
+      ),
+      VerifyOutcome::ExpiredKey => result_card(
+        bold,
+        "\u{f071}",
+        theme::PEACH,
+        theme::ERROR_BG,
+        "Clef expirée",
+        "La signature est mathématiquement valide, mais la clef du signataire \
+         était expirée au moment de la vérification.",
+        &vr.detail,
+      ),
+      VerifyOutcome::RevokedKey => result_card(
+        bold,
+        "\u{f057}",
+        theme::ERROR,
+        theme::ERROR_BG,
+        "Clef révoquée",
+        "La clef ayant signé ce fichier a été révoquée. \
+         La signature n'est plus considérée comme fiable.",
+        &vr.detail,
+      ),
+      VerifyOutcome::Error(msg) => result_card(
+        bold,
+        "\u{f057}",
+        theme::ERROR,
+        theme::ERROR_BG,
+        "Erreur",
+        msg.as_str(),
+        &vr.detail,
+      ),
+    },
   };
 
   let can_verify = form.verify_file.is_some() && !form.verifying;
