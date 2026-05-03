@@ -1,0 +1,66 @@
+name: CI
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  check:
+    name: Build, lint, audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@v14
+
+      - name: Cache Nix store
+        uses: DeterminateSystems/magic-nix-cache-action@v8
+
+      - name: Cache Cargo registry and build artifacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry/index
+            ~/.cargo/registry/cache
+            ~/.cargo/git/db
+            target
+          key: cargo-${{ runner.os }}-${{ hashFiles('Cargo.lock') }}
+          restore-keys: |
+            cargo-${{ runner.os }}-
+
+      # All cargo commands run inside the dev shell so LIBCLANG_PATH and
+      # LD_LIBRARY_PATH are set correctly for sequoia-openpgp and iced.
+
+      - name: cargo fmt
+        run: nix develop --command cargo fmt -- --check --config tab_spaces=2
+
+      - name: cargo clippy
+        run: nix develop --command cargo clippy -- -D warnings
+
+      - name: cargo build
+        run: nix develop --command cargo build
+
+      - name: cargo audit
+        run: nix develop --command cargo audit
+        # Treat advisories as warnings during audits so a newly published CVE
+        # does not block merges before a fix is available. Remove --warn-severity
+        # if you want hard failures.
+        continue-on-error: true
+
+  nix-check:
+    name: nix flake check (Nix formatting & lints)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@v14
+
+      - name: Cache Nix store
+        uses: DeterminateSystems/magic-nix-cache-action@v8
+
+      - name: nix flake check
+        run: nix flake check
