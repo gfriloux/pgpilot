@@ -43,6 +43,7 @@ pub fn card_status() -> Option<CardInfo> {
 }
 
 pub fn move_key_to_card(fingerprint: &str) -> Result<()> {
+  super::keyring::validate_fp(fingerprint)?;
   let pub_bytes = Command::new("gpg")
     .args(["--export", fingerprint])
     .output()

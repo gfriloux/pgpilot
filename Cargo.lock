@@ -2771,6 +2771,7 @@ dependencies = [
  "anyhow",
  "chrono",
  "iced",
+ "percent-encoding",
  "rfd",
  "sequoia-openpgp",
  "tokio",

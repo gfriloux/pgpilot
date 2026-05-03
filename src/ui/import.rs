@@ -196,29 +196,32 @@ pub fn view(form: &ImportForm) -> Element<'_, Message> {
       column![
         section_label("Depuis un keyserver"),
         hint("Fingerprint complet (40 hex), ID long (16 hex) ou adresse email."),
-        text_input("ABC123... ou alice@example.com", &form.keyserver_query)
-          .on_input(Message::ImportKeyserverQueryChanged)
-          .size(13)
-          .width(Length::Fill)
-          .style(|_: &iced::Theme, status| {
-            let border = match status {
-              text_input::Status::Focused { .. } => theme::ACCENT,
-              text_input::Status::Hovered => theme::ACCENT_BORDER,
-              _ => theme::BORDER,
-            };
-            text_input::Style {
-              background: Background::Color(theme::HEADER_BG),
-              border: Border {
-                color: border,
-                width: 1.0,
-                radius: 6.0.into(),
-              },
-              icon: theme::TEXT_MUTED,
-              placeholder: theme::TEXT_MUTED,
-              value: theme::TEXT_STRONG,
-              selection: theme::ACCENT_SUBTLE,
-            }
-          }),
+        text_input(
+          "Fingerprint (40 hex), ID long (16 hex) ou email",
+          &form.keyserver_query,
+        )
+        .on_input(Message::ImportKeyserverQueryChanged)
+        .size(13)
+        .width(Length::Fill)
+        .style(|_: &iced::Theme, status| {
+          let border = match status {
+            text_input::Status::Focused { .. } => theme::ACCENT,
+            text_input::Status::Hovered => theme::ACCENT_BORDER,
+            _ => theme::BORDER,
+          };
+          text_input::Style {
+            background: Background::Color(theme::HEADER_BG),
+            border: Border {
+              color: border,
+              width: 1.0,
+              radius: 6.0.into(),
+            },
+            icon: theme::TEXT_MUTED,
+            placeholder: theme::TEXT_MUTED,
+            value: theme::TEXT_STRONG,
+            selection: theme::ACCENT_SUBTLE,
+          }
+        }),
         ks_list,
         action_btn(
           "Importer depuis le keyserver",

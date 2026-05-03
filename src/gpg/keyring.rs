@@ -4,6 +4,7 @@ use std::path::PathBuf;
 use std::process::{Command, Stdio};
 
 use anyhow::{Context, Result};
+use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
 use sequoia_openpgp::{
   cert::{amalgamation::ValidAmalgamation, CertParser},
   parse::Parse,
@@ -45,6 +46,32 @@ fn expiry_to_str(expiry: &KeyExpiry) -> &'static str {
     KeyExpiry::TwoYears => "2y",
     KeyExpiry::FiveYears => "5y",
   }
+}
+
+pub(super) fn validate_fp(fp: &str) -> Result<()> {
+  if fp.len() != 40 || !fp.chars().all(|c| c.is_ascii_hexdigit()) {
+    anyhow::bail!("Fingerprint invalide : doit être 40 caractères hexadécimaux");
+  }
+  Ok(())
+}
+
+fn validate_keyserver_query(query: &str) -> Result<()> {
+  if query.len() == 40 && query.chars().all(|c| c.is_ascii_hexdigit()) {
+    return Ok(());
+  }
+  if query.len() == 16 && query.chars().all(|c| c.is_ascii_hexdigit()) {
+    return Ok(());
+  }
+  if query.contains('@')
+    && query
+      .chars()
+      .all(|c| c.is_alphanumeric() || "@._+-".contains(c))
+  {
+    return Ok(());
+  }
+  anyhow::bail!(
+    "Requête invalide : entrez un fingerprint 40 hex, un ID long 16 hex, ou une adresse email"
+  );
 }
 
 fn all_public_fingerprints() -> Result<HashSet<String>> {
@@ -134,6 +161,7 @@ pub fn create_key(
 }
 
 pub fn export_public_key_armored(fingerprint: &str) -> Result<String> {
+  validate_fp(fingerprint)?;
   let output = Command::new("gpg")
     .args(["--export", "--armor", fingerprint])
     .output()
@@ -183,6 +211,7 @@ pub fn upload_public_key(fingerprint: &str) -> Result<String> {
 }
 
 pub fn export_public_key(fingerprint: &str, path: &std::path::Path) -> Result<()> {
+  validate_fp(fingerprint)?;
   let output = Command::new("gpg")
     .args(["--export", "--armor", fingerprint])
     .output()
@@ -200,6 +229,7 @@ pub fn export_public_key(fingerprint: &str, path: &std::path::Path) -> Result<()
 }
 
 fn export_secret_key(fingerprint: &str, path: &std::path::Path) -> Result<()> {
+  validate_fp(fingerprint)?;
   let output = Command::new("gpg")
     .args(["--export-secret-keys", "--armor", fingerprint])
     .output()
@@ -223,6 +253,7 @@ pub fn backup_key(
   dir: &std::path::Path,
   key_id: &str,
 ) -> Result<(String, Option<String>)> {
+  validate_fp(fingerprint)?;
   let key_filename = format!("{key_id}_secret.asc");
   export_secret_key(fingerprint, &dir.join(&key_filename))?;
 
@@ -244,6 +275,7 @@ pub fn backup_key(
 }
 
 pub fn check_keyserver(fingerprint: &str) -> Result<(String, bool)> {
+  validate_fp(fingerprint)?;
   let url = format!(
     "https://keys.openpgp.org/vks/v1/by-fingerprint/{}",
     fingerprint.to_uppercase()
@@ -255,6 +287,7 @@ pub fn check_keyserver(fingerprint: &str) -> Result<(String, bool)> {
 }
 
 pub fn publish_key(fingerprint: &str, keyserver_url: &str) -> Result<String> {
+  validate_fp(fingerprint)?;
   let status = Command::new("gpg")
     .args(["--keyserver", keyserver_url, "--send-keys", fingerprint])
     .status()
@@ -337,12 +370,14 @@ pub fn rotate_subkey(
   usage: &str,
   expiry: &KeyExpiry,
 ) -> Result<()> {
+  validate_fp(master_fp)?;
   add_subkey(master_fp, algo, usage, expiry)?;
   let pos = subkey_position(master_fp, old_subkey_fp)?;
   revoke_subkey_at_pos(master_fp, pos)
 }
 
 pub fn add_subkey(master_fp: &str, algo: &str, usage: &str, expiry: &KeyExpiry) -> Result<()> {
+  validate_fp(master_fp)?;
   let expire = expiry_to_str(expiry);
   let status = Command::new("gpg")
     .args(["--batch", "--quick-add-key", master_fp, algo, usage, expire])
@@ -356,6 +391,7 @@ pub fn add_subkey(master_fp: &str, algo: &str, usage: &str, expiry: &KeyExpiry) 
 }
 
 pub fn renew_subkey(master_fp: &str, subkey_fp: &str, expiry: &KeyExpiry) -> Result<()> {
+  validate_fp(master_fp)?;
   let expire = expiry_to_str(expiry);
   let status = Command::new("gpg")
     .args([
@@ -377,6 +413,7 @@ pub fn renew_subkey(master_fp: &str, subkey_fp: &str, expiry: &KeyExpiry) -> Res
 }
 
 pub fn delete_key(fingerprint: &str, has_secret: bool) -> Result<()> {
+  validate_fp(fingerprint)?;
   let cmd = if has_secret {
     "--delete-secret-and-public-keys"
   } else {
@@ -427,8 +464,9 @@ pub fn import_key_from_url(url: &str) -> Result<()> {
 }
 
 pub fn import_key_from_keyserver(query: &str, keyserver_url: &str) -> Result<()> {
+  validate_keyserver_query(query)?;
   if query.contains('@') {
-    let encoded = query.replace('@', "%40");
+    let encoded = utf8_percent_encode(query, NON_ALPHANUMERIC).to_string();
     let url = format!("https://{keyserver_url}/pks/lookup?op=get&search={encoded}");
     let content =
       safe_get(&url).map_err(|e| anyhow::anyhow!("Impossible de joindre le keyserver : {e}"))?;
@@ -640,6 +678,7 @@ fn cert_to_key_info(
 }
 
 pub fn set_key_trust(fingerprint: &str, trust: &TrustLevel) -> Result<()> {
+  validate_fp(fingerprint)?;
   let level: u8 = match trust {
     TrustLevel::Undefined => 2,
     TrustLevel::Marginal => 4,
@@ -738,6 +777,7 @@ pub fn encrypt_files(
 }
 
 pub fn sign_file(file: PathBuf, signer_fp: &str) -> Result<PathBuf> {
+  validate_fp(signer_fp)?;
   let gnupg = super::gnupg_dir();
   let mut sig_path = file.with_extension("sig");
   let mut counter = 1u32;
