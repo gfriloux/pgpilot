@@ -26,10 +26,7 @@ impl App {
   ) -> Task<Message> {
     let new_files = match result {
       Ok(files) => files,
-      Err(e) => {
-        self.status = Some((StatusKind::Error, e));
-        return Task::none();
-      }
+      Err(e) => return self.set_status(StatusKind::Error, e),
     };
 
     let mut tasks = Vec::new();
@@ -77,11 +74,10 @@ impl App {
       .collect();
 
     if files.is_empty() {
-      self.status = Some((
+      return self.set_status(
         StatusKind::Error,
         "Aucun fichier déchiffrable sélectionné.".to_string(),
-      ));
-      return Task::none();
+      );
     }
 
     self.decrypt_form.decrypting = true;
@@ -101,14 +97,11 @@ impl App {
         } else {
           format!("{} fichiers déchiffrés", names.len())
         };
-        self.status = Some((StatusKind::Success, summary));
         self.decrypt_form.files.clear();
         self.decrypt_form.file_statuses.clear();
+        self.set_status(StatusKind::Success, summary)
       }
-      Err(e) => {
-        self.status = Some((StatusKind::Error, format!("Erreur déchiffrement : {e}")));
-      }
+      Err(e) => self.set_status(StatusKind::Error, format!("Erreur déchiffrement : {e}")),
     }
-    Task::none()
   }
 }

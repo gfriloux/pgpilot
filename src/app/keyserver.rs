@@ -31,31 +31,27 @@ impl App {
   pub(super) fn on_publish_key_done(&mut self, result: Result<String, String>) -> Task<Message> {
     match result {
       Ok(url) => {
-        self.status = Some((
-          StatusKind::Success,
-          if url == "keys.openpgp.org" {
-            "Clef publiée. Vérifiez votre email pour valider la publication sur keys.openpgp.org."
-              .to_string()
-          } else {
-            "Clef publiée avec succès.".to_string()
-          },
-        ));
+        let msg = if url == "keys.openpgp.org" {
+          "Clef publiée. Vérifiez votre email pour valider la publication sur keys.openpgp.org."
+            .to_string()
+        } else {
+          "Clef publiée avec succès.".to_string()
+        };
+        let s = self.set_status(StatusKind::Success, msg);
         if let Some(ref fp) = self.selected.clone() {
           self
             .keyserver_statuses
             .insert(fp.clone(), KeyserverStatus::Checking);
           let fp2 = fp.clone();
-          return Task::perform(
+          let check = Task::perform(
             blocking_task(move || crate::gpg::check_keyserver(&fp2)),
             Message::KeyserverStatusLoaded,
           );
+          return Task::batch([s, check]);
         }
-        Task::none()
+        s
       }
-      Err(e) => {
-        self.status = Some((StatusKind::Error, format!("Erreur publication : {e}")));
-        Task::none()
-      }
+      Err(e) => self.set_status(StatusKind::Error, format!("Erreur publication : {e}")),
     }
   }
 
@@ -74,10 +70,7 @@ impl App {
         }
         Task::none()
       }
-      Err(e) => {
-        self.status = Some((StatusKind::Error, format!("Erreur republication : {e}")));
-        Task::none()
-      }
+      Err(e) => self.set_status(StatusKind::Error, format!("Erreur republication : {e}")),
     }
   }
 }

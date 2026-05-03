@@ -11,8 +11,8 @@ pub mod verify;
 
 use iced::{
   font,
-  widget::{button, column, container, row, text},
-  Alignment, Background, Border, Color, Element, Font, Length,
+  widget::{button, column, container, horizontal_space, row, text},
+  Alignment, Background, Border, Color, Element, Font, Length, Shadow,
 };
 
 use crate::app::{App, Message, StatusKind, View};
@@ -35,16 +35,32 @@ pub fn root(app: &App) -> Element<'_, Message> {
         StatusKind::Error => (theme::ERROR_BG, theme::ERROR),
         StatusKind::Success => (theme::SUCCESS_BG, theme::SUCCESS),
       };
+      let gen = app.status_generation;
       column![
         content,
-        container(text(msg.as_str()).size(12))
-          .padding([8, 16])
-          .width(Length::Fill)
-          .style(move |_: &iced::Theme| container::Style {
-            background: Some(Background::Color(bg)),
-            text_color: Some(fg),
-            ..Default::default()
-          }),
+        container(
+          row![
+            text(msg.as_str()).size(12),
+            horizontal_space(),
+            button(text("×").size(12))
+              .on_press(Message::DismissStatus(gen))
+              .padding([2, 8])
+              .style(move |_: &iced::Theme, _| button::Style {
+                background: None,
+                text_color: fg,
+                border: Border::default(),
+                shadow: Shadow::default(),
+              }),
+          ]
+          .align_y(Alignment::Center),
+        )
+        .padding([6, 16])
+        .width(Length::Fill)
+        .style(move |_: &iced::Theme| container::Style {
+          background: Some(Background::Color(bg)),
+          text_color: Some(fg),
+          ..Default::default()
+        }),
       ]
       .height(Length::Fill)
       .width(Length::Fill)

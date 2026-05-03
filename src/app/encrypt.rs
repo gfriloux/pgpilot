@@ -30,10 +30,10 @@ impl App {
             self.encrypt_form.files.push(f);
           }
         }
+        Task::none()
       }
-      Err(e) => self.status = Some((StatusKind::Error, e)),
+      Err(e) => self.set_status(StatusKind::Error, e),
     }
-    Task::none()
   }
 
   pub(super) fn on_encrypt_execute(&mut self) -> Task<Message> {
@@ -80,11 +80,10 @@ impl App {
         } else {
           format!("{} fichiers chiffrés", names.len())
         };
-        self.status = Some((StatusKind::Success, summary));
         self.encrypt_form.files.clear();
+        self.set_status(StatusKind::Success, summary)
       }
-      Err(e) => self.status = Some((StatusKind::Error, format!("Erreur chiffrement : {e}"))),
+      Err(e) => self.set_status(StatusKind::Error, format!("Erreur chiffrement : {e}")),
     }
-    Task::none()
   }
 }

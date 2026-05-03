@@ -31,19 +31,16 @@ impl App {
   pub(super) fn on_renew_subkey_done(&mut self, result: Result<(), String>) -> Task<Message> {
     match result {
       Ok(()) => {
-        self.status = Some((StatusKind::Success, "Sous-clef renouvelée".to_string()));
+        let s = self.set_status(StatusKind::Success, "Sous-clef renouvelée".to_string());
         let reload = self.reload_keys();
         if let Some(ref fp) = self.selected.clone() {
           if let Some(publish) = self.auto_republish_task(fp) {
-            return Task::batch([reload, publish]);
+            return Task::batch([s, reload, publish]);
           }
         }
-        reload
+        Task::batch([s, reload])
       }
-      Err(e) => {
-        self.status = Some((StatusKind::Error, format!("Erreur renouvellement : {e}")));
-        Task::none()
-      }
+      Err(e) => self.set_status(StatusKind::Error, format!("Erreur renouvellement : {e}")),
     }
   }
 
@@ -68,22 +65,19 @@ impl App {
   pub(super) fn on_add_subkey_done(&mut self, result: Result<(), String>) -> Task<Message> {
     match result {
       Ok(()) => {
-        self.status = Some((StatusKind::Success, "Sous-clef créée".to_string()));
+        let s = self.set_status(StatusKind::Success, "Sous-clef créée".to_string());
         let reload = self.reload_keys();
         if let Some(ref fp) = self.selected.clone() {
           if let Some(publish) = self.auto_republish_task(fp) {
-            return Task::batch([reload, publish]);
+            return Task::batch([s, reload, publish]);
           }
         }
-        reload
+        Task::batch([s, reload])
       }
-      Err(e) => {
-        self.status = Some((
-          StatusKind::Error,
-          format!("Erreur création sous-clef : {e}"),
-        ));
-        Task::none()
-      }
+      Err(e) => self.set_status(
+        StatusKind::Error,
+        format!("Erreur création sous-clef : {e}"),
+      ),
     }
   }
 
@@ -123,22 +117,19 @@ impl App {
   pub(super) fn on_rotate_subkey_done(&mut self, result: Result<(), String>) -> Task<Message> {
     match result {
       Ok(()) => {
-        self.status = Some((
+        let s = self.set_status(
           StatusKind::Success,
           "Sous-clef remplacée avec succès".to_string(),
-        ));
+        );
         let reload = self.reload_keys();
         if let Some(ref fp) = self.selected.clone() {
           if let Some(publish) = self.auto_republish_task(fp) {
-            return Task::batch([reload, publish]);
+            return Task::batch([s, reload, publish]);
           }
         }
-        reload
+        Task::batch([s, reload])
       }
-      Err(e) => {
-        self.status = Some((StatusKind::Error, format!("Erreur rotation : {e}")));
-        Task::none()
-      }
+      Err(e) => self.set_status(StatusKind::Error, format!("Erreur rotation : {e}")),
     }
   }
 }

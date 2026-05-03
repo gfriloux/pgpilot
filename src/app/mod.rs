@@ -127,6 +127,7 @@ pub struct App {
   pub selected: Option<String>,
   pub error: Option<String>,
   pub status: Option<(StatusKind, String)>,
+  pub status_generation: u32,
   pub loading: bool,
   pub card_connected: bool,
   pub pending: Option<PendingOp>,
@@ -228,6 +229,7 @@ pub enum Message {
   VerifySigPicked(Result<Option<PathBuf>, String>),
   VerifyExecute,
   VerifyDone(Result<VerifyResult, String>),
+  DismissStatus(u32),
 }
 
 pub(crate) async fn blocking_task<T, F>(f: F) -> Result<T, String>
@@ -295,6 +297,18 @@ impl App {
   pub(crate) fn reset_pending_ops(&mut self) {
     self.status = None;
     self.pending = None;
+  }
+
+  pub(crate) fn set_status(&mut self, kind: StatusKind, msg: String) -> Task<Message> {
+    self.status_generation = self.status_generation.wrapping_add(1);
+    let gen = self.status_generation;
+    self.status = Some((kind, msg));
+    Task::perform(
+      async move {
+        tokio::time::sleep(std::time::Duration::from_secs(4)).await;
+      },
+      move |_| Message::DismissStatus(gen),
+    )
   }
 
   pub(crate) fn key_by_fp(&self, fp: &str) -> Option<&KeyInfo> {
@@ -380,9 +394,8 @@ impl App {
         Task::none()
       }
       Message::HealthChecksLoaded(Err(e)) => {
-        self.status = Some((StatusKind::Error, format!("Erreur diagnostic : {e}")));
         self.health_loading = false;
-        Task::none()
+        self.set_status(StatusKind::Error, format!("Erreur diagnostic : {e}"))
       }
       // Delegated handlers
       Message::KeysLoaded(r) => self.on_keys_loaded(r),
@@ -479,6 +492,12 @@ impl App {
       Message::VerifySigPicked(r) => self.on_verify_sig_picked(r),
       Message::VerifyExecute => self.on_verify_execute(),
       Message::VerifyDone(r) => self.on_verify_done(r),
+      Message::DismissStatus(gen) => {
+        if self.status_generation == gen {
+          self.status = None;
+        }
+        Task::none()
+      }
       Message::FileDropped(path) => {
         if self.view == View::Encrypt && !self.encrypt_form.files.contains(&path) {
           self.encrypt_form.files.push(path);

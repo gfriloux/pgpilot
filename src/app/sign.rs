@@ -29,7 +29,7 @@ impl App {
         self.status = None;
       }
       Ok(None) => {}
-      Err(e) => self.status = Some((StatusKind::Error, e)),
+      Err(e) => return self.set_status(StatusKind::Error, e),
     }
     Task::none()
   }
@@ -61,10 +61,10 @@ impl App {
       Ok(sig_path) => {
         self.sign_form.sign_result = Some(sig_path);
         self.status = None;
+        Task::none()
       }
-      Err(e) => self.status = Some((StatusKind::Error, format!("Erreur signature : {e}"))),
+      Err(e) => self.set_status(StatusKind::Error, format!("Erreur signature : {e}")),
     }
-    Task::none()
   }
 
   pub(super) fn on_verify_pick_file(&mut self) -> Task<Message> {
@@ -91,7 +91,7 @@ impl App {
         self.status = None;
       }
       Ok(None) => {}
-      Err(e) => self.status = Some((StatusKind::Error, e)),
+      Err(e) => return self.set_status(StatusKind::Error, e),
     }
     Task::none()
   }
@@ -121,7 +121,7 @@ impl App {
         self.status = None;
       }
       Ok(None) => {}
-      Err(e) => self.status = Some((StatusKind::Error, e)),
+      Err(e) => return self.set_status(StatusKind::Error, e),
     }
     Task::none()
   }

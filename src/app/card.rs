@@ -22,17 +22,15 @@ impl App {
   pub(super) fn on_move_to_card_done(&mut self, result: Result<(), String>) -> Task<Message> {
     match result {
       Ok(()) => {
-        self.status = Some((
+        self.selected = None;
+        let s = self.set_status(
           StatusKind::Success,
           "Clef migrée sur YubiKey avec succès".to_string(),
-        ));
-        self.selected = None;
-        self.reload_keys()
+        );
+        let reload = self.reload_keys();
+        Task::batch([s, reload])
       }
-      Err(e) => {
-        self.status = Some((StatusKind::Error, format!("Erreur migration : {e}")));
-        Task::none()
-      }
+      Err(e) => self.set_status(StatusKind::Error, format!("Erreur migration : {e}")),
     }
   }
 
@@ -57,23 +55,21 @@ impl App {
   pub(super) fn on_delete_key_done(&mut self, result: Result<(), String>) -> Task<Message> {
     match result {
       Ok(()) => {
-        self.status = Some((StatusKind::Success, "Clef supprimée".to_string()));
         self.selected = None;
-        self.reload_keys()
+        let s = self.set_status(StatusKind::Success, "Clef supprimée".to_string());
+        let reload = self.reload_keys();
+        Task::batch([s, reload])
       }
-      Err(e) => {
-        self.status = Some((StatusKind::Error, format!("Erreur suppression : {e}")));
-        Task::none()
-      }
+      Err(e) => self.set_status(StatusKind::Error, format!("Erreur suppression : {e}")),
     }
   }
 
   pub(super) fn on_copy_to_clipboard(&mut self, text: String) -> Task<Message> {
-    self.status = Some((
+    let s = self.set_status(
       StatusKind::Success,
       "Copié dans le presse-papier".to_string(),
-    ));
-    iced::clipboard::write(text)
+    );
+    Task::batch([s, iced::clipboard::write(text)])
   }
 
   pub(super) fn on_set_key_trust(&mut self, fp: String, trust: TrustLevel) -> Task<Message> {
@@ -86,16 +82,14 @@ impl App {
   pub(super) fn on_set_key_trust_done(&mut self, result: Result<(), String>) -> Task<Message> {
     match result {
       Ok(()) => {
-        self.status = Some((
+        let s = self.set_status(
           StatusKind::Success,
           "Niveau de confiance mis à jour".to_string(),
-        ));
-        self.reload_keys()
+        );
+        let reload = self.reload_keys();
+        Task::batch([s, reload])
       }
-      Err(e) => {
-        self.status = Some((StatusKind::Error, format!("Erreur confiance : {e}")));
-        Task::none()
-      }
+      Err(e) => self.set_status(StatusKind::Error, format!("Erreur confiance : {e}")),
     }
   }
 }

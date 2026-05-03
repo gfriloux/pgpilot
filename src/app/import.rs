@@ -32,18 +32,16 @@ impl App {
     match result {
       Ok(None) => Task::none(),
       Ok(Some(filename)) => {
-        self.status = Some((
-          StatusKind::Success,
-          format!("Clef importée depuis {filename}"),
-        ));
         self.view = View::PublicKeys;
         self.selected = None;
-        self.reload_keys()
+        let s = self.set_status(
+          StatusKind::Success,
+          format!("Clef importée depuis {filename}"),
+        );
+        let reload = self.reload_keys();
+        Task::batch([s, reload])
       }
-      Err(e) => {
-        self.status = Some((StatusKind::Error, format!("Erreur import : {e}")));
-        Task::none()
-      }
+      Err(e) => self.set_status(StatusKind::Error, format!("Erreur import : {e}")),
     }
   }
 
@@ -66,8 +64,7 @@ impl App {
       }
       Err(e) => {
         self.import_form.submitting = false;
-        self.status = Some((StatusKind::Error, format!("Erreur import URL : {e}")));
-        Task::none()
+        self.set_status(StatusKind::Error, format!("Erreur import URL : {e}"))
       }
     }
   }
@@ -95,8 +92,7 @@ impl App {
       }
       Err(e) => {
         self.import_form.submitting = false;
-        self.status = Some((StatusKind::Error, format!("Erreur import keyserver : {e}")));
-        Task::none()
+        self.set_status(StatusKind::Error, format!("Erreur import keyserver : {e}"))
       }
     }
   }
@@ -120,8 +116,7 @@ impl App {
       }
       Err(e) => {
         self.import_form.submitting = false;
-        self.status = Some((StatusKind::Error, format!("Erreur import : {e}")));
-        Task::none()
+        self.set_status(StatusKind::Error, format!("Erreur import : {e}"))
       }
     }
   }

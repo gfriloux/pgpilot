@@ -37,16 +37,13 @@ impl App {
   ) -> Task<Message> {
     match result {
       Ok(armored) => {
-        self.status = Some((
+        let s = self.set_status(
           StatusKind::Success,
           "Clef copiée dans le presse-papier".to_string(),
-        ));
-        iced::clipboard::write(armored)
+        );
+        Task::batch([s, iced::clipboard::write(armored)])
       }
-      Err(e) => {
-        self.status = Some((StatusKind::Error, format!("Erreur export : {e}")));
-        Task::none()
-      }
+      Err(e) => self.set_status(StatusKind::Error, format!("Erreur export : {e}")),
     }
   }
 
@@ -61,13 +58,11 @@ impl App {
   pub(super) fn on_export_upload_done(&mut self, result: Result<String, String>) -> Task<Message> {
     match result {
       Ok(url) => {
-        self.status = Some((StatusKind::Success, format!("Lien copié : {url}")));
-        iced::clipboard::write(url)
+        let msg = format!("Lien copié : {url}");
+        let s = self.set_status(StatusKind::Success, msg);
+        Task::batch([s, iced::clipboard::write(url)])
       }
-      Err(e) => {
-        self.status = Some((StatusKind::Error, format!("Erreur upload : {e}")));
-        Task::none()
-      }
+      Err(e) => self.set_status(StatusKind::Error, format!("Erreur upload : {e}")),
     }
   }
 
@@ -84,23 +79,17 @@ impl App {
 
   pub(super) fn on_backup_done(&mut self, result: Result<Option<String>, String>) -> Task<Message> {
     match result {
-      Ok(None) => {}
-      Ok(Some(summary)) => {
-        self.status = Some((StatusKind::Success, format!("Sauvegardé : {summary}")))
-      }
-      Err(e) => self.status = Some((StatusKind::Error, format!("Erreur sauvegarde : {e}"))),
+      Ok(None) => Task::none(),
+      Ok(Some(summary)) => self.set_status(StatusKind::Success, format!("Sauvegardé : {summary}")),
+      Err(e) => self.set_status(StatusKind::Error, format!("Erreur sauvegarde : {e}")),
     }
-    Task::none()
   }
 
   pub(super) fn on_export_done(&mut self, result: Result<Option<String>, String>) -> Task<Message> {
     match result {
-      Ok(None) => {}
-      Ok(Some(filename)) => {
-        self.status = Some((StatusKind::Success, format!("Exporté : {filename}")))
-      }
-      Err(e) => self.status = Some((StatusKind::Error, format!("Erreur export : {e}"))),
+      Ok(None) => Task::none(),
+      Ok(Some(filename)) => self.set_status(StatusKind::Success, format!("Exporté : {filename}")),
+      Err(e) => self.set_status(StatusKind::Error, format!("Erreur export : {e}")),
     }
-    Task::none()
   }
 }

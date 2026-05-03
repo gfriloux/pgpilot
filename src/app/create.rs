@@ -25,8 +25,7 @@ impl App {
       }
       Err(e) => {
         self.create_form.submitting = false;
-        self.status = Some((StatusKind::Error, format!("Erreur création clef : {e}")));
-        Task::none()
+        self.set_status(StatusKind::Error, format!("Erreur création clef : {e}"))
       }
     }
   }
