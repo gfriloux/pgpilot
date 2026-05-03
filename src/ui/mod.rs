@@ -11,7 +11,7 @@ use iced::{
   Alignment, Background, Border, Color, Element, Font, Length,
 };
 
-use crate::app::{App, Message, View};
+use crate::app::{App, Message, StatusKind, View};
 
 pub fn root(app: &App) -> Element<'_, Message> {
   let content = match app.view {
@@ -22,16 +22,14 @@ pub fn root(app: &App) -> Element<'_, Message> {
   };
 
   let main: Element<Message> = match &app.status {
-    Some(status) => {
-      let is_error = status.starts_with("Erreur");
-      let (bg, fg) = if is_error {
-        (theme::ERROR_BG, theme::ERROR)
-      } else {
-        (theme::SUCCESS_BG, theme::SUCCESS)
+    Some((kind, msg)) => {
+      let (bg, fg) = match kind {
+        StatusKind::Error => (theme::ERROR_BG, theme::ERROR),
+        StatusKind::Success => (theme::SUCCESS_BG, theme::SUCCESS),
       };
       column![
         content,
-        container(text(status.as_str()).size(12))
+        container(text(msg.as_str()).size(12))
           .padding([8, 16])
           .width(Length::Fill)
           .style(move |_: &iced::Theme| container::Style {

@@ -60,13 +60,19 @@ pub struct PendingRenewal {
   pub expiry: KeyExpiry,
 }
 
+#[derive(Debug, Clone)]
+pub enum StatusKind {
+  Success,
+  Error,
+}
+
 #[derive(Default)]
 pub struct App {
   pub view: View,
   pub keys: Vec<KeyInfo>,
   pub selected: Option<String>,
   pub error: Option<String>,
-  pub status: Option<String>,
+  pub status: Option<(StatusKind, String)>,
   pub loading: bool,
   pub card_connected: bool,
   pub pending_migration: Option<String>,
@@ -470,11 +476,14 @@ impl App {
   fn on_export_clipboard_done(&mut self, result: Result<String, String>) -> Task<Message> {
     match result {
       Ok(armored) => {
-        self.status = Some("Clef copiée dans le presse-papier".to_string());
+        self.status = Some((
+          StatusKind::Success,
+          "Clef copiée dans le presse-papier".to_string(),
+        ));
         iced::clipboard::write(armored)
       }
       Err(e) => {
-        self.status = Some(format!("Erreur : {e}"));
+        self.status = Some((StatusKind::Error, format!("Erreur : {e}")));
         Task::none()
       }
     }
@@ -491,11 +500,11 @@ impl App {
   fn on_export_upload_done(&mut self, result: Result<String, String>) -> Task<Message> {
     match result {
       Ok(url) => {
-        self.status = Some(format!("Lien copié : {url}"));
+        self.status = Some((StatusKind::Success, format!("Lien copié : {url}")));
         iced::clipboard::write(url)
       }
       Err(e) => {
-        self.status = Some(format!("Erreur upload : {e}"));
+        self.status = Some((StatusKind::Error, format!("Erreur upload : {e}")));
         Task::none()
       }
     }
@@ -515,8 +524,10 @@ impl App {
   fn on_backup_done(&mut self, result: Result<Option<String>, String>) -> Task<Message> {
     match result {
       Ok(None) => {}
-      Ok(Some(summary)) => self.status = Some(format!("Sauvegardé : {summary}")),
-      Err(e) => self.status = Some(format!("Erreur : {e}")),
+      Ok(Some(summary)) => {
+        self.status = Some((StatusKind::Success, format!("Sauvegardé : {summary}")))
+      }
+      Err(e) => self.status = Some((StatusKind::Error, format!("Erreur : {e}"))),
     }
     Task::none()
   }
@@ -524,8 +535,10 @@ impl App {
   fn on_export_done(&mut self, result: Result<Option<String>, String>) -> Task<Message> {
     match result {
       Ok(None) => {}
-      Ok(Some(filename)) => self.status = Some(format!("Exporté : {filename}")),
-      Err(e) => self.status = Some(format!("Erreur : {e}")),
+      Ok(Some(filename)) => {
+        self.status = Some((StatusKind::Success, format!("Exporté : {filename}")))
+      }
+      Err(e) => self.status = Some((StatusKind::Error, format!("Erreur : {e}"))),
     }
     Task::none()
   }
@@ -554,7 +567,7 @@ impl App {
       }
       Err(e) => {
         self.create_form.submitting = false;
-        self.status = Some(format!("Erreur : {e}"));
+        self.status = Some((StatusKind::Error, format!("Erreur : {e}")));
         Task::none()
       }
     }
@@ -588,13 +601,16 @@ impl App {
     match result {
       Ok(None) => Task::none(),
       Ok(Some(filename)) => {
-        self.status = Some(format!("Clef importée depuis {filename}"));
+        self.status = Some((
+          StatusKind::Success,
+          format!("Clef importée depuis {filename}"),
+        ));
         self.view = View::PublicKeys;
         self.selected = None;
         self.reload_keys()
       }
       Err(e) => {
-        self.status = Some(format!("Erreur import : {e}"));
+        self.status = Some((StatusKind::Error, format!("Erreur import : {e}")));
         Task::none()
       }
     }
@@ -619,7 +635,7 @@ impl App {
       }
       Err(e) => {
         self.import_form.submitting = false;
-        self.status = Some(format!("Erreur import URL : {e}"));
+        self.status = Some((StatusKind::Error, format!("Erreur import URL : {e}")));
         Task::none()
       }
     }
@@ -645,7 +661,7 @@ impl App {
       }
       Err(e) => {
         self.import_form.submitting = false;
-        self.status = Some(format!("Erreur import keyserver : {e}"));
+        self.status = Some((StatusKind::Error, format!("Erreur import keyserver : {e}")));
         Task::none()
       }
     }
@@ -670,7 +686,7 @@ impl App {
       }
       Err(e) => {
         self.import_form.submitting = false;
-        self.status = Some(format!("Erreur import : {e}"));
+        self.status = Some((StatusKind::Error, format!("Erreur import : {e}")));
         Task::none()
       }
     }
@@ -695,12 +711,15 @@ impl App {
   fn on_move_to_card_done(&mut self, result: Result<(), String>) -> Task<Message> {
     match result {
       Ok(()) => {
-        self.status = Some("Clef migrée sur YubiKey avec succès".to_string());
+        self.status = Some((
+          StatusKind::Success,
+          "Clef migrée sur YubiKey avec succès".to_string(),
+        ));
         self.selected = None;
         self.reload_keys()
       }
       Err(e) => {
-        self.status = Some(format!("Erreur migration : {e}"));
+        self.status = Some((StatusKind::Error, format!("Erreur migration : {e}")));
         Task::none()
       }
     }
@@ -727,19 +746,22 @@ impl App {
   fn on_delete_key_done(&mut self, result: Result<(), String>) -> Task<Message> {
     match result {
       Ok(()) => {
-        self.status = Some("Clef supprimée".to_string());
+        self.status = Some((StatusKind::Success, "Clef supprimée".to_string()));
         self.selected = None;
         self.reload_keys()
       }
       Err(e) => {
-        self.status = Some(format!("Erreur suppression : {e}"));
+        self.status = Some((StatusKind::Error, format!("Erreur suppression : {e}")));
         Task::none()
       }
     }
   }
 
   fn on_copy_to_clipboard(&mut self, text: String) -> Task<Message> {
-    self.status = Some("Copié dans le presse-papier".to_string());
+    self.status = Some((
+      StatusKind::Success,
+      "Copié dans le presse-papier".to_string(),
+    ));
     iced::clipboard::write(text)
   }
 
@@ -771,7 +793,7 @@ impl App {
   fn on_renew_subkey_done(&mut self, result: Result<(), String>) -> Task<Message> {
     match result {
       Ok(()) => {
-        self.status = Some("Sous-clef renouvelée".to_string());
+        self.status = Some((StatusKind::Success, "Sous-clef renouvelée".to_string()));
         let reload = self.reload_keys();
         if let Some(ref fp) = self.selected.clone() {
           if let Some(publish) = self.auto_republish_task(fp) {
@@ -781,7 +803,7 @@ impl App {
         reload
       }
       Err(e) => {
-        self.status = Some(format!("Erreur renouvellement : {e}"));
+        self.status = Some((StatusKind::Error, format!("Erreur renouvellement : {e}")));
         Task::none()
       }
     }
@@ -808,7 +830,7 @@ impl App {
   fn on_add_subkey_done(&mut self, result: Result<(), String>) -> Task<Message> {
     match result {
       Ok(()) => {
-        self.status = Some("Sous-clef créée".to_string());
+        self.status = Some((StatusKind::Success, "Sous-clef créée".to_string()));
         let reload = self.reload_keys();
         if let Some(ref fp) = self.selected.clone() {
           if let Some(publish) = self.auto_republish_task(fp) {
@@ -818,7 +840,10 @@ impl App {
         reload
       }
       Err(e) => {
-        self.status = Some(format!("Erreur création sous-clef : {e}"));
+        self.status = Some((
+          StatusKind::Error,
+          format!("Erreur création sous-clef : {e}"),
+        ));
         Task::none()
       }
     }
@@ -857,7 +882,10 @@ impl App {
   fn on_rotate_subkey_done(&mut self, result: Result<(), String>) -> Task<Message> {
     match result {
       Ok(()) => {
-        self.status = Some("Sous-clef remplacée avec succès".to_string());
+        self.status = Some((
+          StatusKind::Success,
+          "Sous-clef remplacée avec succès".to_string(),
+        ));
         let reload = self.reload_keys();
         if let Some(ref fp) = self.selected.clone() {
           if let Some(publish) = self.auto_republish_task(fp) {
@@ -867,7 +895,7 @@ impl App {
         reload
       }
       Err(e) => {
-        self.status = Some(format!("Erreur rotation : {e}"));
+        self.status = Some((StatusKind::Error, format!("Erreur rotation : {e}")));
         Task::none()
       }
     }
@@ -899,14 +927,15 @@ impl App {
   fn on_publish_key_done(&mut self, result: Result<String, String>) -> Task<Message> {
     match result {
       Ok(url) => {
-        self.status = if url == "keys.openpgp.org" {
-          Some(
+        self.status = Some((
+          StatusKind::Success,
+          if url == "keys.openpgp.org" {
             "Clef publiée. Vérifiez votre email pour valider la publication sur keys.openpgp.org."
-              .to_string(),
-          )
-        } else {
-          Some("Clef publiée avec succès.".to_string())
-        };
+              .to_string()
+          } else {
+            "Clef publiée avec succès.".to_string()
+          },
+        ));
         if let Some(ref fp) = self.selected.clone() {
           self
             .keyserver_statuses
@@ -920,7 +949,7 @@ impl App {
         Task::none()
       }
       Err(e) => {
-        self.status = Some(format!("Erreur publication : {e}"));
+        self.status = Some((StatusKind::Error, format!("Erreur publication : {e}")));
         Task::none()
       }
     }
@@ -942,7 +971,7 @@ impl App {
         Task::none()
       }
       Err(e) => {
-        self.status = Some(format!("Erreur republication : {e}"));
+        self.status = Some((StatusKind::Error, format!("Erreur republication : {e}")));
         Task::none()
       }
     }
