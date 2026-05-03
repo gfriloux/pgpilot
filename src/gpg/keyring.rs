@@ -456,7 +456,7 @@ pub fn list_keys() -> Result<(Vec<KeyInfo>, bool)> {
     Some(c) => {
       let fps: HashSet<String> = [&c.sig_fp, &c.enc_fp, &c.auth_fp]
         .into_iter()
-        .filter_map(|fp| fp.clone())
+        .filter_map(std::clone::Clone::clone)
         .collect();
       (fps, Some(c.serial.clone()))
     }
@@ -465,7 +465,7 @@ pub fn list_keys() -> Result<(Vec<KeyInfo>, bool)> {
 
   let keys = CertParser::from_bytes(&pub_bytes)
     .context("failed to parse keyring")?
-    .filter_map(|r| r.ok())
+    .filter_map(std::result::Result::ok)
     .map(|cert| {
       let fp = cert.fingerprint().to_hex();
       let has_secret = secret_fps.contains(&fp);

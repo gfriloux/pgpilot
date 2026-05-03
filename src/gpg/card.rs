@@ -51,8 +51,7 @@ pub fn move_key_to_card(fingerprint: &str) -> Result<()> {
 
   let cert = CertParser::from_bytes(&pub_bytes)
     .context("failed to parse key")?
-    .filter_map(|r| r.ok())
-    .next()
+    .find_map(std::result::Result::ok)
     .ok_or_else(|| anyhow::anyhow!("Clef introuvable : {fingerprint}"))?;
 
   let stdin_cmds = build_keytocard_sequence(&cert)?;
@@ -100,8 +99,7 @@ fn build_keytocard_sequence(cert: &Cert) -> Result<String> {
   let primary_signs = vc
     .primary_key()
     .key_flags()
-    .map(|f| f.for_signing())
-    .unwrap_or(false);
+    .is_some_and(|f| f.for_signing());
   if primary_signs {
     cmds.push_str("keytocard\n1\n");
   }

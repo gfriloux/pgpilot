@@ -156,16 +156,15 @@ fn check_pinentry() -> HealthCheck {
         explanation: "pinentry gère la saisie sécurisée du mot de passe hors du terminal.",
         fix: None,
       };
-    } else {
-      return HealthCheck {
-        category: "Agent GPG",
-        name: "pinentry configuré",
-        status: CheckStatus::Error,
-        current_value: Some(format!("{path} (introuvable)")),
-        explanation: "Le chemin configuré dans gpg-agent.conf ne pointe pas sur un binaire valide.",
-        fix: Some("Corrigez pinentry-program dans ~/.gnupg/gpg-agent.conf."),
-      };
     }
+    return HealthCheck {
+      category: "Agent GPG",
+      name: "pinentry configuré",
+      status: CheckStatus::Error,
+      current_value: Some(format!("{path} (introuvable)")),
+      explanation: "Le chemin configuré dans gpg-agent.conf ne pointe pas sur un binaire valide.",
+      fix: Some("Corrigez pinentry-program dans ~/.gnupg/gpg-agent.conf."),
+    };
   }
 
   let output = Command::new("which").arg("pinentry").output();

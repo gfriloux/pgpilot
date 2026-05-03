@@ -75,11 +75,11 @@ pub fn view(key: &KeyInfo, ctx: ViewCtx) -> Element<'_, Message> {
   .into()
 }
 
-fn action_buttons<'a>(
-  key: &'a KeyInfo,
+fn action_buttons(
+  key: &KeyInfo,
   keyserver_status: KeyserverStatus,
   card_connected: bool,
-) -> Vec<Element<'a, Message>> {
+) -> Vec<Element<'_, Message>> {
   let icon_row = |icon: &'static str, label: &'static str| {
     row![text(icon).font(theme::ICONS).size(12), text(label).size(12),]
       .spacing(6)
@@ -262,7 +262,7 @@ fn keyserver_badge(status: KeyserverStatus, fingerprint: &str) -> Element<'_, Me
   }
 }
 
-fn migration_modal<'a>(key: &'a KeyInfo, bold: Font) -> Element<'a, Message> {
+fn migration_modal(key: &KeyInfo, bold: Font) -> Element<'_, Message> {
   let icon_row = |icon: &'static str, label: &'static str| {
     row![text(icon).font(theme::ICONS).size(12), text(label).size(12),]
       .spacing(6)
@@ -352,7 +352,7 @@ fn migration_modal<'a>(key: &'a KeyInfo, bold: Font) -> Element<'a, Message> {
   .into()
 }
 
-fn delete_modal<'a>(key: &'a KeyInfo, bold: Font) -> Element<'a, Message> {
+fn delete_modal(key: &KeyInfo, bold: Font) -> Element<'_, Message> {
   let icon_row = |icon: &'static str, label: &'static str| {
     row![text(icon).font(theme::ICONS).size(12), text(label).size(12),]
       .spacing(6)
@@ -459,7 +459,7 @@ fn delete_modal<'a>(key: &'a KeyInfo, bold: Font) -> Element<'a, Message> {
   .into()
 }
 
-fn publish_modal<'a>(key: &'a KeyInfo, selected_ks: Keyserver, bold: Font) -> Element<'a, Message> {
+fn publish_modal(key: &KeyInfo, selected_ks: Keyserver, bold: Font) -> Element<'_, Message> {
   let icon_row = |icon: &'static str, label: &'static str| {
     row![text(icon).font(theme::ICONS).size(12), text(label).size(12),]
       .spacing(6)
@@ -590,7 +590,7 @@ fn publish_modal<'a>(key: &'a KeyInfo, selected_ks: Keyserver, bold: Font) -> El
   .into()
 }
 
-fn export_pub_modal<'a>(key: &'a KeyInfo, bold: Font) -> Element<'a, Message> {
+fn export_pub_modal(key: &KeyInfo, bold: Font) -> Element<'_, Message> {
   let menu_btn = |icon: &'static str, label: &'static str, msg: Message| {
     button(
       row![text(icon).font(theme::ICONS).size(12), text(label).size(12)]
@@ -678,8 +678,8 @@ fn export_pub_modal<'a>(key: &'a KeyInfo, bold: Font) -> Element<'a, Message> {
 }
 
 #[allow(clippy::too_many_arguments)]
-fn left_column_items<'a>(
-  key: &'a KeyInfo,
+fn left_column_items(
+  key: &KeyInfo,
   keyserver_status: KeyserverStatus,
   card_connected: bool,
   confirming: bool,
@@ -688,7 +688,7 @@ fn left_column_items<'a>(
   publish_confirming: Option<Keyserver>,
   bold: Font,
   mono: Font,
-) -> Column<'a, Message> {
+) -> Column<'_, Message> {
   let expires = key.expires.as_deref().unwrap_or("Aucune expiration");
   let key_type = if key.on_card {
     "Sur YubiKey"
@@ -731,11 +731,11 @@ fn left_column_items<'a>(
     keyserver_badge(keyserver_status, &key.fingerprint),
     container(
       row![
-        text(key.algo.to_string()).size(12),
+        text(key.algo.clone()).size(12),
         text("·").size(12),
         text(format!("Créée : {}", key.created)).size(12),
         text("·").size(12),
-        text(format!("Expire : {}", expires)).size(12),
+        text(format!("Expire : {expires}")).size(12),
         text("·").size(12),
         text(key_type).size(12),
       ]
@@ -1049,13 +1049,13 @@ fn subkey_ghost_card<'a>(
   .into()
 }
 
-fn subkey_column<'a>(
-  key: &'a KeyInfo,
+fn subkey_column(
+  key: &KeyInfo,
   can_edit: bool,
   renewing_subkey: Option<(String, KeyExpiry)>,
   bold: Font,
   mono: Font,
-) -> Column<'a, Message> {
+) -> Column<'_, Message> {
   let standard_types = [
     (SubkeyType::Sign, "\u{f040}", "Signature", theme::ACCENT),
     (SubkeyType::Encr, "\u{f023}", "Chiffrement", theme::SUCCESS),
@@ -1086,8 +1086,7 @@ fn subkey_column<'a>(
         {
           let renewal_expiry = renewing_subkey
             .as_ref()
-            .map(|(_, e)| e)
-            .unwrap_or(&KeyExpiry::TwoYears);
+            .map_or(&KeyExpiry::TwoYears, |(_, e)| e);
           subkey_renewal_form(
             renewal_expiry,
             type_color,
