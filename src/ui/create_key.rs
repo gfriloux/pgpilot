@@ -1,7 +1,8 @@
 use iced::{
   font,
   widget::{
-    button, checkbox, column, container, horizontal_rule, pick_list, row, rule, text, text_input,
+    button, checkbox, column, container, horizontal_rule, pick_list, row, rule, scrollable, text,
+    text_input,
   },
   Background, Border, Color, Element, Font, Length,
 };
@@ -281,12 +282,21 @@ pub fn view(form: &CreateKeyForm) -> Element<'_, Message> {
     ..Default::default()
   });
 
-  container(card)
-    .center_x(Length::Fill)
-    .center_y(Length::Fill)
-    .style(|_: &iced::Theme| container::Style {
-      background: Some(Background::Color(theme::SIDEBAR_BG)),
-      ..Default::default()
-    })
-    .into()
+  container(
+    scrollable(
+      container(card)
+        .center_x(Length::Fill)
+        .padding([24, 0])
+        .width(Length::Fill),
+    )
+    .height(Length::Fill)
+    .width(Length::Fill),
+  )
+  .height(Length::Fill)
+  .width(Length::Fill)
+  .style(|_: &iced::Theme| container::Style {
+    background: Some(Background::Color(theme::SIDEBAR_BG)),
+    ..Default::default()
+  })
+  .into()
 }

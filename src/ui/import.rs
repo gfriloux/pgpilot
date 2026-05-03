@@ -275,17 +275,21 @@ pub fn view(form: &ImportForm) -> Element<'_, Message> {
     ..Default::default()
   });
 
-  scrollable(
-    container(card)
-      .center_x(Length::Fill)
-      .padding([24, 0])
-      .width(Length::Fill)
-      .style(|_: &iced::Theme| container::Style {
-        background: Some(Background::Color(theme::SIDEBAR_BG)),
-        ..Default::default()
-      }),
+  container(
+    scrollable(
+      container(card)
+        .center_x(Length::Fill)
+        .padding([24, 0])
+        .width(Length::Fill),
+    )
+    .height(Length::Fill)
+    .width(Length::Fill),
   )
   .height(Length::Fill)
   .width(Length::Fill)
+  .style(|_: &iced::Theme| container::Style {
+    background: Some(Background::Color(theme::SIDEBAR_BG)),
+    ..Default::default()
+  })
   .into()
 }
