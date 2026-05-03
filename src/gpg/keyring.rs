@@ -127,16 +127,19 @@ pub fn export_public_key_armored(fingerprint: &str) -> Result<String> {
 
 pub fn upload_public_key(fingerprint: &str) -> Result<String> {
   let armored = export_public_key_armored(fingerprint)?;
-  let resp = ureq::post("https://paste.rs/")
-    .set("Content-Type", "text/plain")
-    .set("User-Agent", "pgpilot/1.0")
-    .send_string(&armored)
+  let mut resp = ureq::post("https://paste.rs/")
+    .header("Content-Type", "text/plain")
+    .header("User-Agent", "pgpilot/1.0")
+    .send(&armored)
     .map_err(|e| match e {
-      ureq::Error::Status(code, _) => anyhow::anyhow!("paste.rs a refusé la requête (HTTP {code})"),
+      ureq::Error::StatusCode(code) => {
+        anyhow::anyhow!("paste.rs a refusé la requête (HTTP {code})")
+      }
       other => anyhow::anyhow!("Connexion à paste.rs impossible : {other}"),
     })?;
   let url = resp
-    .into_string()
+    .body_mut()
+    .read_to_string()
     .context("impossible de lire la réponse")?
     .trim()
     .to_string();
@@ -214,7 +217,7 @@ pub fn check_keyserver(fingerprint: &str) -> Result<(String, bool)> {
   );
   match ureq::get(&url).call() {
     Ok(_) => Ok((fingerprint.to_string(), true)),
-    Err(ureq::Error::Status(404, _)) => Ok((fingerprint.to_string(), false)),
+    Err(ureq::Error::StatusCode(404)) => Ok((fingerprint.to_string(), false)),
     Err(e) => Err(anyhow::anyhow!(
       "Impossible de joindre keys.openpgp.org : {e}"
     )),
@@ -389,12 +392,13 @@ pub fn import_key_from_text(content: &str) -> Result<()> {
 }
 
 pub fn import_key_from_url(url: &str) -> Result<()> {
-  let resp = ureq::get(url)
-    .set("User-Agent", "pgpilot/1.0")
+  let mut resp = ureq::get(url)
+    .header("User-Agent", "pgpilot/1.0")
     .call()
     .map_err(|e| anyhow::anyhow!("Impossible de charger l'URL : {e}"))?;
   let content = resp
-    .into_string()
+    .body_mut()
+    .read_to_string()
     .context("impossible de lire le contenu")?;
   import_key_from_text(&content)
 }
@@ -403,18 +407,19 @@ pub fn import_key_from_keyserver(query: &str, keyserver_url: &str) -> Result<()>
   if query.contains('@') {
     let encoded = query.replace('@', "%40");
     let url = format!("https://{keyserver_url}/pks/lookup?op=get&search={encoded}");
-    let resp = ureq::get(&url)
-      .set("User-Agent", "pgpilot/1.0")
+    let mut resp = ureq::get(&url)
+      .header("User-Agent", "pgpilot/1.0")
       .call()
       .map_err(|e| match e {
-        ureq::Error::Status(404, _) => {
+        ureq::Error::StatusCode(404) => {
           anyhow::anyhow!("Aucune clef trouvée pour '{query}'")
         }
-        ureq::Error::Status(code, _) => anyhow::anyhow!("Keyserver : HTTP {code}"),
+        ureq::Error::StatusCode(code) => anyhow::anyhow!("Keyserver : HTTP {code}"),
         other => anyhow::anyhow!("Impossible de joindre le keyserver : {other}"),
       })?;
     let content = resp
-      .into_string()
+      .body_mut()
+      .read_to_string()
       .context("impossible de lire la réponse")?;
     import_key_from_text(&content)
   } else {
