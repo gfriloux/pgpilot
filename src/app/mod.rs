@@ -29,6 +29,7 @@ pub enum View {
   Encrypt,
   Decrypt,
   Sign,
+  Verify,
 }
 
 pub struct ImportForm {

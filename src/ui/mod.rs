@@ -7,6 +7,7 @@ pub mod key_detail;
 pub mod key_list;
 pub mod sign;
 pub mod theme;
+pub mod verify;
 
 use iced::{
   font,
@@ -25,6 +26,7 @@ pub fn root(app: &App) -> Element<'_, Message> {
     View::Encrypt => encrypt::view(&app.encrypt_form, &app.keys),
     View::Decrypt => decrypt::view(&app.decrypt_form),
     View::Sign => sign::view(&app.sign_form, &app.keys),
+    View::Verify => verify::view(&app.sign_form),
   };
 
   let main: Element<Message> = match &app.status {
@@ -133,7 +135,8 @@ fn sidebar(app: &App) -> Element<'_, Message> {
       nav_btn("\u{f067}", "Créer une clef", View::CreateKey),
       nav_btn("\u{f023}", "Chiffrer", View::Encrypt),
       nav_btn("\u{f13e}", "Déchiffrer", View::Decrypt),
-      nav_btn("\u{f14b}", "Signer / Vérifier", View::Sign),
+      nav_btn("\u{f14b}", "Signer", View::Sign),
+      nav_btn("\u{f00c}", "Vérifier", View::Verify),
     ]
     .spacing(2),
     nav_btn("\u{f132}", "Diagnostic", View::Health),
