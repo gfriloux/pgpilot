@@ -2,7 +2,7 @@ use iced::Task;
 
 use crate::gpg::KeyExpiry;
 
-use super::{blocking_task, App, Message, PendingOp, PendingRenewal, StatusKind};
+use super::{blocking_task, truncate_error, App, Message, PendingOp, PendingRenewal, StatusKind};
 
 impl App {
   pub(super) fn on_renew_subkey(&mut self, key_fp: String, subkey_fp: String) -> Task<Message> {
@@ -40,7 +40,10 @@ impl App {
         }
         Task::batch([s, reload])
       }
-      Err(e) => self.set_status(StatusKind::Error, format!("Erreur renouvellement : {e}")),
+      Err(e) => self.set_status(
+        StatusKind::Error,
+        truncate_error(format!("Erreur renouvellement : {e}")),
+      ),
     }
   }
 
@@ -76,7 +79,7 @@ impl App {
       }
       Err(e) => self.set_status(
         StatusKind::Error,
-        format!("Erreur création sous-clef : {e}"),
+        truncate_error(format!("Erreur création sous-clef : {e}")),
       ),
     }
   }
@@ -129,7 +132,10 @@ impl App {
         }
         Task::batch([s, reload])
       }
-      Err(e) => self.set_status(StatusKind::Error, format!("Erreur rotation : {e}")),
+      Err(e) => self.set_status(
+        StatusKind::Error,
+        truncate_error(format!("Erreur rotation : {e}")),
+      ),
     }
   }
 }

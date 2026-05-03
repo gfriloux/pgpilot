@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 use iced::Task;
 
-use super::{blocking_task, App, Message, StatusKind};
+use super::{blocking_task, truncate_error, App, Message, StatusKind};
 
 impl App {
   pub(super) fn on_decrypt_pick_files(&mut self) -> Task<Message> {
@@ -106,7 +106,10 @@ impl App {
         self.decrypt_form.file_statuses.clear();
         self.set_status(StatusKind::Success, summary)
       }
-      Err(e) => self.set_status(StatusKind::Error, format!("Erreur déchiffrement : {e}")),
+      Err(e) => self.set_status(
+        StatusKind::Error,
+        truncate_error(format!("Erreur déchiffrement : {e}")),
+      ),
     }
   }
 }

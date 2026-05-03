@@ -8,6 +8,26 @@ pub(crate) fn gnupg_dir() -> String {
     .unwrap_or_else(|_| format!("{}/.gnupg", std::env::var("HOME").unwrap_or_default()))
 }
 
+pub(crate) fn display_path(path: &std::path::Path) -> String {
+  let home = std::env::var("HOME").unwrap_or_default();
+  if home.is_empty() {
+    return path.display().to_string();
+  }
+  match path.strip_prefix(&home) {
+    Ok(rel) => format!("~/{}", rel.display()),
+    Err(_) => path.display().to_string(),
+  }
+}
+
+pub(crate) fn sanitize_gpg_stderr(stderr: &str) -> String {
+  stderr
+    .lines()
+    .filter(|l| !l.starts_with("[GNUPG:]"))
+    .filter(|l| !l.is_empty())
+    .collect::<Vec<_>>()
+    .join("\n")
+}
+
 pub use card::move_key_to_card;
 pub use health::{run_all_checks, CheckStatus, HealthCheck};
 pub use keyring::{

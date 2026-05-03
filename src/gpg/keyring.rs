@@ -15,6 +15,7 @@ use sequoia_openpgp::{
 
 use super::card::card_status;
 use super::types::{format_date, KeyExpiry, KeyInfo, SubkeyInfo, TrustLevel};
+use super::{display_path, sanitize_gpg_stderr};
 
 const MAX_RESPONSE_BYTES: u64 = 1 << 20; // 1 MiB
 
@@ -25,6 +26,8 @@ fn safe_get(url: &str) -> Result<String> {
   let agent = ureq::Agent::config_builder()
     .max_redirects(3)
     .max_redirects_will_error(true)
+    .timeout_connect(Some(std::time::Duration::from_secs(10)))
+    .timeout_recv_response(Some(std::time::Duration::from_secs(15)))
     .build()
     .new_agent();
   let mut resp = agent
@@ -169,7 +172,7 @@ pub fn export_public_key_armored(fingerprint: &str) -> Result<String> {
 
   if !output.status.success() {
     let stderr = String::from_utf8_lossy(&output.stderr);
-    return Err(anyhow::anyhow!("{stderr}"));
+    return Err(anyhow::anyhow!("{}", sanitize_gpg_stderr(&stderr)));
   }
   if output.stdout.is_empty() {
     return Err(anyhow::anyhow!("Aucune clef trouvée pour ce fingerprint"));
@@ -183,6 +186,8 @@ pub fn upload_public_key(fingerprint: &str) -> Result<String> {
   let agent = ureq::Agent::config_builder()
     .max_redirects(3)
     .max_redirects_will_error(true)
+    .timeout_connect(Some(std::time::Duration::from_secs(10)))
+    .timeout_recv_response(Some(std::time::Duration::from_secs(15)))
     .build()
     .new_agent();
   let mut resp = agent
@@ -219,7 +224,7 @@ pub fn export_public_key(fingerprint: &str, path: &std::path::Path) -> Result<()
 
   if !output.status.success() {
     let stderr = String::from_utf8_lossy(&output.stderr);
-    return Err(anyhow::anyhow!("{stderr}"));
+    return Err(anyhow::anyhow!("{}", sanitize_gpg_stderr(&stderr)));
   }
   if output.stdout.is_empty() {
     return Err(anyhow::anyhow!("Aucune clef trouvée pour ce fingerprint"));
@@ -237,7 +242,7 @@ fn export_secret_key(fingerprint: &str, path: &std::path::Path) -> Result<()> {
 
   if !output.status.success() {
     let stderr = String::from_utf8_lossy(&output.stderr);
-    return Err(anyhow::anyhow!("{stderr}"));
+    return Err(anyhow::anyhow!("{}", sanitize_gpg_stderr(&stderr)));
   }
   if output.stdout.is_empty() {
     return Err(anyhow::anyhow!(
@@ -358,7 +363,10 @@ fn revoke_subkey_at_pos(master_fp: &str, pos: usize) -> Result<()> {
 
   if !output.status.success() {
     let stderr = String::from_utf8_lossy(&output.stderr);
-    return Err(anyhow::anyhow!("Révocation échouée : {stderr}"));
+    return Err(anyhow::anyhow!(
+      "Révocation échouée : {}",
+      sanitize_gpg_stderr(&stderr)
+    ));
   }
   Ok(())
 }
@@ -453,7 +461,7 @@ pub fn import_key_from_text(content: &str) -> Result<()> {
   let output = child.wait_with_output().context("failed to wait for gpg")?;
   if !output.status.success() {
     let stderr = String::from_utf8_lossy(&output.stderr);
-    return Err(anyhow::anyhow!("{stderr}"));
+    return Err(anyhow::anyhow!("{}", sanitize_gpg_stderr(&stderr)));
   }
   Ok(())
 }
@@ -478,7 +486,7 @@ pub fn import_key_from_keyserver(query: &str, keyserver_url: &str) -> Result<()>
       .context("failed to run gpg --recv-keys")?;
     if !output.status.success() {
       let stderr = String::from_utf8_lossy(&output.stderr);
-      return Err(anyhow::anyhow!("{stderr}"));
+      return Err(anyhow::anyhow!("{}", sanitize_gpg_stderr(&stderr)));
     }
     Ok(())
   }
@@ -492,7 +500,7 @@ pub fn import_key(path: &std::path::Path) -> Result<()> {
 
   if !output.status.success() {
     let stderr = String::from_utf8_lossy(&output.stderr);
-    return Err(anyhow::anyhow!("{stderr}"));
+    return Err(anyhow::anyhow!("{}", sanitize_gpg_stderr(&stderr)));
   }
   Ok(())
 }
@@ -760,7 +768,7 @@ pub fn encrypt_files(
       return Err(anyhow::anyhow!(
         "Échec du chiffrement de {} : {}",
         file.file_name().unwrap_or_default().to_string_lossy(),
-        stderr.trim()
+        sanitize_gpg_stderr(stderr.trim())
       ));
     }
 
@@ -804,7 +812,7 @@ pub fn sign_file(file: PathBuf, signer_fp: &str) -> Result<PathBuf> {
     return Err(anyhow::anyhow!(
       "Échec de la signature de {} : {}",
       file.file_name().unwrap_or_default().to_string_lossy(),
-      stderr.trim()
+      sanitize_gpg_stderr(stderr.trim())
     ));
   }
   Ok(sig_path)
@@ -875,7 +883,7 @@ pub fn verify_signature(
   if !sig.exists() {
     return Err(anyhow::anyhow!(
       "Fichier de signature introuvable : {}",
-      sig.display()
+      display_path(&sig)
     ));
   }
 
@@ -1072,7 +1080,7 @@ pub fn decrypt_files(files: &[PathBuf]) -> Result<Vec<String>> {
       return Err(anyhow::anyhow!(
         "Échec du déchiffrement de {} : {}",
         file.file_name().unwrap_or_default().to_string_lossy(),
-        stderr.trim()
+        sanitize_gpg_stderr(stderr.trim())
       ));
     }
 

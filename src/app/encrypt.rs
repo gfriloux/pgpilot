@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 use iced::Task;
 
-use super::{blocking_task, App, Message, StatusKind};
+use super::{blocking_task, truncate_error, App, Message, StatusKind};
 
 impl App {
   pub(super) fn on_encrypt_pick_files(&mut self) -> Task<Message> {
@@ -88,7 +88,10 @@ impl App {
         self.encrypt_form.files.clear();
         self.set_status(StatusKind::Success, summary)
       }
-      Err(e) => self.set_status(StatusKind::Error, format!("Erreur chiffrement : {e}")),
+      Err(e) => self.set_status(
+        StatusKind::Error,
+        truncate_error(format!("Erreur chiffrement : {e}")),
+      ),
     }
   }
 }

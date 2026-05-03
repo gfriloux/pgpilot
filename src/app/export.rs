@@ -1,7 +1,8 @@
 use iced::Task;
 
 use super::{
-  backup_key_to_dir, blocking_task, export_key_to_file, App, Message, PendingOp, StatusKind,
+  backup_key_to_dir, blocking_task, export_key_to_file, truncate_error, App, Message, PendingOp,
+  StatusKind,
 };
 
 impl App {
@@ -40,7 +41,10 @@ impl App {
         );
         Task::batch([s, iced::clipboard::write(armored)])
       }
-      Err(e) => self.set_status(StatusKind::Error, format!("Erreur export : {e}")),
+      Err(e) => self.set_status(
+        StatusKind::Error,
+        truncate_error(format!("Erreur export : {e}")),
+      ),
     }
   }
 
@@ -59,7 +63,10 @@ impl App {
         let s = self.set_status(StatusKind::Success, msg);
         Task::batch([s, iced::clipboard::write(url)])
       }
-      Err(e) => self.set_status(StatusKind::Error, format!("Erreur upload : {e}")),
+      Err(e) => self.set_status(
+        StatusKind::Error,
+        truncate_error(format!("Erreur upload : {e}")),
+      ),
     }
   }
 
@@ -75,7 +82,10 @@ impl App {
     match result {
       Ok(None) => Task::none(),
       Ok(Some(summary)) => self.set_status(StatusKind::Success, format!("Sauvegardé : {summary}")),
-      Err(e) => self.set_status(StatusKind::Error, format!("Erreur sauvegarde : {e}")),
+      Err(e) => self.set_status(
+        StatusKind::Error,
+        truncate_error(format!("Erreur sauvegarde : {e}")),
+      ),
     }
   }
 
@@ -83,7 +93,10 @@ impl App {
     match result {
       Ok(None) => Task::none(),
       Ok(Some(filename)) => self.set_status(StatusKind::Success, format!("Exporté : {filename}")),
-      Err(e) => self.set_status(StatusKind::Error, format!("Erreur export : {e}")),
+      Err(e) => self.set_status(
+        StatusKind::Error,
+        truncate_error(format!("Erreur export : {e}")),
+      ),
     }
   }
 }

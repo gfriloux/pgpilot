@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 use iced::Task;
 
-use super::{blocking_task, App, Message, StatusKind, VerifyResult};
+use super::{blocking_task, truncate_error, App, Message, StatusKind, VerifyResult};
 
 impl App {
   pub(super) fn on_sign_pick_file(&mut self) -> Task<Message> {
@@ -65,7 +65,10 @@ impl App {
         self.status = None;
         Task::none()
       }
-      Err(e) => self.set_status(StatusKind::Error, format!("Erreur signature : {e}")),
+      Err(e) => self.set_status(
+        StatusKind::Error,
+        truncate_error(format!("Erreur signature : {e}")),
+      ),
     }
   }
 

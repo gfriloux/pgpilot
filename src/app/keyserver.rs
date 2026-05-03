@@ -2,7 +2,7 @@ use iced::Task;
 
 use crate::gpg::Keyserver;
 
-use super::{blocking_task, App, KeyserverStatus, Message, PendingOp, StatusKind};
+use super::{blocking_task, truncate_error, App, KeyserverStatus, Message, PendingOp, StatusKind};
 
 impl App {
   pub(super) fn on_publish_key(&mut self) -> Task<Message> {
@@ -51,7 +51,10 @@ impl App {
         }
         s
       }
-      Err(e) => self.set_status(StatusKind::Error, format!("Erreur publication : {e}")),
+      Err(e) => self.set_status(
+        StatusKind::Error,
+        truncate_error(format!("Erreur publication : {e}")),
+      ),
     }
   }
 
@@ -70,7 +73,10 @@ impl App {
         }
         Task::none()
       }
-      Err(e) => self.set_status(StatusKind::Error, format!("Erreur republication : {e}")),
+      Err(e) => self.set_status(
+        StatusKind::Error,
+        truncate_error(format!("Erreur republication : {e}")),
+      ),
     }
   }
 }

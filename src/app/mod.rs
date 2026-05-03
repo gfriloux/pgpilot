@@ -234,6 +234,19 @@ pub enum Message {
   NavBack,
 }
 
+pub(crate) fn truncate_error(msg: String) -> String {
+  if msg.len() <= 120 {
+    return msg;
+  }
+  let cut = msg
+    .char_indices()
+    .map(|(i, c)| i + c.len_utf8())
+    .take_while(|&end| end <= 120)
+    .last()
+    .unwrap_or(0);
+  format!("{}…", &msg[..cut])
+}
+
 pub(crate) async fn blocking_task<T, F>(f: F) -> Result<T, String>
 where
   T: Send + 'static,

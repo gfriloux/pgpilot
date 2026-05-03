@@ -2,7 +2,7 @@ use iced::Task;
 
 use crate::gpg::TrustLevel;
 
-use super::{blocking_task, App, Message, PendingOp, StatusKind};
+use super::{blocking_task, truncate_error, App, Message, PendingOp, StatusKind};
 
 impl App {
   pub(super) fn on_move_to_card(&mut self, fp: String) -> Task<Message> {
@@ -30,7 +30,10 @@ impl App {
         let reload = self.reload_keys();
         Task::batch([s, reload])
       }
-      Err(e) => self.set_status(StatusKind::Error, format!("Erreur migration : {e}")),
+      Err(e) => self.set_status(
+        StatusKind::Error,
+        truncate_error(format!("Erreur migration : {e}")),
+      ),
     }
   }
 
@@ -60,7 +63,10 @@ impl App {
         let reload = self.reload_keys();
         Task::batch([s, reload])
       }
-      Err(e) => self.set_status(StatusKind::Error, format!("Erreur suppression : {e}")),
+      Err(e) => self.set_status(
+        StatusKind::Error,
+        truncate_error(format!("Erreur suppression : {e}")),
+      ),
     }
   }
 
@@ -89,7 +95,10 @@ impl App {
         let reload = self.reload_keys();
         Task::batch([s, reload])
       }
-      Err(e) => self.set_status(StatusKind::Error, format!("Erreur confiance : {e}")),
+      Err(e) => self.set_status(
+        StatusKind::Error,
+        truncate_error(format!("Erreur confiance : {e}")),
+      ),
     }
   }
 }

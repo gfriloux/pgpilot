@@ -1,6 +1,6 @@
 use iced::Task;
 
-use super::{blocking_task, App, ImportForm, Message, StatusKind, View};
+use super::{blocking_task, truncate_error, App, ImportForm, Message, StatusKind, View};
 
 impl App {
   pub(super) fn on_import_key(&mut self) -> Task<Message> {
@@ -47,7 +47,10 @@ impl App {
         let reload = self.reload_keys();
         Task::batch([s, reload])
       }
-      Err(e) => self.set_status(StatusKind::Error, format!("Erreur import : {e}")),
+      Err(e) => self.set_status(
+        StatusKind::Error,
+        truncate_error(format!("Erreur import : {e}")),
+      ),
     }
   }
 
@@ -70,7 +73,10 @@ impl App {
       }
       Err(e) => {
         self.import_form.submitting = false;
-        self.set_status(StatusKind::Error, format!("Erreur import URL : {e}"))
+        self.set_status(
+          StatusKind::Error,
+          truncate_error(format!("Erreur import URL : {e}")),
+        )
       }
     }
   }
@@ -98,7 +104,10 @@ impl App {
       }
       Err(e) => {
         self.import_form.submitting = false;
-        self.set_status(StatusKind::Error, format!("Erreur import keyserver : {e}"))
+        self.set_status(
+          StatusKind::Error,
+          truncate_error(format!("Erreur import keyserver : {e}")),
+        )
       }
     }
   }
@@ -122,7 +131,10 @@ impl App {
       }
       Err(e) => {
         self.import_form.submitting = false;
-        self.set_status(StatusKind::Error, format!("Erreur import : {e}"))
+        self.set_status(
+          StatusKind::Error,
+          truncate_error(format!("Erreur import : {e}")),
+        )
       }
     }
   }
