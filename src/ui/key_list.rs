@@ -42,6 +42,8 @@ pub fn view(app: &App) -> Element<'_, Message> {
   if keys.is_empty() {
     return container(text("Aucune clef trouvée.").size(14))
       .padding(24)
+      .center_x(Length::Fill)
+      .height(Length::Fill)
       .style(|_: &iced::Theme| container::Style {
         text_color: Some(theme::TEXT_MUTED),
         ..Default::default()

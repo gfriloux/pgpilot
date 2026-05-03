@@ -195,7 +195,7 @@ pub fn view(form: &ImportForm) -> Element<'_, Message> {
       separator(),
       column![
         section_label("Depuis un keyserver"),
-        hint("Fingerprint complet, ID court (8 chars) ou adresse email."),
+        hint("Fingerprint complet (40 hex), ID long (16 hex) ou adresse email."),
         text_input("ABC123... ou alice@example.com", &form.keyserver_query)
           .on_input(Message::ImportKeyserverQueryChanged)
           .size(13)

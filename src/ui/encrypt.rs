@@ -233,19 +233,86 @@ pub fn view<'a>(form: &'a EncryptForm, keys: &'a [KeyInfo]) -> Element<'a, Messa
     snap: false,
   });
 
-  let files_col: Element<'_, Message> = column![
+  let header_label =
     container(text("Fichiers à chiffrer").size(12).font(bold)).style(|_: &iced::Theme| {
       container::Style {
         text_color: Some(theme::TEXT_SECONDARY),
         ..Default::default()
       }
-    }),
-    scrollable(column(file_items).spacing(2).padding([0, 4])).height(232),
-    add_files_btn,
-  ]
-  .spacing(8)
-  .width(Length::FillPortion(55))
-  .into();
+    });
+
+  let files_col: Element<'_, Message> = if form.files.is_empty() {
+    let drop_zone = container(
+      column![
+        text("\u{f093}")
+          .font(theme::ICONS)
+          .size(28)
+          .style(|_: &iced::Theme| {
+            iced::widget::text::Style {
+              color: Some(theme::TEXT_MUTED),
+            }
+          }),
+        text("Glissez des fichiers ici")
+          .size(13)
+          .style(|_: &iced::Theme| {
+            iced::widget::text::Style {
+              color: Some(theme::TEXT_MUTED),
+            }
+          }),
+        button(
+          row![
+            text("\u{f067}").font(theme::ICONS).size(12),
+            text("Choisir des fichiers...").size(13),
+          ]
+          .spacing(6)
+          .align_y(Alignment::Center),
+        )
+        .on_press(Message::EncryptPickFiles)
+        .width(Length::Fill)
+        .padding([8, 12])
+        .style(|_: &iced::Theme, status| button::Style {
+          background: Some(Background::Color(match status {
+            button::Status::Hovered | button::Status::Pressed => theme::ACCENT_SUBTLE,
+            _ => Color::TRANSPARENT,
+          })),
+          text_color: theme::TEXT_STRONG,
+          border: Border {
+            color: theme::BORDER,
+            width: 1.0,
+            radius: 6.0.into(),
+          },
+          shadow: Shadow::default(),
+          snap: false,
+        }),
+      ]
+      .spacing(10)
+      .align_x(Alignment::Center),
+    )
+    .center_x(Length::Fill)
+    .padding([32, 24])
+    .style(|_: &iced::Theme| container::Style {
+      border: Border {
+        color: theme::BORDER,
+        width: 1.0,
+        radius: 6.0.into(),
+      },
+      ..Default::default()
+    });
+
+    column![header_label, drop_zone,]
+      .spacing(8)
+      .width(Length::FillPortion(55))
+      .into()
+  } else {
+    column![
+      header_label,
+      scrollable(column(file_items).spacing(2).padding([0, 4])).height(232),
+      add_files_btn,
+    ]
+    .spacing(8)
+    .width(Length::FillPortion(55))
+    .into()
+  };
 
   // Action bar
   let can_encrypt = n_recipients > 0 && !form.files.is_empty() && !form.encrypting;
@@ -505,7 +572,7 @@ pub fn view<'a>(form: &'a EncryptForm, keys: &'a [KeyInfo]) -> Element<'a, Messa
       separator(),
       info_banner,
       separator(),
-      row![recipients_col, container(vsep).padding([0, 8]), files_col,].height(320),
+      row![recipients_col, container(vsep).padding([0, 8]), files_col,],
       separator(),
       bottom_section,
     ]

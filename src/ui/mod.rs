@@ -47,10 +47,20 @@ pub fn root(app: &App) -> Element<'_, Message> {
             button(text("×").size(12))
               .on_press(Message::DismissStatus(gen))
               .padding([2, 8])
-              .style(move |_: &iced::Theme, _| button::Style {
-                background: None,
+              .style(move |_: &iced::Theme, status| button::Style {
+                background: Some(Background::Color(match status {
+                  button::Status::Hovered | button::Status::Pressed => Color {
+                    a: 0.15,
+                    ..Color::WHITE
+                  },
+                  _ => Color::TRANSPARENT,
+                })),
                 text_color: fg,
-                border: Border::default(),
+                border: Border {
+                  color: Color::TRANSPARENT,
+                  width: 0.0,
+                  radius: 4.0.into(),
+                },
                 shadow: Shadow::default(),
                 snap: false,
               }),

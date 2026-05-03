@@ -358,10 +358,10 @@ fn migration_modal(key: &KeyInfo, bold: Font) -> Element<'_, Message> {
   )
   .padding(12)
   .style(|_: &iced::Theme| container::Style {
-    background: Some(Background::Color(theme::ERROR_BG)),
+    background: Some(Background::Color(theme::ACCENT_SUBTLE)),
     text_color: Some(theme::TEXT_STRONG),
     border: Border {
-      color: theme::ERROR,
+      color: theme::ACCENT_BORDER,
       width: 1.0,
       radius: 6.0.into(),
     },

@@ -117,8 +117,7 @@ pub fn view(checks: &[HealthCheck], loading: bool) -> Element<'_, Message> {
               .into(),
           );
 
-          if matches!(check.status, CheckStatus::Ok | CheckStatus::Info) && check.fix.is_none() {
-          } else if let Some(fix) = check.fix {
+          if let Some(fix) = check.fix {
             content.push(
               container(text(fix).size(11).font(mono))
                 .padding([6, 10])
