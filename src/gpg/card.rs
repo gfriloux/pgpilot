@@ -1,13 +1,18 @@
 use std::io::Write;
-use std::process::{Command, Stdio};
+use std::process::Stdio;
 
 use anyhow::{Context, Result};
 use sequoia_openpgp::{cert::CertParser, parse::Parse, policy::StandardPolicy, Cert};
 
 use super::types::CardInfo;
+use super::{gnupg_dir, gpg_command};
 
 pub fn card_status() -> Option<CardInfo> {
-  let output = Command::new("gpg").args(["--card-status"]).output().ok()?;
+  let homedir = gnupg_dir().ok()?;
+  let output = gpg_command(&homedir)
+    .args(["--card-status"])
+    .output()
+    .ok()?;
 
   if !output.status.success() {
     return None;
@@ -44,7 +49,8 @@ pub fn card_status() -> Option<CardInfo> {
 
 pub fn move_key_to_card(fingerprint: &str) -> Result<()> {
   super::keyring::validate_fp(fingerprint)?;
-  let pub_bytes = Command::new("gpg")
+  let homedir = gnupg_dir()?;
+  let pub_bytes = gpg_command(&homedir)
     .args(["--export", fingerprint])
     .output()
     .context("failed to export key for inspection")?
@@ -57,7 +63,7 @@ pub fn move_key_to_card(fingerprint: &str) -> Result<()> {
 
   let stdin_cmds = build_keytocard_sequence(&cert)?;
 
-  let mut child = Command::new("gpg")
+  let mut child = gpg_command(&homedir)
     .args([
       "--no-tty",
       "--yes",

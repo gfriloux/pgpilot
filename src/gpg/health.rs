@@ -3,6 +3,7 @@ use std::path::Path;
 use std::process::Command;
 
 use super::types::KeyInfo;
+use super::{gnupg_dir, gpg_command};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum CheckStatus {
@@ -22,13 +23,12 @@ pub struct HealthCheck {
   pub fix: Option<&'static str>,
 }
 
-fn gnupg_dir() -> String {
-  super::gnupg_dir()
-}
-
 fn check_gpg_installed() -> HealthCheck {
-  match Command::new("gpg").arg("--version").output() {
-    Ok(o) if o.status.success() => {
+  let result = gnupg_dir()
+    .ok()
+    .and_then(|homedir| gpg_command(&homedir).arg("--version").output().ok());
+  match result {
+    Some(o) if o.status.success() => {
       let first_line = String::from_utf8_lossy(&o.stdout)
         .lines()
         .next()
@@ -55,9 +55,13 @@ fn check_gpg_installed() -> HealthCheck {
 }
 
 fn check_gpg_version() -> HealthCheck {
-  let output = match Command::new("gpg").arg("--version").output() {
-    Ok(o) if o.status.success() => o,
-    _ => {
+  let output = match gnupg_dir()
+    .ok()
+    .and_then(|homedir| gpg_command(&homedir).arg("--version").output().ok())
+    .filter(|o| o.status.success())
+  {
+    Some(o) => o,
+    None => {
       return HealthCheck {
         category: "Installation",
         name: "Version GPG ≥ 2.1",
@@ -133,18 +137,21 @@ fn check_agent_running() -> HealthCheck {
 }
 
 fn check_pinentry() -> HealthCheck {
-  let configured = fs::read_to_string(format!("{}/gpg-agent.conf", gnupg_dir()))
-    .ok()
-    .and_then(|conf| {
-      conf
-        .lines()
-        .filter(|l| !l.trim_start().starts_with('#'))
-        .find_map(|l| {
-          l.trim()
-            .strip_prefix("pinentry-program")
-            .map(|v| v.trim().to_string())
-        })
-    });
+  let configured = fs::read_to_string(format!(
+    "{}/gpg-agent.conf",
+    gnupg_dir().unwrap_or_default()
+  ))
+  .ok()
+  .and_then(|conf| {
+    conf
+      .lines()
+      .filter(|l| !l.trim_start().starts_with('#'))
+      .find_map(|l| {
+        l.trim()
+          .strip_prefix("pinentry-program")
+          .map(|v| v.trim().to_string())
+      })
+  });
 
   if let Some(path) = configured {
     if Path::new(&path).exists() {
@@ -189,7 +196,11 @@ fn check_pinentry() -> HealthCheck {
 }
 
 fn parse_agent_conf_value(key: &str) -> Option<u64> {
-  let conf = fs::read_to_string(format!("{}/gpg-agent.conf", gnupg_dir())).ok()?;
+  let conf = fs::read_to_string(format!(
+    "{}/gpg-agent.conf",
+    gnupg_dir().unwrap_or_default()
+  ))
+  .ok()?;
   conf
     .lines()
     .filter(|l| !l.trim_start().starts_with('#'))
@@ -263,7 +274,7 @@ fn check_max_cache_ttl() -> HealthCheck {
 }
 
 fn check_gnupg_permissions() -> HealthCheck {
-  let dir = gnupg_dir();
+  let dir = gnupg_dir().unwrap_or_default();
 
   #[cfg(unix)]
   {
@@ -314,7 +325,7 @@ fn check_gnupg_permissions() -> HealthCheck {
 }
 
 fn check_revocation_certs(keys: &[KeyInfo]) -> HealthCheck {
-  let dir = gnupg_dir();
+  let dir = gnupg_dir().unwrap_or_default();
   let rev_dir = format!("{dir}/openpgp-revocs.d");
 
   let owned: Vec<&KeyInfo> = keys.iter().filter(|k| k.has_secret).collect();

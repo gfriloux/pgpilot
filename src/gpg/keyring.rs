@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 use std::io::Write;
 use std::path::PathBuf;
-use std::process::{Command, Stdio};
+use std::process::Stdio;
 
 use anyhow::{Context, Result};
 use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
@@ -15,7 +15,7 @@ use sequoia_openpgp::{
 
 use super::card::card_status;
 use super::types::{format_date, KeyExpiry, KeyInfo, SubkeyInfo, TrustLevel};
-use super::{display_path, sanitize_gpg_stderr};
+use super::{display_path, gnupg_dir, gpg_command, sanitize_gpg_stderr};
 
 const MAX_RESPONSE_BYTES: u64 = 1 << 20; // 1 MiB
 
@@ -78,7 +78,8 @@ fn validate_keyserver_query(query: &str) -> Result<()> {
 }
 
 fn all_public_fingerprints() -> Result<HashSet<String>> {
-  let output = Command::new("gpg")
+  let homedir = gnupg_dir()?;
+  let output = gpg_command(&homedir)
     .args(["--list-keys", "--with-colons"])
     .output()
     .context("failed to list keys")?;
@@ -104,12 +105,13 @@ pub fn create_key(
   subkey_expiry: &KeyExpiry,
   include_auth: bool,
 ) -> Result<()> {
+  let homedir = gnupg_dir()?;
   let user_id = format!("{name} <{email}>");
   let sub_expire = expiry_to_str(subkey_expiry);
 
   let fps_before = all_public_fingerprints()?;
 
-  let status = Command::new("gpg")
+  let status = gpg_command(&homedir)
     .args([
       "--batch",
       "--quick-gen-key",
@@ -132,7 +134,7 @@ pub fn create_key(
     .ok_or_else(|| anyhow::anyhow!("Fingerprint de la nouvelle clef introuvable"))?;
 
   for (algo, usage) in [("ed25519", "sign"), ("cv25519", "encr")] {
-    let status = Command::new("gpg")
+    let status = gpg_command(&homedir)
       .args(["--batch", "--quick-add-key", &fp, algo, usage, sub_expire])
       .status()
       .context("failed to run gpg --quick-add-key")?;
@@ -142,7 +144,7 @@ pub fn create_key(
   }
 
   if include_auth {
-    let status = Command::new("gpg")
+    let status = gpg_command(&homedir)
       .args([
         "--batch",
         "--quick-add-key",
@@ -165,7 +167,8 @@ pub fn create_key(
 
 pub fn export_public_key_armored(fingerprint: &str) -> Result<String> {
   validate_fp(fingerprint)?;
-  let output = Command::new("gpg")
+  let homedir = gnupg_dir()?;
+  let output = gpg_command(&homedir)
     .args(["--export", "--armor", fingerprint])
     .output()
     .context("failed to run gpg --export")?;
@@ -217,7 +220,8 @@ pub fn upload_public_key(fingerprint: &str) -> Result<String> {
 
 pub fn export_public_key(fingerprint: &str, path: &std::path::Path) -> Result<()> {
   validate_fp(fingerprint)?;
-  let output = Command::new("gpg")
+  let homedir = gnupg_dir()?;
+  let output = gpg_command(&homedir)
     .args(["--export", "--armor", fingerprint])
     .output()
     .context("failed to run gpg --export")?;
@@ -235,7 +239,8 @@ pub fn export_public_key(fingerprint: &str, path: &std::path::Path) -> Result<()
 
 fn export_secret_key(fingerprint: &str, path: &std::path::Path) -> Result<()> {
   validate_fp(fingerprint)?;
-  let output = Command::new("gpg")
+  let homedir = gnupg_dir()?;
+  let output = gpg_command(&homedir)
     .args(["--export-secret-keys", "--armor", fingerprint])
     .output()
     .context("failed to run gpg --export-secret-keys")?;
@@ -262,9 +267,9 @@ pub fn backup_key(
   let key_filename = format!("{key_id}_secret.asc");
   export_secret_key(fingerprint, &dir.join(&key_filename))?;
 
-  let gnupg_dir = super::gnupg_dir();
+  let homedir = gnupg_dir()?;
   let rev_src = format!(
-    "{gnupg_dir}/openpgp-revocs.d/{}.rev",
+    "{homedir}/openpgp-revocs.d/{}.rev",
     fingerprint.to_uppercase()
   );
 
@@ -293,7 +298,8 @@ pub fn check_keyserver(fingerprint: &str) -> Result<(String, bool)> {
 
 pub fn publish_key(fingerprint: &str, keyserver_url: &str) -> Result<String> {
   validate_fp(fingerprint)?;
-  let status = Command::new("gpg")
+  let homedir = gnupg_dir()?;
+  let status = gpg_command(&homedir)
     .args(["--keyserver", keyserver_url, "--send-keys", fingerprint])
     .status()
     .context("failed to run gpg --send-keys")?;
@@ -305,7 +311,8 @@ pub fn publish_key(fingerprint: &str, keyserver_url: &str) -> Result<String> {
 }
 
 fn subkey_position(master_fp: &str, subkey_fp: &str) -> Result<usize> {
-  let output = Command::new("gpg")
+  let homedir = gnupg_dir()?;
+  let output = gpg_command(&homedir)
     .args(["--list-keys", "--with-colons", master_fp])
     .output()
     .context("failed to list key")?;
@@ -342,9 +349,10 @@ fn subkey_position(master_fp: &str, subkey_fp: &str) -> Result<usize> {
 }
 
 fn revoke_subkey_at_pos(master_fp: &str, pos: usize) -> Result<()> {
+  let homedir = gnupg_dir()?;
   let cmds = format!("key {pos}\nrevkey\ny\n2\n\ny\nsave\n");
 
-  let mut child = Command::new("gpg")
+  let mut child = gpg_command(&homedir)
     .args(["--no-tty", "--command-fd", "0", "--edit-key", master_fp])
     .stdin(Stdio::piped())
     .stdout(Stdio::piped())
@@ -386,8 +394,9 @@ pub fn rotate_subkey(
 
 pub fn add_subkey(master_fp: &str, algo: &str, usage: &str, expiry: &KeyExpiry) -> Result<()> {
   validate_fp(master_fp)?;
+  let homedir = gnupg_dir()?;
   let expire = expiry_to_str(expiry);
-  let status = Command::new("gpg")
+  let status = gpg_command(&homedir)
     .args(["--batch", "--quick-add-key", master_fp, algo, usage, expire])
     .status()
     .context("failed to run gpg --quick-add-key")?;
@@ -400,8 +409,9 @@ pub fn add_subkey(master_fp: &str, algo: &str, usage: &str, expiry: &KeyExpiry) 
 
 pub fn renew_subkey(master_fp: &str, subkey_fp: &str, expiry: &KeyExpiry) -> Result<()> {
   validate_fp(master_fp)?;
+  let homedir = gnupg_dir()?;
   let expire = expiry_to_str(expiry);
-  let status = Command::new("gpg")
+  let status = gpg_command(&homedir)
     .args([
       "--batch",
       "--quick-set-expire",
@@ -422,13 +432,14 @@ pub fn renew_subkey(master_fp: &str, subkey_fp: &str, expiry: &KeyExpiry) -> Res
 
 pub fn delete_key(fingerprint: &str, has_secret: bool) -> Result<()> {
   validate_fp(fingerprint)?;
+  let homedir = gnupg_dir()?;
   let cmd = if has_secret {
     "--delete-secret-and-public-keys"
   } else {
     "--delete-keys"
   };
 
-  let status = Command::new("gpg")
+  let status = gpg_command(&homedir)
     .args(["--batch", "--yes", cmd, fingerprint])
     .status()
     .context("failed to run gpg delete")?;
@@ -445,7 +456,8 @@ pub fn import_key_from_text(content: &str) -> Result<()> {
       "Le contenu ne ressemble pas à une clef PGP (en-tête -----BEGIN PGP introuvable)"
     ));
   }
-  let mut child = Command::new("gpg")
+  let homedir = gnupg_dir()?;
+  let mut child = gpg_command(&homedir)
     .args(["--import"])
     .stdin(Stdio::piped())
     .stdout(Stdio::piped())
@@ -480,7 +492,8 @@ pub fn import_key_from_keyserver(query: &str, keyserver_url: &str) -> Result<()>
       safe_get(&url).map_err(|e| anyhow::anyhow!("Impossible de joindre le keyserver : {e}"))?;
     import_key_from_text(&content)
   } else {
-    let output = Command::new("gpg")
+    let homedir = gnupg_dir()?;
+    let output = gpg_command(&homedir)
       .args(["--keyserver", keyserver_url, "--recv-keys", query])
       .output()
       .context("failed to run gpg --recv-keys")?;
@@ -493,7 +506,8 @@ pub fn import_key_from_keyserver(query: &str, keyserver_url: &str) -> Result<()>
 }
 
 pub fn import_key(path: &std::path::Path) -> Result<()> {
-  let output = Command::new("gpg")
+  let homedir = gnupg_dir()?;
+  let output = gpg_command(&homedir)
     .args(["--import", &path.to_string_lossy()])
     .output()
     .context("failed to run gpg --import")?;
@@ -506,10 +520,8 @@ pub fn import_key(path: &std::path::Path) -> Result<()> {
 }
 
 fn key_ownertrusts() -> Result<std::collections::HashMap<String, TrustLevel>> {
-  let gnupg = super::gnupg_dir();
-  let output = Command::new("gpg")
-    .arg("--homedir")
-    .arg(&gnupg)
+  let homedir = gnupg_dir()?;
+  let output = gpg_command(&homedir)
     .args(["--list-keys", "--with-colons"])
     .output()
     .context("failed to run gpg --list-keys")?;
@@ -539,7 +551,8 @@ fn key_ownertrusts() -> Result<std::collections::HashMap<String, TrustLevel>> {
 }
 
 pub fn list_keys() -> Result<(Vec<KeyInfo>, bool)> {
-  let pub_bytes = Command::new("gpg")
+  let homedir = gnupg_dir()?;
+  let pub_bytes = gpg_command(&homedir)
     .args(["--export"])
     .output()
     .context("failed to run gpg --export")?
@@ -580,7 +593,8 @@ pub fn list_keys() -> Result<(Vec<KeyInfo>, bool)> {
 }
 
 fn secret_key_fingerprints() -> Result<HashSet<String>> {
-  let output = Command::new("gpg")
+  let homedir = gnupg_dir()?;
+  let output = gpg_command(&homedir)
     .args(["--list-secret-keys", "--with-colons"])
     .output()
     .context("failed to run gpg --list-secret-keys")?;
@@ -693,12 +707,10 @@ pub fn set_key_trust(fingerprint: &str, trust: &TrustLevel) -> Result<()> {
     TrustLevel::Full => 5,
     TrustLevel::Ultimate => 6,
   };
-  let gnupg = super::gnupg_dir();
+  let homedir = gnupg_dir()?;
   let input = format!("{fingerprint}:{level}:\n");
 
-  let mut child = Command::new("gpg")
-    .arg("--homedir")
-    .arg(&gnupg)
+  let mut child = gpg_command(&homedir)
     .arg("--import-ownertrust")
     .stdin(Stdio::piped())
     .spawn()
@@ -726,7 +738,7 @@ pub fn encrypt_files(
   armor: bool,
   force_trust: bool,
 ) -> Result<Vec<String>> {
-  let gnupg = super::gnupg_dir();
+  let homedir = gnupg_dir()?;
   let ext_str = if armor { "asc" } else { "gpg" };
   let mut results = Vec::new();
 
@@ -745,8 +757,7 @@ pub fn encrypt_files(
       counter += 1;
     }
 
-    let mut cmd = Command::new("gpg");
-    cmd.arg("--homedir").arg(&gnupg);
+    let mut cmd = gpg_command(&homedir);
     cmd.arg("--batch");
     if force_trust {
       cmd.arg("--trust-model").arg("always");
@@ -786,7 +797,7 @@ pub fn encrypt_files(
 
 pub fn sign_file(file: PathBuf, signer_fp: &str) -> Result<PathBuf> {
   validate_fp(signer_fp)?;
-  let gnupg = super::gnupg_dir();
+  let homedir = gnupg_dir()?;
   let mut sig_path = file.with_extension("sig");
   let mut counter = 1u32;
   while sig_path.exists() {
@@ -795,9 +806,7 @@ pub fn sign_file(file: PathBuf, signer_fp: &str) -> Result<PathBuf> {
     counter += 1;
   }
 
-  let out = Command::new("gpg")
-    .arg("--homedir")
-    .arg(&gnupg)
+  let out = gpg_command(&homedir)
     .args(["--batch", "--detach-sign", "--armor"])
     .args(["--local-user", signer_fp])
     .arg("--output")
@@ -821,10 +830,8 @@ pub fn sign_file(file: PathBuf, signer_fp: &str) -> Result<PathBuf> {
 /// Builds a map from every key fingerprint (primary + subkeys) to the primary key's TrustLevel.
 /// VALIDSIG emits the subkey fingerprint, so we need to resolve subkeys back to their primary.
 fn all_fp_to_trust() -> Result<std::collections::HashMap<String, TrustLevel>> {
-  let gnupg = super::gnupg_dir();
-  let output = Command::new("gpg")
-    .arg("--homedir")
-    .arg(&gnupg)
+  let homedir = gnupg_dir()?;
+  let output = gpg_command(&homedir)
     .args(["--list-keys", "--with-colons"])
     .output()
     .context("failed to run gpg --list-keys")?;
@@ -874,7 +881,7 @@ pub fn verify_signature(
 ) -> Result<super::types::VerifyResult> {
   use super::types::{VerifyOutcome, VerifyResult};
 
-  let gnupg = super::gnupg_dir();
+  let homedir = gnupg_dir()?;
   let sig = match sig_file {
     Some(s) => s,
     None => PathBuf::from(format!("{}.sig", file.display())),
@@ -887,9 +894,7 @@ pub fn verify_signature(
     ));
   }
 
-  let out = Command::new("gpg")
-    .arg("--homedir")
-    .arg(&gnupg)
+  let out = gpg_command(&homedir)
     .args(["--batch", "--status-fd", "1", "--verify"])
     .arg(&sig)
     .arg(&file)
@@ -986,17 +991,9 @@ pub fn verify_signature(
 
 pub fn inspect_decrypt(file: &std::path::Path) -> Result<super::types::DecryptStatus> {
   use super::types::DecryptStatus;
-  let gnupg = super::gnupg_dir();
-  let out = Command::new("gpg")
-    .args([
-      "--homedir",
-      &gnupg,
-      "--batch",
-      "--status-fd",
-      "1",
-      "--list-only",
-      "--decrypt",
-    ])
+  let homedir = gnupg_dir()?;
+  let out = gpg_command(&homedir)
+    .args(["--batch", "--status-fd", "1", "--list-only", "--decrypt"])
     .arg(file)
     .output()
     .context("failed to run gpg --list-only --decrypt")?;
@@ -1033,7 +1030,7 @@ pub fn inspect_decrypt(file: &std::path::Path) -> Result<super::types::DecryptSt
 }
 
 pub fn decrypt_files(files: &[PathBuf]) -> Result<Vec<String>> {
-  let gnupg = super::gnupg_dir();
+  let homedir = gnupg_dir()?;
   let mut results = Vec::new();
 
   for file in files {
@@ -1066,8 +1063,7 @@ pub fn decrypt_files(files: &[PathBuf]) -> Result<Vec<String>> {
       counter += 1;
     }
 
-    let mut cmd = Command::new("gpg");
-    cmd.arg("--homedir").arg(&gnupg);
+    let mut cmd = gpg_command(&homedir);
     cmd.arg("--batch");
     cmd.arg("--yes");
     cmd.arg("--output").arg(&candidate);
