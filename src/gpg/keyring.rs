@@ -460,9 +460,33 @@ pub fn rotate_subkey(
   expiry: &KeyExpiry,
 ) -> Result<()> {
   validate_fp(master_fp)?;
+
+  let snapshot = tempfile::NamedTempFile::new().context("failed to create snapshot tempfile")?;
+  export_secret_key(master_fp, snapshot.path())?;
+
   add_subkey(master_fp, algo, usage, expiry)?;
+
   let pos = subkey_position(master_fp, old_subkey_fp)?;
-  revoke_subkey_at_pos(master_fp, pos)
+  if let Err(e) = revoke_subkey_at_pos(master_fp, pos) {
+    let homedir = gnupg_dir()?;
+    let reimport_ok = gpg_command(&homedir)
+      .args(["--batch", "--import", "--"])
+      .arg(snapshot.path())
+      .status()
+      .map(|s| s.success())
+      .unwrap_or(false);
+    drop(snapshot);
+    if reimport_ok {
+      anyhow::bail!("Révocation échouée — keyring restauré à l'état précédent : {e}");
+    } else {
+      anyhow::bail!(
+        "Révocation échouée ET restauration impossible — vérifiez votre keyring manuellement : {e}"
+      );
+    }
+  }
+
+  drop(snapshot);
+  Ok(())
 }
 
 pub fn add_subkey(master_fp: &str, algo: &str, usage: &str, expiry: &KeyExpiry) -> Result<()> {

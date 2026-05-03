@@ -2774,6 +2774,7 @@ dependencies = [
  "percent-encoding",
  "rfd",
  "sequoia-openpgp",
+ "tempfile",
  "tokio",
  "ureq",
 ]
