@@ -742,6 +742,8 @@ fn cert_to_key_info(
     .and_then(|vc| vc.primary_key().key_expiration_time())
     .map(format_date);
 
+  // SAFETY: NullPolicy skips algorithm checks — used only to enumerate subkey metadata
+  // (read-only), never to verify signatures. Required for legacy SHA-1 keys.
   let subkeys = cert
     .with_policy(unsafe { &NullPolicy::new() }, None)
     .map(|vc| {
