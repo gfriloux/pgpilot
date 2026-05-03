@@ -740,6 +740,56 @@ pub fn sign_file(file: PathBuf, signer_fp: &str) -> Result<PathBuf> {
   Ok(sig_path)
 }
 
+/// Builds a map from every key fingerprint (primary + subkeys) to the primary key's TrustLevel.
+/// VALIDSIG emits the subkey fingerprint, so we need to resolve subkeys back to their primary.
+fn all_fp_to_trust() -> Result<std::collections::HashMap<String, TrustLevel>> {
+  let gnupg = super::gnupg_dir();
+  let output = Command::new("gpg")
+    .arg("--homedir")
+    .arg(&gnupg)
+    .args(["--list-keys", "--with-colons"])
+    .output()
+    .context("failed to run gpg --list-keys")?;
+
+  let mut map = std::collections::HashMap::new();
+  let mut current_trust = TrustLevel::Undefined;
+  let mut last_was_key = false;
+
+  for line in String::from_utf8(output.stdout)?.lines() {
+    let fields: Vec<&str> = line.split(':').collect();
+    match fields.first().copied() {
+      Some("pub") if fields.len() > 8 => {
+        current_trust = TrustLevel::from_char(fields[8].chars().next().unwrap_or('-'));
+        last_was_key = true;
+      }
+      Some("sub") | Some("ssb") => {
+        last_was_key = true;
+      }
+      Some("fpr") if fields.len() > 9 && last_was_key => {
+        map.insert(fields[9].to_string(), current_trust.clone());
+        last_was_key = false;
+      }
+      _ => {
+        last_was_key = false;
+      }
+    }
+  }
+
+  Ok(map)
+}
+
+fn resolve_signer_trust(signer_fp: &Option<String>) -> TrustLevel {
+  let fp = match signer_fp {
+    Some(f) => f,
+    None => return TrustLevel::Undefined,
+  };
+
+  all_fp_to_trust()
+    .ok()
+    .and_then(|m| m.get(fp.as_str()).cloned())
+    .unwrap_or(TrustLevel::Undefined)
+}
+
 pub fn verify_signature(
   file: PathBuf,
   sig_file: Option<PathBuf>,
@@ -844,12 +894,15 @@ pub fn verify_signature(
     None
   });
 
+  let signer_trust = resolve_signer_trust(&signer_fp);
+
   Ok(VerifyResult {
     outcome,
     signer_name,
     signer_fp,
     signed_at,
     detail,
+    signer_trust,
   })
 }
 

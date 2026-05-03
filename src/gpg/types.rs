@@ -169,4 +169,5 @@ pub struct VerifyResult {
   pub signer_fp: Option<String>,
   pub signed_at: Option<String>,
   pub detail: String,
+  pub signer_trust: TrustLevel,
 }

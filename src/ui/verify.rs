@@ -5,7 +5,7 @@ use iced::{
 };
 
 use crate::app::{Message, SignForm};
-use crate::gpg::VerifyOutcome;
+use crate::gpg::{types::TrustLevel, VerifyOutcome};
 use crate::ui::{common, theme};
 
 fn result_card<'a>(
@@ -170,18 +170,56 @@ pub fn view<'a>(form: &'a SignForm) -> Element<'a, Message> {
     .into(),
     Some(Ok(vr)) => match &vr.outcome {
       VerifyOutcome::Valid => {
+        let (icon, icon_color, title, border_color, bg_color) = match &vr.signer_trust {
+          TrustLevel::Full | TrustLevel::Ultimate => (
+            "\u{f058}",
+            theme::SUCCESS,
+            "Signature valide",
+            theme::SUCCESS,
+            theme::SUCCESS_BG,
+          ),
+          TrustLevel::Marginal => (
+            "\u{f058}",
+            theme::PEACH,
+            "Valide (confiance marginale)",
+            theme::PEACH,
+            theme::WARNING_BG,
+          ),
+          TrustLevel::Undefined => (
+            "\u{f071}",
+            theme::PEACH,
+            "Signature correcte — identité non vérifiée",
+            theme::PEACH,
+            theme::WARNING_BG,
+          ),
+        };
+
         let mut details: Vec<Element<'_, Message>> = vec![row![
-          text("\u{f058}")
+          text(icon)
             .font(theme::ICONS)
             .size(20)
-            .style(|_: &iced::Theme| iced::widget::text::Style {
-              color: Some(theme::SUCCESS),
+            .style(move |_: &iced::Theme| iced::widget::text::Style {
+              color: Some(icon_color),
             }),
-          text("Signature valide").size(18).font(bold),
+          text(title).size(18).font(bold),
         ]
         .spacing(10)
         .align_y(Alignment::Center)
         .into()];
+
+        if matches!(vr.signer_trust, TrustLevel::Undefined) {
+          details.push(
+            container(
+              text("L'identité affichée n'est pas vérifiée par votre toile de confiance.").size(12),
+            )
+            .style(|_: &iced::Theme| container::Style {
+              text_color: Some(theme::PEACH),
+              ..Default::default()
+            })
+            .into(),
+          );
+        }
+
         if let Some(name) = &vr.signer_name {
           details.push(
             row![
@@ -231,10 +269,10 @@ pub fn view<'a>(form: &'a SignForm) -> Element<'a, Message> {
         container(column(details).spacing(6))
           .padding([12, 14])
           .width(Length::Fill)
-          .style(|_: &iced::Theme| container::Style {
-            background: Some(Background::Color(theme::SUCCESS_BG)),
+          .style(move |_: &iced::Theme| container::Style {
+            background: Some(Background::Color(bg_color)),
             border: Border {
-              color: theme::SUCCESS,
+              color: border_color,
               width: 1.0,
               radius: 8.0.into(),
             },
