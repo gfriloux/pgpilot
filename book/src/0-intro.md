@@ -1,0 +1,43 @@
+# pgpilot
+
+**pgpilot** is a graphical GPG key manager for Linux. It provides a user-friendly interface to create, import, export, publish, and manage OpenPGP keys — without requiring GPG command-line knowledge.
+
+## What pgpilot does
+
+- **Create keys** — Generate primary keys with Sign, Encryption, and SSH Auth subkeys (ed25519 / cv25519)
+- **Manage keys** — View, export, import, delete, and organize your keyring in an intuitive list-detail view
+- **Trust management** — Set trust levels (Undefined / Marginal / Full / Ultimate) for contacts' keys
+- **Publish & share** — Upload keys to keyservers (keys.openpgp.org, keyserver.ubuntu.com) with status tracking and auto-republish
+- **File operations**:
+  - **Encrypt** files for one or more recipients; toggle between binary `.gpg` and armored `.asc` formats
+  - **Sign** files (creates detached `.sig` signatures)
+  - **Verify** signatures with 5-state result feedback (valid / bad signature / unknown key / expired / revoked)
+- **Subkey management** — Add, renew, or rotate subkeys with ease
+- **YubiKey support** — Migrate subkeys to hardware security keys for offline storage
+- **Hardware check** — Diagnostic page to validate GPG setup and detect issues
+- **Backup & recovery** — Export private keys and revocation certificates for disaster recovery
+- **Multi-language** — English and French UI
+
+## What pgpilot does NOT do
+
+pgpilot is **not a replacement for the GPG command line**. It is a **GUI wrapper** that delegates all cryptographic operations to the `gpg` binary. You cannot:
+- Edit key properties (name, email, expiration) after creation
+- Modify master key expiry (by design — keys created by pgpilot never expire)
+- Use non-standard algorithms (pgpilot creates ed25519 keys only)
+- Access advanced `gpg` features not exposed in the UI
+
+For power users needing full control, use `gpg` directly in a terminal.
+
+## Key principles
+
+- **Privacy first** — All operations happen locally; keys never leave your machine
+- **Safety** — pgpilot validates input, guards against silent overwrites, and prevents dangerous operations
+- **Simplicity** — No jargon in the UI; terminology is localized and beginner-friendly
+- **Trust on first use** — Keys default to "Undefined" trust; you must actively set trust before relying on them
+
+## Get started
+
+- [Installation](1-installation.md) — Install pgpilot on your system
+- [Quickstart](2-quickstart.md) — Create your first key in 5 minutes
+- [Key Management](3-key-management.md) — Detailed workflows for all operations
+- [Security](9-security.md) — Learn about threat models and best practices
