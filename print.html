@@ -1,0 +1,2440 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>pgpilot</title>
+        <meta name="robots" content="noindex">
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="favicon-8114d1fc.png">
+        <link rel="stylesheet" href="css/variables-8adf115d.css">
+        <link rel="stylesheet" href="css/general-2459343d.css">
+        <link rel="stylesheet" href="css/chrome-ae938929.css">
+        <link rel="stylesheet" href="css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "searchindex-81af80cd.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="toc-a800ce08.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">pgpilot</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/gfriloux/pgpilot" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="pgpilot"><a class="header" href="#pgpilot">pgpilot</a></h1>
+<p><strong>pgpilot</strong> is a graphical GPG key manager for Linux. It provides a user-friendly interface to create, import, export, publish, and manage OpenPGP keys — without requiring GPG command-line knowledge.</p>
+<h2 id="what-pgpilot-does"><a class="header" href="#what-pgpilot-does">What pgpilot does</a></h2>
+<ul>
+<li><strong>Create keys</strong> — Generate primary keys with Sign, Encryption, and SSH Auth subkeys (ed25519 / cv25519)</li>
+<li><strong>Manage keys</strong> — View, export, import, delete, and organize your keyring in an intuitive list-detail view</li>
+<li><strong>Trust management</strong> — Set trust levels (Undefined / Marginal / Full / Ultimate) for contacts’ keys</li>
+<li><strong>Publish &amp; share</strong> — Upload keys to keyservers (keys.openpgp.org, keyserver.ubuntu.com) with status tracking and auto-republish</li>
+<li><strong>File operations</strong>:
+<ul>
+<li><strong>Encrypt</strong> files for one or more recipients; toggle between binary <code>.gpg</code> and armored <code>.asc</code> formats</li>
+<li><strong>Sign</strong> files (creates detached <code>.sig</code> signatures)</li>
+<li><strong>Verify</strong> signatures with 5-state result feedback (valid / bad signature / unknown key / expired / revoked)</li>
+</ul>
+</li>
+<li><strong>Subkey management</strong> — Add, renew, or rotate subkeys with ease</li>
+<li><strong>YubiKey support</strong> — Migrate subkeys to hardware security keys for offline storage</li>
+<li><strong>Hardware check</strong> — Diagnostic page to validate GPG setup and detect issues</li>
+<li><strong>Backup &amp; recovery</strong> — Export private keys and revocation certificates for disaster recovery</li>
+<li><strong>Themes &amp; customization</strong> — Two visual themes (Catppuccin Frappé and USSR), configurable scale factor, English/French UI</li>
+</ul>
+<h2 id="what-pgpilot-does-not-do"><a class="header" href="#what-pgpilot-does-not-do">What pgpilot does NOT do</a></h2>
+<p>pgpilot is <strong>not a replacement for the GPG command line</strong>. It is a <strong>GUI wrapper</strong> that delegates all cryptographic operations to the <code>gpg</code> binary. You cannot:</p>
+<ul>
+<li>Edit key properties (name, email, expiration) after creation</li>
+<li>Modify master key expiry (by design — keys created by pgpilot never expire)</li>
+<li>Use non-standard algorithms (pgpilot creates ed25519 keys only)</li>
+<li>Access advanced <code>gpg</code> features not exposed in the UI</li>
+</ul>
+<p>For power users needing full control, use <code>gpg</code> directly in a terminal.</p>
+<h2 id="key-principles"><a class="header" href="#key-principles">Key principles</a></h2>
+<ul>
+<li><strong>Privacy first</strong> — All operations happen locally; keys never leave your machine</li>
+<li><strong>Safety</strong> — pgpilot validates input, guards against silent overwrites, and prevents dangerous operations</li>
+<li><strong>Simplicity</strong> — No jargon in the UI; terminology is localized and beginner-friendly</li>
+<li><strong>Trust on first use</strong> — Keys default to “Undefined” trust; you must actively set trust before relying on them</li>
+</ul>
+<h2 id="get-started"><a class="header" href="#get-started">Get started</a></h2>
+<ul>
+<li><a href="#installation">Installation</a> — Install pgpilot on your system</li>
+<li><a href="#quickstart">Quickstart</a> — Create your first key in 5 minutes</li>
+<li><a href="#key-management">Key Management</a> — Detailed workflows for all operations</li>
+<li><a href="#security-1">Security</a> — Learn about threat models and best practices</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="installation"><a class="header" href="#installation">Installation</a></h1>
+<p>pgpilot is a graphical key manager for GPG. This guide covers installation from GitHub releases and building from source.</p>
+<h2 id="prerequisites"><a class="header" href="#prerequisites">Prerequisites</a></h2>
+<p>pgpilot requires:</p>
+<ul>
+<li><strong>GnuPG</strong> ≥ 2.2 (the <code>gpg</code> command must be in <code>PATH</code>)</li>
+<li><strong>gpg-agent</strong> (usually bundled with GnuPG)</li>
+<li><strong>pinentry</strong> — a pinentry program for password prompts (e.g. <code>pinentry-tty</code>, <code>pinentry-gtk2</code>, or <code>pinentry-qt</code>)</li>
+</ul>
+<h3 id="verify-prerequisites-linux"><a class="header" href="#verify-prerequisites-linux">Verify prerequisites (Linux)</a></h3>
+<pre><code class="language-bash">gpg --version
+# Output should show GnuPG version ≥ 2.2
+
+gpg-agent --version
+# Confirm agent is available
+
+which pinentry
+# Should find a pinentry binary (or check: gpg-conf --list-dirs | grep pinentry)
+</code></pre>
+<p>If <code>gpg</code> is missing:</p>
+<ul>
+<li><strong>Ubuntu / Debian</strong>: <code>sudo apt install gpg gnupg-agent pinentry</code></li>
+<li><strong>Fedora / RHEL</strong>: <code>sudo dnf install gnupg pinentry</code></li>
+<li><strong>Arch</strong>: <code>sudo pacman -S gnupg pinentry</code></li>
+<li><strong>NixOS</strong>: Use <code>nix-shell -p gnupg gpg-agent pinentry</code> or add to <code>flake.nix</code>/<code>shell.nix</code></li>
+</ul>
+<hr>
+<h2 id="installation-from-github-releases"><a class="header" href="#installation-from-github-releases">Installation from GitHub Releases</a></h2>
+<ol>
+<li>Visit <a href="https://github.com/gfriloux/pgpilot/releases">pgpilot releases</a></li>
+<li>Download the latest <code>pgpilot</code> binary for your Linux distribution (amd64, arm64, etc.)</li>
+<li>Make it executable:
+<pre><code class="language-bash">chmod +x pgpilot
+</code></pre>
+</li>
+<li>Run it:
+<pre><code class="language-bash">./pgpilot
+</code></pre>
+</li>
+</ol>
+<p>To install system-wide:</p>
+<pre><code class="language-bash">sudo mv pgpilot /usr/local/bin/
+pgpilot  # now runs from anywhere
+</code></pre>
+<hr>
+<h2 id="building-from-source"><a class="header" href="#building-from-source">Building from Source</a></h2>
+<h3 id="requirements"><a class="header" href="#requirements">Requirements</a></h3>
+<ul>
+<li><strong>Rust</strong> ≥ 1.80 (install from <a href="https://rustup.rs">rustup.rs</a> if needed)</li>
+<li><strong>Nix</strong> (optional but recommended on NixOS) — see <a href="https://nix.dev">nix.dev</a></li>
+<li><strong>clang</strong> and <strong>development headers</strong> for Wayland/X11 support</li>
+</ul>
+<h3 id="clone-the-repository"><a class="header" href="#clone-the-repository">Clone the repository</a></h3>
+<pre><code class="language-bash">git clone https://github.com/gfriloux/pgpilot.git
+cd pgpilot
+</code></pre>
+<h3 id="build-in-the-nix-dev-shell-recommended"><a class="header" href="#build-in-the-nix-dev-shell-recommended">Build in the Nix dev shell (recommended)</a></h3>
+<p>If you have <code>nix</code> installed:</p>
+<pre><code class="language-bash">nix develop
+cargo build --release
+</code></pre>
+<p>The dev shell sets up <code>LIBCLANG_PATH</code> and <code>LD_LIBRARY_PATH</code> for all dependencies (sequoia-openpgp, iced/Wayland, dbus, etc.).</p>
+<h3 id="build-without-nix"><a class="header" href="#build-without-nix">Build without Nix</a></h3>
+<pre><code class="language-bash">cargo build --release
+./target/release/pgpilot
+</code></pre>
+<p><strong>Note</strong>: On systems without a pre-configured environment, you may need to install additional packages (clang, libssl-dev, libdbus-1-dev, libwayland-dev, etc.). See your distribution’s docs if the build fails.</p>
+<hr>
+<h2 id="verification"><a class="header" href="#verification">Verification</a></h2>
+<p>Once installed, verify pgpilot is working:</p>
+<ol>
+<li>
+<p>Launch pgpilot:</p>
+<pre><code class="language-bash">pgpilot
+</code></pre>
+</li>
+<li>
+<p>A window should appear. If not, check that your display server (X11 or Wayland) is running:</p>
+<pre><code class="language-bash">echo $DISPLAY     # X11
+echo $WAYLAND_DISPLAY  # Wayland
+</code></pre>
+</li>
+<li>
+<p>Open the <strong>Diagnostic</strong> page (sidebar, “Diagnostic” button):</p>
+<ul>
+<li>All checks should show “OK” or “Info” (green/blue icons)</li>
+<li>If you see “Error” in red, follow the troubleshooting guide (see <a href="#troubleshooting-4">Troubleshooting</a>)</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h2 id="uninstall"><a class="header" href="#uninstall">Uninstall</a></h2>
+<p>To remove pgpilot:</p>
+<pre><code class="language-bash"># If installed via /usr/local/bin/
+sudo rm /usr/local/bin/pgpilot
+
+# To also remove config and cached data:
+rm ~/.config/pgpilot/config.yaml
+</code></pre>
+<p><strong>Note</strong>: pgpilot does not modify your GPG keyring directly — all operations delegate to the <code>gpg</code> binary. Your keys remain in <code>~/.gnupg/</code> and are safe to back up independently.</p>
+<hr>
+<h2 id="removing-gnupg-keyring-data"><a class="header" href="#removing-gnupg-keyring-data">Removing GnuPG keyring data</a></h2>
+<blockquote>
+<p><strong>Warning: This is NOT part of uninstalling pgpilot.</strong></p>
+<p><code>~/.gnupg/</code> is GnuPG’s own data directory. It contains <strong>all your GPG keys</strong>, including keys from other applications, keys you’ve imported over years, and your private keys. Deleting it is <strong>permanent and irreversible</strong> unless you have a backup.</p>
+<p>pgpilot does not own or modify this directory — it delegates all operations to the <code>gpg</code> binary which reads from <code>~/.gnupg/</code>.</p>
+</blockquote>
+<p>Only proceed if you intend to <strong>completely destroy your GPG keyring</strong> and have verified your backups.</p>
+<p><strong>Prerequisites before proceeding:</strong></p>
+<ol>
+<li>Export and securely store all private keys you want to keep</li>
+<li>Back up your revocation certificates</li>
+<li>Verify your backups can be restored</li>
+</ol>
+<pre><code class="language-bash"># IRREVERSIBLE — destroys all GPG keys
+rm -rf ~/.gnupg/
+</code></pre>
+<hr>
+<h2 id="next-steps"><a class="header" href="#next-steps">Next steps</a></h2>
+<ul>
+<li>Read <a href="#quickstart">Quickstart</a> to create your first key</li>
+<li>See <a href="#key-management">Key Management</a> for detailed workflows</li>
+<li>Check <a href="#troubleshooting-4">Troubleshooting</a> if you encounter issues</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="quickstart"><a class="header" href="#quickstart">Quickstart</a></h1>
+<p>Get your first key up and running in 5 minutes.</p>
+<h2 id="step-1-create-your-first-key"><a class="header" href="#step-1-create-your-first-key">Step 1: Create Your First Key</a></h2>
+<ol>
+<li>Launch pgpilot</li>
+<li>Click <strong>Create</strong> in the sidebar</li>
+<li>Fill in the form:
+<ul>
+<li><strong>Name</strong>: Your full name (e.g., “Alice Wonderland”)</li>
+<li><strong>Email</strong>: Your email address (e.g., “alice@example.com”)</li>
+<li><strong>Subkey Expiry</strong>: Keep the default (keys created by pgpilot do not expire)</li>
+<li><strong>Include SSH Auth</strong>: Leave unchecked (you can add it later if needed)</li>
+</ul>
+</li>
+<li>Click <strong>Create Key</strong></li>
+<li>pgpilot will call <code>gpg --batch --generate-key</code>. This takes 10–30 seconds. You’ll see:
+<ul>
+<li>A progress message</li>
+<li>Your new key appears in the <strong>My Keys</strong> list on the left</li>
+<li>A green checkmark “Key created successfully”</li>
+</ul>
+</li>
+</ol>
+<p><strong>What pgpilot created</strong>:</p>
+<ul>
+<li>A <strong>primary key</strong> (certification-only, ed25519)</li>
+<li>Three <strong>subkeys</strong>:
+<ul>
+<li><strong>Sign</strong> subkey (ed25519) — for signing files</li>
+<li><strong>Encr</strong> subkey (cv25519) — for decryption</li>
+<li><strong>Auth</strong> subkey (ed25519) — for SSH authentication (optional)</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h2 id="step-2-export-your-public-key"><a class="header" href="#step-2-export-your-public-key">Step 2: Export Your Public Key</a></h2>
+<p>Share your public key with contacts so they can send you encrypted messages.</p>
+<ol>
+<li>Select your new key in the <strong>My Keys</strong> list</li>
+<li>Click the <strong>Export</strong> button (or three-dot menu)</li>
+<li>Choose one of three options:
+<ul>
+<li><strong>File</strong> — saves <code>YourName.pub.asc</code> to disk</li>
+<li><strong>Clipboard</strong> — copies the key so you can paste it anywhere</li>
+<li><strong>Upload</strong> — posts to paste.rs and gives you a shareable link</li>
+</ul>
+</li>
+</ol>
+<p><strong>Example</strong>: Export to clipboard, then paste into an email or chat.</p>
+<hr>
+<h2 id="step-3-import-a-contacts-key"><a class="header" href="#step-3-import-a-contacts-key">Step 3: Import a Contact’s Key</a></h2>
+<p>Receive a public key from someone and add it to your keyring.</p>
+<h3 id="option-a-from-a-file"><a class="header" href="#option-a-from-a-file">Option A: From a file</a></h3>
+<ol>
+<li>Click <strong>Import</strong> in the sidebar</li>
+<li>Select <strong>File</strong></li>
+<li>Choose the <code>.asc</code> file containing their key</li>
+<li>Click <strong>Import</strong> — pgpilot will validate and add it</li>
+</ol>
+<h3 id="option-b-from-keyserver"><a class="header" href="#option-b-from-keyserver">Option B: From keyserver</a></h3>
+<ol>
+<li>Click <strong>Import</strong></li>
+<li>Select <strong>Keyserver</strong></li>
+<li>Enter their email or fingerprint</li>
+<li>pgpilot queries <code>keys.openpgp.org</code> (or another keyserver) and shows the key</li>
+<li>Click <strong>Import</strong></li>
+</ol>
+<h3 id="option-c-from-url-or-pasted-text"><a class="header" href="#option-c-from-url-or-pasted-text">Option C: From URL or pasted text</a></h3>
+<ol>
+<li>Click <strong>Import</strong></li>
+<li>Select <strong>URL</strong> (paste an HTTPS link to a <code>.asc</code> file) or <strong>Paste</strong> (paste armored key text)</li>
+<li>pgpilot fetches or parses the key</li>
+<li>Click <strong>Import</strong></li>
+</ol>
+<hr>
+<h2 id="step-4-trust-their-key"><a class="header" href="#step-4-trust-their-key">Step 4: Trust Their Key</a></h2>
+<p>Once imported, the key appears in <strong>My Keys</strong> with trust level <strong>Undefined</strong>.</p>
+<p>To send them encrypted messages, increase their trust:</p>
+<ol>
+<li>Select their key in the list</li>
+<li>In the detail panel, find the <strong>Trust</strong> badge</li>
+<li>Click it and choose:
+<ul>
+<li><strong>Marginal</strong> — you’ve partially verified their identity</li>
+<li><strong>Full</strong> — you’ve fully verified their identity</li>
+</ul>
+</li>
+<li>Click <strong>Save</strong></li>
+</ol>
+<p><strong>Best practice</strong>: Meet them in person, exchange fingerprints, and verify by hand before trusting.</p>
+<hr>
+<h2 id="step-5-encrypt-a-file-for-them"><a class="header" href="#step-5-encrypt-a-file-for-them">Step 5: Encrypt a File for Them</a></h2>
+<p>Now you can send them encrypted messages.</p>
+<ol>
+<li>Click <strong>Encrypt</strong> in the sidebar</li>
+<li>Click <strong>Add Files</strong> and select a file</li>
+<li>Check their key in the <strong>Recipients</strong> list</li>
+<li>Optionally toggle between <code>.gpg</code> (binary) and <code>.asc</code> (armored/text) format</li>
+<li>Click <strong>Encrypt</strong></li>
+<li>pgpilot creates <code>yourfile.pdf.gpg</code> (or <code>.asc</code>) in the same folder as the original</li>
+</ol>
+<p>Send the encrypted file to them. Only they can decrypt it (using their private key password).</p>
+<hr>
+<h2 id="whats-next"><a class="header" href="#whats-next">What’s Next?</a></h2>
+<ul>
+<li><strong>Publish your key</strong> — Use <strong>Publish</strong> to upload to keyservers so anyone can find your key by email</li>
+<li><strong>Rotate subkeys</strong> — Use <strong>Renew</strong> or <strong>Replace</strong> to keep subkeys fresh</li>
+<li><strong>Backup</strong> — Use <strong>Backup</strong> to export your private key + revocation certificate</li>
+<li><strong>YubiKey</strong> — Use <strong>Migrate to YubiKey</strong> to store your subkeys on a hardware security key</li>
+</ul>
+<p>See <a href="#key-management">Key Management</a> for detailed guides.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="key-management"><a class="header" href="#key-management">Key Management</a></h1>
+<p>Detailed workflows for managing GPG keys with pgpilot.</p>
+<h2 id="understanding-key-structure"><a class="header" href="#understanding-key-structure">Understanding Key Structure</a></h2>
+<p>pgpilot creates keys with a specific structure optimized for modern cryptography:</p>
+<ul>
+<li><strong>Primary key</strong> (master cert): ed25519, certification-only (doesn’t expire)</li>
+<li><strong>Sign subkey</strong> (S): ed25519, for signing files and commits</li>
+<li><strong>Encryption subkey</strong> (E): cv25519, for decryption of messages/files</li>
+<li><strong>Auth subkey</strong> (A): ed25519 (optional), for SSH authentication</li>
+</ul>
+<p>This structure follows best practices: subkeys can be rotated without changing your master key identity.</p>
+<hr>
+<h2 id="navigating-the-key-list"><a class="header" href="#navigating-the-key-list">Navigating the Key List</a></h2>
+<p>The <strong>My Keys</strong> view displays your secret keys in a 2-column layout:</p>
+<p><strong>Left panel (320px fixed)</strong>:</p>
+<ul>
+<li>Master key list with name, email, creation date, and expiry badge</li>
+<li>Trust level indicator (colored badge: Undefined / Marginal / Full)</li>
+<li>Key icons (S E A) for subkey types present</li>
+</ul>
+<p><strong>Right panel (fills remaining space)</strong>:</p>
+<ul>
+<li>Detailed key information</li>
+<li>Subkey list (read-only)</li>
+<li>Action buttons (Export, Backup, Migrate, Publish, Delete)</li>
+<li>Trust level picker</li>
+</ul>
+<p>Click a key in the list to select it and view details on the right.</p>
+<hr>
+<h2 id="managing-trust-levels"><a class="header" href="#managing-trust-levels">Managing Trust Levels</a></h2>
+<p><strong>Trust levels</strong> tell pgpilot how much you trust a key. When encrypting, only keys at sufficient trust (Full or Ultimate) are recommended without warning.</p>
+<h3 id="view-trust-level"><a class="header" href="#view-trust-level">View trust level</a></h3>
+<ol>
+<li>Select a key in the list (right panel shows details)</li>
+<li>Find the <strong>Trust</strong> badge — shows current level
+<ul>
+<li><strong>Undefined</strong> (gray) — you haven’t verified this key</li>
+<li><strong>Marginal</strong> (amber) — you’ve partially verified the owner</li>
+<li><strong>Full</strong> (green) — you’ve fully verified the owner</li>
+<li><strong>Ultimate</strong> (green, rare) — you own this key</li>
+</ul>
+</li>
+</ol>
+<h3 id="change-trust-level"><a class="header" href="#change-trust-level">Change trust level</a></h3>
+<ol>
+<li>Select a key in the list</li>
+<li>In the detail panel, click the <strong>Trust</strong> badge</li>
+<li>A picker appears with three options: Undefined, Marginal, Full</li>
+<li>Click your choice</li>
+<li>Trust is saved immediately (calls <code>gpg --import-ownertrust</code>)</li>
+</ol>
+<p><strong>Best practice</strong>: Set trust only after meeting someone in person and verifying their fingerprint by hand.</p>
+<hr>
+<h2 id="working-with-subkeys"><a class="header" href="#working-with-subkeys">Working with Subkeys</a></h2>
+<p>Subkeys are the workhorses of your key. They handle encryption and signing, while the primary key stays secure.</p>
+<h3 id="view-subkeys"><a class="header" href="#view-subkeys">View subkeys</a></h3>
+<p>Select a key in the list. The right panel shows a <strong>Subkeys</strong> section:</p>
+<pre><code>[S] Sign             Created: 2024-01-15   Expires: Never
+    Algo: ed25519  ID: ABC123...
+
+[E] Encrypt          Created: 2024-01-15   Expires: Never
+    Algo: cv25519  ID: DEF456...
+
+[A] Auth SSH         Created: 2024-01-20   Expires: 2026-01-20
+    Algo: ed25519  ID: GHI789...
+</code></pre>
+<p>Legend: <strong>[S]</strong> = Sign, <strong>[E]</strong> = Encrypt, <strong>[A]</strong> = Authentication.</p>
+<h3 id="add-a-subkey"><a class="header" href="#add-a-subkey">Add a subkey</a></h3>
+<p>If you’re missing a subkey (e.g., you created a key without SSH Auth and want to add it now):</p>
+<ol>
+<li>Select your key</li>
+<li>Click <strong>+ Add Subkey</strong></li>
+<li>Choose the type: Sign / Encrypt / Auth</li>
+<li>Confirm</li>
+<li>pgpilot calls <code>gpg --quick-add-key</code> with the new subkey</li>
+</ol>
+<p>This is useful when you realize you need a subkey you didn’t include at creation.</p>
+<h3 id="renew-subkey-expiry"><a class="header" href="#renew-subkey-expiry">Renew subkey expiry</a></h3>
+<p>Subkeys expire by default (after 1, 2, or 5 years — see <a href="#quickstart">Quickstart</a>). Renewal extends the expiry date.</p>
+<ol>
+<li>Select a key, then click a subkey card’s <strong>Renew</strong> button</li>
+<li>A modal appears asking for new expiry duration (1/2/5 years)</li>
+<li>Click <strong>Renew</strong></li>
+<li>pgpilot calls <code>gpg --quick-set-expire</code></li>
+<li>The subkey’s expiry updates</li>
+</ol>
+<p>You can renew a subkey as many times as needed.</p>
+<h3 id="rotate-a-subkey-replace"><a class="header" href="#rotate-a-subkey-replace">Rotate a subkey (Replace)</a></h3>
+<p>Rotation creates a <strong>new</strong> subkey with fresh parameters and <strong>revokes</strong> the old one. Use this when:</p>
+<ul>
+<li>A subkey is compromised or suspected compromised</li>
+<li>You want to keep the primary key but refresh all subkeys</li>
+</ul>
+<p>Process:</p>
+<ol>
+<li>Select a key, then click a subkey card’s <strong>Replace</strong> button</li>
+<li>A modal appears asking for new expiry duration</li>
+<li>Click <strong>Replace</strong></li>
+<li>pgpilot:
+<ul>
+<li>Snapshots your secret key (backup)</li>
+<li>Creates a new subkey with <code>gpg --quick-add-key</code></li>
+<li>Revokes the old subkey via <code>gpg --edit-key</code> (dialogue-driven)</li>
+<li>If revocation fails, restores the snapshot</li>
+</ul>
+</li>
+<li>When done, the old subkey is marked revoked; new one is active</li>
+</ol>
+<p><strong>Note</strong>: The primary key identity is unchanged — fingerprint stays the same.</p>
+<hr>
+<h2 id="exporting-keys"><a class="header" href="#exporting-keys">Exporting Keys</a></h2>
+<p>Share your public key with contacts, or backup your secret key.</p>
+<h3 id="export-public-key-file"><a class="header" href="#export-public-key-file">Export public key (file)</a></h3>
+<ol>
+<li>Select your key</li>
+<li>Click <strong>Export</strong> or the three-dot menu</li>
+<li>Choose <strong>File</strong></li>
+<li>pgpilot opens a file-save dialog</li>
+<li>Choose a location (default: <code>YourName.pub.asc</code>)</li>
+<li>Click <strong>Save</strong></li>
+</ol>
+<p>The <code>.asc</code> file contains only your <strong>public key</strong>. It’s safe to share widely.</p>
+<h3 id="export-public-key-clipboard"><a class="header" href="#export-public-key-clipboard">Export public key (clipboard)</a></h3>
+<ol>
+<li>Select your key</li>
+<li>Click <strong>Export</strong> or the three-dot menu</li>
+<li>Choose <strong>Clipboard</strong></li>
+<li>A confirmation modal appears (to avoid accidental copy)</li>
+<li>Click <strong>Copy</strong></li>
+<li>pgpilot copies the public key to clipboard</li>
+<li>A green status message confirms: “Key copied”</li>
+</ol>
+<p>Now paste it into an email, chat, or website.</p>
+<h3 id="export-public-key-upload-to-pasters"><a class="header" href="#export-public-key-upload-to-pasters">Export public key (upload to paste.rs)</a></h3>
+<ol>
+<li>Select your key</li>
+<li>Click <strong>Export</strong> or the three-dot menu</li>
+<li>Choose <strong>Paste</strong></li>
+<li>A confirmation modal appears</li>
+<li>Click <strong>Paste</strong></li>
+<li>pgpilot uploads to paste.rs and returns a shareable link (e.g., <code>https://paste.rs/abc123</code>)</li>
+<li>Share that link — anyone can fetch your public key without needing email or GitHub</li>
+</ol>
+<p>This is handy for temporary sharing or embedding in a bio.</p>
+<h3 id="backup-secret-key"><a class="header" href="#backup-secret-key">Backup secret key</a></h3>
+<p><strong>IMPORTANT</strong>: Your secret key is what allows you to decrypt messages and sign files. Back it up in a secure location!</p>
+<ol>
+<li>Select your key</li>
+<li>Click <strong>Backup</strong></li>
+<li>pgpilot opens a folder-picker dialog</li>
+<li>Choose a secure location (USB drive, external SSD, safe, etc.)</li>
+<li>Click <strong>Select Folder</strong></li>
+<li>pgpilot exports two files:
+<ul>
+<li><code>&lt;KeyID&gt;_secret.asc</code> — your <strong>secret key</strong> (encrypted, requires password to use)</li>
+<li><code>&lt;KeyID&gt;_revocation.rev</code> — <strong>revocation certificate</strong> (if available)</li>
+</ul>
+</li>
+<li>A status message confirms: “Backup complete”</li>
+</ol>
+<p><strong>Security practices</strong>:</p>
+<ul>
+<li>Store backup offline (no network)</li>
+<li>Encrypt the USB drive itself</li>
+<li>Keep a copy in a physical safe if critical</li>
+<li>Test recovery annually (decrypt, check fingerprint)</li>
+</ul>
+<hr>
+<h2 id="importing-keys"><a class="header" href="#importing-keys">Importing Keys</a></h2>
+<p>Add someone else’s public key to your keyring so you can send them encrypted messages.</p>
+<h3 id="import-from-file"><a class="header" href="#import-from-file">Import from file</a></h3>
+<ol>
+<li>Click <strong>Import</strong> in the sidebar</li>
+<li>The <strong>Import</strong> view opens with tabs</li>
+<li>Select <strong>File</strong></li>
+<li>Click <strong>Choose file</strong></li>
+<li>Select an <code>.asc</code> file containing a PGP key</li>
+<li>Click <strong>Import</strong></li>
+<li>pgpilot validates and imports the key</li>
+<li>If successful, you’re returned to <strong>My Keys</strong> with the new key listed</li>
+</ol>
+<h3 id="import-from-url"><a class="header" href="#import-from-url">Import from URL</a></h3>
+<ol>
+<li>Click <strong>Import</strong></li>
+<li>Select <strong>URL</strong></li>
+<li>Paste an HTTPS link to a <code>.asc</code> file (e.g., <code>https://example.com/keys/alice.asc</code>)</li>
+<li>Click <strong>Load from URL</strong></li>
+<li>pgpilot fetches the file and imports it</li>
+</ol>
+<p>Must be HTTPS; HTTP is rejected for security.</p>
+<h3 id="import-from-keyserver"><a class="header" href="#import-from-keyserver">Import from keyserver</a></h3>
+<ol>
+<li>Click <strong>Import</strong></li>
+<li>Select <strong>Keyserver</strong></li>
+<li>Enter a search query:
+<ul>
+<li><strong>Fingerprint</strong> (40 hex chars): <code>ABCD1234...</code></li>
+<li><strong>Key ID</strong> (16 hex chars): <code>1234567890ABCDEF</code></li>
+<li><strong>Email</strong>: <code>alice@example.com</code></li>
+</ul>
+</li>
+<li>Choose keyserver:
+<ul>
+<li><strong>keys.openpgp.org</strong> (default, recommended — privacy-respecting)</li>
+<li><strong>keyserver.ubuntu.com</strong> (traditional, returns all matching keys)</li>
+</ul>
+</li>
+<li>Click <strong>Search</strong></li>
+<li>pgpilot queries the keyserver and shows matching key(s)</li>
+<li>Click <strong>Import</strong> for the key you want</li>
+</ol>
+<p>For email queries, pgpilot URL-encodes the address and uses the <code>/pks/lookup?op=get</code> API endpoint.</p>
+<h3 id="import-from-pasted-text"><a class="header" href="#import-from-pasted-text">Import from pasted text</a></h3>
+<ol>
+<li>Click <strong>Import</strong></li>
+<li>Select <strong>Paste</strong></li>
+<li>Paste the entire armored key text (begins with <code>-----BEGIN PGP PUBLIC KEY BLOCK-----</code>)</li>
+<li>The preview updates live</li>
+<li>Click <strong>Import</strong></li>
+<li>pgpilot validates and adds the key</li>
+</ol>
+<p><strong>Security note</strong>: pgpilot validates that input starts with <code>-----BEGIN PGP</code>, rejecting HTML pages, error messages, etc.</p>
+<hr>
+<h2 id="deleting-keys"><a class="header" href="#deleting-keys">Deleting Keys</a></h2>
+<p>Remove a key from your keyring.</p>
+<h3 id="delete-public-key"><a class="header" href="#delete-public-key">Delete public key</a></h3>
+<p>If you have only the <strong>public key</strong> (no secret):</p>
+<ol>
+<li>Select the key in <strong>My Keys</strong></li>
+<li>Click <strong>Delete</strong></li>
+<li>A confirmation modal appears: “Are you sure?”</li>
+<li>Click <strong>Delete</strong></li>
+<li>pgpilot calls <code>gpg --delete-keys &lt;fingerprint&gt;</code></li>
+<li>Key is removed; status shows: “Key deleted”</li>
+</ol>
+<h3 id="delete-secret-key"><a class="header" href="#delete-secret-key">Delete secret key</a></h3>
+<p>If you have the <strong>secret key</strong>:</p>
+<ol>
+<li>Select the key</li>
+<li>Click <strong>Delete</strong></li>
+<li>A warning modal appears: “This action cannot be undone…”</li>
+<li>Click <strong>Delete secret key</strong></li>
+<li>pgpilot calls <code>gpg --delete-secret-and-public-keys &lt;fingerprint&gt;</code></li>
+<li>Both secret and public key are erased</li>
+<li>Status: “Key deleted”</li>
+</ol>
+<p><strong>CRITICAL</strong>: Before deleting your secret key, export a backup! Once deleted, you cannot decrypt old messages or revoke the key if it’s compromised.</p>
+<h3 id="delete-yubikey-stub"><a class="header" href="#delete-yubikey-stub">Delete YubiKey stub</a></h3>
+<p>If a key is stored on a <strong>YubiKey</strong> (smart card):</p>
+<ol>
+<li>Select the key</li>
+<li>Click <strong>Supprimer</strong></li>
+<li>Confirm</li>
+<li>pgpilot removes the key from your local keyring</li>
+</ol>
+<p>The stub remains on the card; you can re-import it later. The private key is <strong>not</strong> erased from the card (only a <code>gpg</code> delete on the keyring stub).</p>
+<hr>
+<h2 id="publishing-to-keyservers"><a class="header" href="#publishing-to-keyservers">Publishing to Keyservers</a></h2>
+<p>Make your public key discoverable so others can find you by email.</p>
+<h3 id="publish-a-key"><a class="header" href="#publish-a-key">Publish a key</a></h3>
+<ol>
+<li>Select your key</li>
+<li>Click <strong>Publish</strong></li>
+<li>A modal appears asking which keyserver:
+<ul>
+<li><strong>keys.openpgp.org</strong> (recommended — verified keys only, privacy-preserving)</li>
+<li><strong>keyserver.ubuntu.com</strong> (traditional, lists all keys)</li>
+</ul>
+</li>
+<li>Click <strong>Publish</strong></li>
+<li>pgpilot calls <code>gpg --keyserver &lt;url&gt; --send-keys &lt;fingerprint&gt;</code></li>
+<li>If successful, status shows: “Key published to <code>&lt;serveur&gt;</code>”</li>
+</ol>
+<h3 id="check-publication-status"><a class="header" href="#check-publication-status">Check publication status</a></h3>
+<ol>
+<li>Select your key</li>
+<li>In the detail panel, find the <strong>Keyserver</strong> badge:
+<ul>
+<li><strong>Unknown</strong> (gray) — not yet checked</li>
+<li><strong>Checking</strong> (spinner) — checking now</li>
+<li><strong>Published</strong> (green) — found on keyserver</li>
+<li><strong>Not Published</strong> (red) — not found</li>
+</ul>
+</li>
+</ol>
+<p>pgpilot automatically checks status every time you view a key (calls <code>safe_get(https://keys.openpgp.org/...)</code> to verify).</p>
+<h3 id="auto-republish"><a class="header" href="#auto-republish">Auto-republish</a></h3>
+<p>pgpilot automatically re-publishes <strong>already-published</strong> keys every 4 weeks:</p>
+<ul>
+<li>When you rotate a subkey, pgpilot remembers which keyserver you used</li>
+<li>Every 28 days, it re-sends the key to keep your certificate fresh on the keyserver</li>
+<li>You can trigger manually anytime by clicking <strong>Publish</strong> again</li>
+</ul>
+<p>This ensures your key stays visible and your latest subkeys are always discoverable.</p>
+<h3 id="share-a-keyserver-link"><a class="header" href="#share-a-keyserver-link">Share a keyserver link</a></h3>
+<p>Once published, you can share a direct link to your key:</p>
+<pre><code>https://keys.openpgp.org/search?q=alice@example.com
+</code></pre>
+<p>Others can fetch your key without your email or any central authority.</p>
+<hr>
+<h2 id="next-steps-1"><a class="header" href="#next-steps-1">Next steps</a></h2>
+<ul>
+<li>Encrypt files for contacts — see <a href="#file-operations">File Operations</a></li>
+<li>Use SSH with your Auth subkey — see <a href="#yubikey--smartcard">YubiKey / Smartcard</a> (SSH section)</li>
+<li>Rotate keys on hardware — see <a href="#yubikey--smartcard">YubiKey / Smartcard</a></li>
+<li>Troubleshoot issues — see <a href="#troubleshooting-4">Troubleshooting</a></li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="keyserver--sharing"><a class="header" href="#keyserver--sharing">Keyserver &amp; Sharing</a></h1>
+<p>Publish and discover keys on OpenPGP keyservers.</p>
+<h2 id="what-is-a-keyserver"><a class="header" href="#what-is-a-keyserver">What is a keyserver?</a></h2>
+<p>A <strong>keyserver</strong> is a database of public keys indexed by fingerprint, email, and key ID. Anyone can:</p>
+<ul>
+<li><strong>Publish</strong> their key → others find it by email</li>
+<li><strong>Search</strong> for someone’s key → download it</li>
+<li><strong>Receive</strong> their key without sharing files directly</li>
+</ul>
+<p>pgpilot supports two popular keyservers:</p>
+<h3 id="keysopenpgporg-recommended"><a class="header" href="#keysopenpgporg-recommended">keys.openpgp.org (recommended)</a></h3>
+<ul>
+<li>Privacy-respecting (does not list email addresses by default)</li>
+<li>Requires email verification (you control your own key listing)</li>
+<li>Modern, well-maintained</li>
+<li>Respects <code>--no-export</code> flag (your key can be private if you choose)</li>
+</ul>
+<h3 id="keyserverubuntucom"><a class="header" href="#keyserverubuntucom">keyserver.ubuntu.com</a></h3>
+<ul>
+<li>Traditional OpenPGP keyserver (Syncable pool)</li>
+<li>Lists all keys publicly (anyone can see your email)</li>
+<li>Large distributed network</li>
+<li>Better for finding keys by email</li>
+</ul>
+<hr>
+<h2 id="publishing-your-key"><a class="header" href="#publishing-your-key">Publishing your key</a></h2>
+<h3 id="publish-to-keysopenpgporg"><a class="header" href="#publish-to-keysopenpgporg">Publish to keys.openpgp.org</a></h3>
+<ol>
+<li>In pgpilot, select your key in <strong>My Keys</strong></li>
+<li>Click <strong>Publish</strong></li>
+<li>A modal asks “Where to publish?”
+<ul>
+<li>Choose <strong>keys.openpgp.org</strong> (default)</li>
+</ul>
+</li>
+<li>Click <strong>Publish</strong></li>
+<li>pgpilot calls <code>gpg --keyserver keys.openpgp.org --send-keys &lt;fingerprint&gt;</code></li>
+<li>Status message: “Key published to keys.openpgp.org”</li>
+</ol>
+<p><strong>After publishing</strong>: keys.openpgp.org sends you an email verification link. Click it to activate your key listing.</p>
+<h3 id="publish-to-keyserverubuntucom"><a class="header" href="#publish-to-keyserverubuntucom">Publish to keyserver.ubuntu.com</a></h3>
+<ol>
+<li>Select your key</li>
+<li>Click <strong>Publish</strong></li>
+<li>Choose <strong>keyserver.ubuntu.com</strong></li>
+<li>Click <strong>Publish</strong></li>
+<li>Status: “Key published to keyserver.ubuntu.com”</li>
+</ol>
+<p>No verification email required; your key is immediately searchable (including email).</p>
+<hr>
+<h2 id="checking-publication-status"><a class="header" href="#checking-publication-status">Checking publication status</a></h2>
+<p>pgpilot displays a <strong>Keyserver</strong> badge in the key detail panel:</p>
+<ul>
+<li><strong>Unknown</strong> (gray badge) → status not yet checked</li>
+<li><strong>Checking</strong> (spinner) → checking now…</li>
+<li><strong>Published</strong> (green checkmark) → found on keyserver</li>
+<li><strong>Not Published</strong> (red X) → not found</li>
+</ul>
+<p>When you view a key’s details, pgpilot automatically checks <code>keys.openpgp.org</code> for your key’s presence.</p>
+<h3 id="manual-check"><a class="header" href="#manual-check">Manual check</a></h3>
+<p>To re-check status:</p>
+<ol>
+<li>Select your key</li>
+<li>The badge updates automatically</li>
+<li>Or click <strong>Publish</strong> again to trigger a new publication</li>
+</ol>
+<hr>
+<h2 id="auto-republish-1"><a class="header" href="#auto-republish-1">Auto-republish</a></h2>
+<p><strong>Why?</strong> Keyservers expire old certificates. To keep your key fresh and discoverable:</p>
+<p><strong>pgpilot auto-republishes every 28 days:</strong></p>
+<ul>
+<li>pgpilot remembers which keyserver you last used</li>
+<li>Every 28 days, it automatically re-publishes your key</li>
+<li>You’ll see a status message in the background</li>
+<li>This ensures subkey rotations and updates are always visible</li>
+</ul>
+<p>You can also <strong>manually republish</strong> anytime by clicking <strong>Publish</strong> again.</p>
+<hr>
+<h2 id="sharing-your-key"><a class="header" href="#sharing-your-key">Sharing your key</a></h2>
+<p>Once published, you have multiple ways to share your public key:</p>
+<h3 id="via-keysopenpgporg-search-link"><a class="header" href="#via-keysopenpgporg-search-link">Via keys.openpgp.org search link</a></h3>
+<pre><code>https://keys.openpgp.org/search?q=alice@example.com
+</code></pre>
+<p>Anyone can access this link and find your key by email.</p>
+<h3 id="via-pasters-temporary"><a class="header" href="#via-pasters-temporary">Via paste.rs (temporary)</a></h3>
+<ol>
+<li>Select your key</li>
+<li>Click <strong>Export</strong> → <strong>Paste</strong></li>
+<li>A shareable link is generated: <code>https://paste.rs/abc123xyz</code></li>
+<li>Share the link</li>
+</ol>
+<p>This link works for 30 days (paste.rs default retention).</p>
+<h3 id="as-an-asc-file"><a class="header" href="#as-an-asc-file">As an .asc file</a></h3>
+<ol>
+<li>Select your key</li>
+<li>Click <strong>Export</strong> → <strong>File</strong></li>
+<li>Save to <code>YourName.pub.asc</code></li>
+<li>Share the file via email, upload to your website, etc.</li>
+</ol>
+<hr>
+<h2 id="searching-for-someones-key"><a class="header" href="#searching-for-someones-key">Searching for someone’s key</a></h2>
+<p>Use pgpilot’s <strong>Import</strong> view to find someone’s public key:</p>
+<ol>
+<li>Click <strong>Import</strong> in sidebar</li>
+<li>Select <strong>Keyserver</strong></li>
+<li>Enter their:
+<ul>
+<li>Email: <code>alice@example.com</code></li>
+<li>Fingerprint: <code>ABCD1234567890ABCD1234567890ABCD1234567890</code></li>
+<li>Key ID: <code>1234567890ABCDEF</code></li>
+</ul>
+</li>
+<li>Choose keyserver (keys.openpgp.org or keyserver.ubuntu.com)</li>
+<li>Click <strong>Search</strong></li>
+<li>pgpilot queries the keyserver and shows matching keys</li>
+<li>Click <strong>Import</strong> to add to your keyring</li>
+</ol>
+<hr>
+<h2 id="best-practices"><a class="header" href="#best-practices">Best practices</a></h2>
+<ol>
+<li>
+<p><strong>Publish once, republish regularly</strong></p>
+<ul>
+<li>Publish once to both major keyservers</li>
+<li>Let pgpilot auto-republish to keep current</li>
+</ul>
+</li>
+<li>
+<p><strong>Use email verification</strong></p>
+<ul>
+<li>After publishing to keys.openpgp.org, check the verification email</li>
+<li>This prevents email hijacking/spoofing</li>
+</ul>
+</li>
+<li>
+<p><strong>Rotate old keys</strong></p>
+<ul>
+<li>Old compromised keys should be revoked, not deleted</li>
+<li>Use <strong>Renew</strong> or <strong>Replace</strong> for subkeys</li>
+<li>Use <code>gpg --gen-revoke</code> for master keys (not yet in pgpilot)</li>
+</ul>
+</li>
+<li>
+<p><strong>Verify before importing</strong></p>
+<ul>
+<li>Always verify the key fingerprint before trusting</li>
+<li>Meet someone in person and compare fingerprints by hand</li>
+<li>Then set trust level in pgpilot (Marginal or Full)</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h2 id="troubleshooting"><a class="header" href="#troubleshooting">Troubleshooting</a></h2>
+<p><strong>“Publication failed”</strong></p>
+<ul>
+<li>Network issue — try again later</li>
+<li>Keyserver temporarily down — retry or use different server</li>
+</ul>
+<p><strong>“Key not published after 30 minutes”</strong></p>
+<ul>
+<li>keys.openpgp.org may require email verification</li>
+<li>Check your email for a confirmation link from keys.openpgp.org</li>
+<li>Click the link and try re-publishing</li>
+</ul>
+<p><strong>“Found wrong key”</strong></p>
+<ul>
+<li>If multiple keys exist for an email, pgpilot shows all</li>
+<li>Compare fingerprints carefully</li>
+<li>Only import keys you can verify</li>
+</ul>
+<hr>
+<h2 id="next-steps-2"><a class="header" href="#next-steps-2">Next steps</a></h2>
+<ul>
+<li>Learn about file signing &amp; verification — see <a href="#file-operations">File Operations</a></li>
+<li>Manage trust — see <a href="#key-management">Key Management</a> (Trust Levels)</li>
+<li>Use hardware keys — see <a href="#yubikey--smartcard">YubiKey / Smartcard</a></li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="file-operations"><a class="header" href="#file-operations">File Operations</a></h1>
+<p>Encrypt, decrypt, sign, and verify files with pgpilot.</p>
+<h2 id="encryption"><a class="header" href="#encryption">Encryption</a></h2>
+<p>Encrypt files so only your chosen recipients can read them.</p>
+<h3 id="encrypt-a-file"><a class="header" href="#encrypt-a-file">Encrypt a file</a></h3>
+<ol>
+<li>Click <strong>Encrypt</strong> in the sidebar</li>
+<li>In the <strong>Encrypt</strong> view:
+<ul>
+<li>Click <strong>Add Files</strong> to select one or more files</li>
+<li>Files appear in a list below</li>
+</ul>
+</li>
+<li>Select <strong>Recipients</strong> — check the boxes for people who should be able to decrypt:
+<ul>
+<li>Only keys with Encryption subkeys can be selected</li>
+<li>Trust level shown as a badge next to each key</li>
+</ul>
+</li>
+<li>Choose format:
+<ul>
+<li><strong>Binary</strong> (<code>.gpg</code>) — compressed, smaller, binary</li>
+<li><strong>Armored</strong> (<code>.asc</code>) — text-based, readable, larger, ASCII-only</li>
+</ul>
+</li>
+<li>Click <strong>Encrypt</strong></li>
+</ol>
+<p>If any recipient’s trust is <strong>Undefined</strong> or <strong>Marginal</strong>, a warning modal appears:</p>
+<pre><code>⚠️ Untrusted keys
+Selected keys do not have sufficient trust level.
+Continue? (uses --trust-model always)
+</code></pre>
+<p>Click <strong>Continue</strong> to proceed (pgpilot adds <code>--trust-model always</code> to bypass trust checks).</p>
+<p><strong>Output</strong>: Encrypted files are created next to the original:</p>
+<ul>
+<li><code>document.pdf</code> → <code>document.pdf.gpg</code> (binary) or <code>document.pdf.asc</code> (armored)</li>
+<li>If file already exists, a counter suffix is added: <code>document_1.pdf.gpg</code>, <code>document_2.pdf.gpg</code>, etc.</li>
+</ul>
+<h3 id="drag--drop-x11"><a class="header" href="#drag--drop-x11">Drag &amp; drop (X11)</a></h3>
+<p>On X11 systems, you can drag files directly onto the <strong>Encrypt</strong> view:</p>
+<ol>
+<li>Open the <strong>Encrypt</strong> view</li>
+<li>Open a file manager in another window</li>
+<li>Drag files from the file manager to pgpilot</li>
+<li>Files are added to the list</li>
+</ol>
+<p><strong>Note</strong>: Wayland support depends on compositor; may not work on all Wayland systems.</p>
+<h3 id="trust-warning-override"><a class="header" href="#trust-warning-override">Trust warning override</a></h3>
+<p>pgpilot’s default behavior is conservative: it warns before encrypting to untrusted keys. To bypass:</p>
+<ol>
+<li>Check untrusted keys in the <strong>Recipients</strong> list</li>
+<li>Click <strong>Encrypt</strong></li>
+<li>If warning appears, click <strong>Continue</strong></li>
+<li>pgpilot uses <code>--trust-model always</code> (bypasses trust validation without modifying trust database)</li>
+</ol>
+<p>This is safe for one-off scenarios (e.g., encrypting to a key you haven’t verified yet, but want to send anyway).</p>
+<hr>
+<h2 id="decryption"><a class="header" href="#decryption">Decryption</a></h2>
+<p>Decrypt files that were encrypted for you.</p>
+<h3 id="decrypt-a-file"><a class="header" href="#decrypt-a-file">Decrypt a file</a></h3>
+<ol>
+<li>Click <strong>Decrypt</strong> in the sidebar</li>
+<li>In the <strong>Decrypt</strong> view:
+<ul>
+<li>Click <strong>Add Files</strong></li>
+<li>Select one or more <code>.gpg</code> or <code>.asc</code> files</li>
+</ul>
+</li>
+<li>pgpilot scans each file:
+<ul>
+<li>Shows <strong>Can decrypt</strong> (green) if your private key exists</li>
+<li>Shows <strong>No key</strong> (red) if you lack the decrypt key</li>
+<li>Shows <strong>Checking…</strong> while inspecting</li>
+</ul>
+</li>
+<li>Click <strong>Decrypt</strong></li>
+<li>pgpilot prompts for your private key password (via <code>gpg-agent</code> / <code>pinentry</code>)</li>
+<li>Decrypted files are created next to originals:
+<ul>
+<li><code>document.pdf.gpg</code> → <code>document.pdf</code> (same name, no .gpg extension)</li>
+<li>If file exists, counter suffix added: <code>document_1.pdf</code>, <code>document_2.pdf</code>, etc.</li>
+</ul>
+</li>
+</ol>
+<h3 id="auto-check-capability"><a class="header" href="#auto-check-capability">Auto-check capability</a></h3>
+<p>When you add files to decrypt, pgpilot automatically checks if you have the private key:</p>
+<ul>
+<li>Green checkmark = you can decrypt</li>
+<li>Red X = missing private key (file stays encrypted)</li>
+</ul>
+<hr>
+<h2 id="signing"><a class="header" href="#signing">Signing</a></h2>
+<p>Sign files to prove you created them.</p>
+<h3 id="sign-a-file"><a class="header" href="#sign-a-file">Sign a file</a></h3>
+<ol>
+<li>Click <strong>Sign</strong> in the sidebar</li>
+<li>In the <strong>Sign</strong> view:
+<ul>
+<li>Click <strong>Choose file</strong></li>
+<li>Select the file to sign</li>
+</ul>
+</li>
+<li>Choose <strong>Signing key</strong>:
+<ul>
+<li>pgpilot filters to keys with Sign subkeys</li>
+<li>Select your key</li>
+</ul>
+</li>
+<li>Click <strong>Sign</strong></li>
+<li>pgpilot prompts for your private key password</li>
+<li>A detached signature is created: <code>yourfile.sig</code> next to the original</li>
+</ol>
+<p><strong>What is a detached signature?</strong></p>
+<p>A <code>.sig</code> file proves that you signed the original file. Unlike signing inside the file, the signature is separate, so:</p>
+<ul>
+<li>Original file remains unchanged (<code>yourfile.pdf</code> is still a valid PDF)</li>
+<li>Signature is lightweight (<code>yourfile.sig</code> is much smaller)</li>
+<li>Recipient can verify with: <code>gpg --verify yourfile.sig yourfile.pdf</code></li>
+</ul>
+<p>If file already has a <code>.sig</code>, counter suffix added: <code>yourfile_1.sig</code>, <code>yourfile_2.sig</code>, etc.</p>
+<hr>
+<h2 id="signature-verification"><a class="header" href="#signature-verification">Signature Verification</a></h2>
+<p>Verify that a file was signed by who you think signed it.</p>
+<h3 id="verify-a-signature"><a class="header" href="#verify-a-signature">Verify a signature</a></h3>
+<ol>
+<li>
+<p>Click <strong>Verify</strong> in the sidebar</p>
+</li>
+<li>
+<p>In the <strong>Verify</strong> view:</p>
+<ul>
+<li>Click <strong>Choose file</strong> → select the <strong>original</strong> file (e.g., <code>document.pdf</code>)</li>
+<li>Click <strong>Choose signature</strong> → select the <code>.sig</code> file</li>
+</ul>
+<p><strong>Auto-detect</strong>: If you choose <code>document.pdf</code>, pgpilot automatically looks for <code>document.pdf.sig</code> in the same folder.</p>
+</li>
+<li>
+<p>Click <strong>Verify</strong></p>
+</li>
+<li>
+<p>pgpilot calls <code>gpg --verify</code> and shows a result:</p>
+</li>
+</ol>
+<h4 id="valid-signature"><a class="header" href="#valid-signature">Valid signature</a></h4>
+<pre><code>✓ Valid signature
+Signed by: Alice Wonder &lt;alice@example.com&gt;
+Fingerprint: ABCD1234...
+Date: 2024-01-15 at 14:30:00 UTC
+Trust: Full ✓
+</code></pre>
+<p>Green checkmark, signer details shown. File is authentic.</p>
+<h4 id="bad-signature"><a class="header" href="#bad-signature">Bad signature</a></h4>
+<pre><code>✗ Invalid signature
+The signature does not match the file.
+The file may have been modified.
+</code></pre>
+<p>Red X. The file has been tampered with since signing.</p>
+<h4 id="unknown-key"><a class="header" href="#unknown-key">Unknown key</a></h4>
+<pre><code>? Unknown key
+Signed by (Key ID): 1234567890ABCDEF
+Fingerprint: Not found in keyring
+</code></pre>
+<p>Yellow warning. Signature is valid, but the signer’s key is not in your keyring. You cannot verify authenticity.</p>
+<p><strong>Next step</strong>: Import the signer’s key from a keyserver, then re-verify.</p>
+<h4 id="expired-key"><a class="header" href="#expired-key">Expired key</a></h4>
+<pre><code>⏱ Expired key
+Signed by: Bob Smith &lt;bob@example.com&gt;
+Key expired on: 2023-12-31
+</code></pre>
+<p>Orange warning. The signer’s key has expired, but the signature was valid at signing time.</p>
+<h4 id="revoked-key"><a class="header" href="#revoked-key">Revoked key</a></h4>
+<pre><code>🔴 Revoked key
+Signed by: Charlie Brown &lt;charlie@example.com&gt;
+The key was revoked (reason: compromise)
+</code></pre>
+<p>Red warning. The signer revoked their key (possibly due to compromise). Don’t trust this signature.</p>
+<hr>
+<h2 id="format-toggle"><a class="header" href="#format-toggle">Format toggle</a></h2>
+<p>pgpilot offers two encryption formats:</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Format</th><th>Extension</th><th>Type</th><th>Use Case</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>Binary</strong></td><td><code>.gpg</code></td><td>Compressed, binary</td><td>Secure transfer, email attachment</td></tr>
+<tr><td><strong>Armored</strong></td><td><code>.asc</code></td><td>Text (ASCII), readable</td><td>Paste into email body, GitHub gists, web forms</td></tr>
+</tbody>
+</table>
+</div>
+<p>Toggle between formats with the <strong>Format</strong> button in the Encrypt view.</p>
+<hr>
+<h2 id="best-practices-1"><a class="header" href="#best-practices-1">Best practices</a></h2>
+<ol>
+<li>
+<p><strong>Always verify signatures</strong></p>
+<ul>
+<li>Don’t assume a <code>.sig</code> file is legitimate</li>
+<li>Verify before trusting content</li>
+</ul>
+</li>
+<li>
+<p><strong>Check trust before verifying</strong></p>
+<ul>
+<li>Invalid signature ≠ untrusted signer</li>
+<li>Check the signer’s trust level in <strong>My Keys</strong></li>
+</ul>
+</li>
+<li>
+<p><strong>Encrypt to multiple recipients</strong></p>
+<ul>
+<li>Each recipient gets their own encrypted copy (pgpilot handles this)</li>
+<li>No single file that “everyone decrypts with different passwords”</li>
+</ul>
+</li>
+<li>
+<p><strong>Keep signatures with files</strong></p>
+<ul>
+<li>Store <code>.sig</code> and original together</li>
+<li>If you move the file, move the <code>.sig</code> too</li>
+</ul>
+</li>
+<li>
+<p><strong>Test before sending</strong></p>
+<ul>
+<li>Encrypt a test file to yourself</li>
+<li>Decrypt it to verify it works</li>
+<li>Then send to real recipients</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h2 id="troubleshooting-1"><a class="header" href="#troubleshooting-1">Troubleshooting</a></h2>
+<p><strong>“Password prompt hangs”</strong></p>
+<ul>
+<li>See <a href="#troubleshooting-4">Troubleshooting</a> — pinentry issues</li>
+</ul>
+<p><strong>“File already exists”</strong></p>
+<ul>
+<li>pgpilot automatically adds counters: <code>file_1.gpg</code>, <code>file_2.gpg</code>, etc.</li>
+<li>Delete the old encrypted file if you want to overwrite</li>
+</ul>
+<p><strong>“Signature file not found”</strong></p>
+<ul>
+<li>pgpilot looks for <code>yourfile.sig</code> next to <code>yourfile</code></li>
+<li>If in different folders, manually choose both files</li>
+</ul>
+<p><strong>“Decrypt failed: No secret key”</strong></p>
+<ul>
+<li>You don’t have the private key for this encrypted file</li>
+<li>The file was encrypted for someone else</li>
+<li>Ask them to decrypt and share unencrypted (or re-encrypt for you)</li>
+</ul>
+<hr>
+<h2 id="next-steps-3"><a class="header" href="#next-steps-3">Next steps</a></h2>
+<ul>
+<li>Manage who can decrypt — see <a href="#key-management">Key Management</a> (Trust Levels)</li>
+<li>Publish your key so others can send you encrypted files — see <a href="#keyserver--sharing">Keyserver &amp; Sharing</a></li>
+<li>Use SSH with your Auth key — see <a href="#yubikey--smartcard">YubiKey / Smartcard</a></li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="yubikey--smartcard"><a class="header" href="#yubikey--smartcard">YubiKey / Smartcard</a></h1>
+<p>Store your subkeys on hardware for enhanced security.</p>
+<h2 id="why-use-a-hardware-key"><a class="header" href="#why-use-a-hardware-key">Why use a hardware key?</a></h2>
+<p>A <strong>hardware security key</strong> (e.g., <strong>YubiKey</strong>) keeps your private keys isolated from your computer:</p>
+<ul>
+<li>Private keys never leave the hardware</li>
+<li>Compromised computer ≠ compromised keys</li>
+<li>Requires physical key present to sign/decrypt</li>
+<li>You still use <code>gpg</code> — pgpilot is your GUI</li>
+</ul>
+<p><strong>Trade-off</strong>: Slower (requires physical interaction); more secure.</p>
+<hr>
+<h2 id="supported-hardware"><a class="header" href="#supported-hardware">Supported Hardware</a></h2>
+<p>pgpilot supports <strong>OpenPGP-compatible</strong> smartcards via <code>gpg</code>:</p>
+<ul>
+<li><strong>YubiKey 5 / 5C / 5 Nano</strong> (most popular)</li>
+<li><strong>YubiKey 4</strong> (older, still supported)</li>
+<li><strong>Nitrokey</strong> (open-source alternative)</li>
+<li><strong>Gemalto IDBridge</strong> (enterprise)</li>
+<li>Any <strong>OpenPGP Card 3.x</strong> compatible device</li>
+</ul>
+<h3 id="requirements-1"><a class="header" href="#requirements-1">Requirements</a></h3>
+<ul>
+<li>Hardware key plugged in (USB-A, USB-C, or NFC depending on model)</li>
+<li>GnuPG ≥ 2.2 (with smart card support)</li>
+<li><code>scdaemon</code> running (usually automatic; see <a href="#troubleshooting-4">Troubleshooting</a>)</li>
+</ul>
+<hr>
+<h2 id="checking-card-status"><a class="header" href="#checking-card-status">Checking Card Status</a></h2>
+<p>pgpilot auto-detects connected hardware:</p>
+<ol>
+<li>Select a key in <strong>My Keys</strong></li>
+<li>In the detail panel, look for:
+<ul>
+<li><strong>Card badge</strong>: Shows card serial number if a key is migrated to this card</li>
+<li><strong>Card icon</strong>: Appears next to key if stored on hardware</li>
+</ul>
+</li>
+</ol>
+<p>If no card is detected:</p>
+<ul>
+<li>Check that the key is plugged in</li>
+<li>See <a href="#troubleshooting-4">Troubleshooting</a> for scdaemon issues</li>
+</ul>
+<hr>
+<h2 id="migrating-a-subkey-to-hardware"><a class="header" href="#migrating-a-subkey-to-hardware">Migrating a Subkey to Hardware</a></h2>
+<p>Move an individual subkey to the card (e.g., move only the Encryption subkey).</p>
+<h3 id="before-you-start"><a class="header" href="#before-you-start">Before you start</a></h3>
+<ol>
+<li><strong>Back up your key</strong>: Click <strong>Backup</strong> first (see <a href="#key-management">Key Management</a>)
+<ul>
+<li>If migration fails, you can restore from backup</li>
+</ul>
+</li>
+<li><strong>Initialize the card</strong> (first-time only):
+<pre><code class="language-bash">gpg --card-edit
+admin
+passwd  # set admin PIN (default: 12345678)
+quit
+</code></pre>
+</li>
+</ol>
+<h3 id="migrate-in-pgpilot"><a class="header" href="#migrate-in-pgpilot">Migrate in pgpilot</a></h3>
+<ol>
+<li>Select your key</li>
+<li>Click <strong>Migrate to YubiKey</strong></li>
+<li>A modal asks: “Which subkey?”
+<ul>
+<li>Choose <strong>Sign</strong>, <strong>Encrypt</strong>, or <strong>Auth</strong></li>
+</ul>
+</li>
+<li>Confirm: “This action cannot be undone”</li>
+<li>pgpilot calls <code>gpg --edit-key --command-fd 0 --status-fd 2 &lt;fp&gt;</code>:
+<ul>
+<li>Sends <code>key N</code> (select subkey)</li>
+<li>Sends <code>keytocard</code></li>
+<li>Prompts for card admin PIN (default: <code>12345678</code>)</li>
+</ul>
+</li>
+<li>After successful migration:
+<ul>
+<li>Card icon appears in the key detail</li>
+<li>Subkey now lives on the card</li>
+<li>Private key removed from your computer</li>
+</ul>
+</li>
+</ol>
+<h3 id="what-happens-to-the-original-key"><a class="header" href="#what-happens-to-the-original-key">What happens to the original key?</a></h3>
+<p>After migration, your computer has:</p>
+<ul>
+<li><strong>Secret key stub</strong> — pointer to the card (gpg recognizes which card)</li>
+<li><strong>Public key</strong> — unchanged, still in <code>~/.gnupg/pubring.gpg</code></li>
+</ul>
+<p>When you sign/decrypt, gpg sends commands to the card via USB.</p>
+<hr>
+<h2 id="using-a-card-based-key"><a class="header" href="#using-a-card-based-key">Using a Card-Based Key</a></h2>
+<p>Once a subkey is on the card, signing and decryption work the same in pgpilot:</p>
+<ol>
+<li><strong>Signing</strong>: Click <strong>Sign</strong>, choose signer key, enter PIN (via <code>pinentry</code>)</li>
+<li><strong>Decryption</strong>: Click <strong>Decrypt</strong>, decryption happens on card, enter PIN</li>
+<li><strong>Publishing</strong>: <strong>Publish</strong> still works (sends stub + public key to keyserver)</li>
+</ol>
+<p>From pgpilot’s perspective, it’s transparent — you don’t need to know if a key is on card or on disk.</p>
+<p><strong>Difference you’ll notice</strong>: Operations require physical presence (key must be plugged in) and PIN entry.</p>
+<hr>
+<h2 id="ssh-authentication-with-auth-subkey"><a class="header" href="#ssh-authentication-with-auth-subkey">SSH Authentication with Auth Subkey</a></h2>
+<p>If you created your key with SSH Auth subkey enabled, you can use it for SSH:</p>
+<h3 id="setup-one-time"><a class="header" href="#setup-one-time">Setup (one-time)</a></h3>
+<ol>
+<li>
+<p>Export your public key in SSH format (currently requires command-line):</p>
+<pre><code class="language-bash">gpg --export-ssh-key &lt;fingerprint&gt; &gt; ~/.ssh/id_pgp.pub
+</code></pre>
+</li>
+<li>
+<p>Add to authorized_keys on your servers:</p>
+<pre><code class="language-bash">cat ~/.ssh/id_pgp.pub &gt;&gt; ~/.ssh/authorized_keys  # on remote server
+</code></pre>
+</li>
+<li>
+<p>Configure SSH to use the GPG key:</p>
+<pre><code class="language-bash">export SSH_AUTH_SOCK="/run/user/$(id -u)/gnupg/S.gpg-agent.ssh"
+ssh -i ~/.ssh/id_pgp.pub username@server.com
+</code></pre>
+</li>
+</ol>
+<h3 id="usage"><a class="header" href="#usage">Usage</a></h3>
+<ul>
+<li>SSH now uses your GPG key instead of separate SSH keys</li>
+<li>If Auth subkey is on a YubiKey, SSH also requires the card + PIN</li>
+<li>Centralize key management: one master key, subkeys for different purposes</li>
+</ul>
+<p><strong>Note</strong>: This requires <code>gpg-agent</code> SSH socket, not pgpilot UI. pgpilot may add SSH key export in a future release.</p>
+<hr>
+<h2 id="rotating-a-card-based-subkey"><a class="header" href="#rotating-a-card-based-subkey">Rotating a Card-Based Subkey</a></h2>
+<p>If a card-based subkey is compromised or expired:</p>
+<ol>
+<li>Rotate as normal: Select key, click subkey <strong>Replace</strong></li>
+<li>pgpilot creates a new subkey on <strong>disk</strong></li>
+<li>Old subkey on card is revoked</li>
+<li>You can now:
+<ul>
+<li>Keep the new subkey on disk, or</li>
+<li>Migrate it to card (see “Migrating a Subkey to Hardware” above)</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h2 id="multiple-keys--multiple-cards"><a class="header" href="#multiple-keys--multiple-cards">Multiple Keys / Multiple Cards</a></h2>
+<p>You can have multiple hardware keys:</p>
+<ol>
+<li>Plug in a different card</li>
+<li>In pgpilot, select a different key</li>
+<li>Migrate different subkeys to different cards</li>
+<li>Cards are identified by serial number (shown in detail panel)</li>
+</ol>
+<p>pgpilot keeps track of which card holds which key.</p>
+<hr>
+<h2 id="resetting-a-card"><a class="header" href="#resetting-a-card">Resetting a Card</a></h2>
+<p>To erase and reuse a card:</p>
+<pre><code class="language-bash">gpg --card-edit
+admin
+factoryreset  # WARNING: erases all keys on card
+quit
+</code></pre>
+<p>Then reinitialize:</p>
+<pre><code class="language-bash">gpg --card-edit
+admin
+passwd
+quit
+</code></pre>
+<p><strong>⚠️ WARNING</strong>: <code>factoryreset</code> is irreversible. Ensure you have backups before doing this.</p>
+<hr>
+<h2 id="troubleshooting-2"><a class="header" href="#troubleshooting-2">Troubleshooting</a></h2>
+<p><strong>“Card not detected”</strong></p>
+<ul>
+<li>Plug in the key (USB-A, USB-C, or NFC)</li>
+<li>Check: <code>gpg --card-status</code></li>
+<li>If error, see <a href="#troubleshooting-4">Troubleshooting</a> — scdaemon section</li>
+</ul>
+<p><strong>“Migration failed”</strong></p>
+<ul>
+<li>Wrong admin PIN entered (default: <code>12345678</code>)</li>
+<li>Card full (max 3 subkeys per OpenPGP Card 3.x)</li>
+<li>Card not detected mid-operation</li>
+</ul>
+<p>If migration partially fails, restore from backup:</p>
+<pre><code class="language-bash">gpg --import &lt;backup-secret.asc&gt;
+</code></pre>
+<p><strong>“Sign/decrypt hangs on card”</strong></p>
+<ul>
+<li>Card unplugged</li>
+<li>Card unresponsive (try unplugging and re-plugging)</li>
+<li>See <a href="#troubleshooting-4">Troubleshooting</a> — pinentry/scdaemon issues</li>
+</ul>
+<p><strong>“Two keys on same card”</strong></p>
+<ul>
+<li>OpenPGP Card 3.x holds <strong>3 subkeys max</strong>: Signature, Encryption, Authentication</li>
+<li>You cannot put two master keys’ subkeys on one card</li>
+<li>Use separate cards for separate identities</li>
+</ul>
+<hr>
+<h2 id="best-practices-2"><a class="header" href="#best-practices-2">Best practices</a></h2>
+<ol>
+<li>
+<p><strong>Back up before migration</strong></p>
+<ul>
+<li>Always export secret key backup (see <a href="#key-management">Key Management</a>)</li>
+<li>Keep backups offline (USB in a safe)</li>
+</ul>
+</li>
+<li>
+<p><strong>Use strong card PIN</strong></p>
+<ul>
+<li>Default: <code>12345678</code> (extremely weak)</li>
+<li>Change immediately: <code>gpg --card-edit → admin → passwd</code></li>
+<li>Recommended: 8+ mixed characters</li>
+</ul>
+</li>
+<li>
+<p><strong>Keep card with you</strong></p>
+<ul>
+<li>Can’t sign/decrypt without it</li>
+<li>Misplaced card = need to rotate and revoke old keys</li>
+</ul>
+</li>
+<li>
+<p><strong>Test recovery</strong></p>
+<ul>
+<li>Periodically restore from backup and verify it works</li>
+<li>Don’t discover backup corruption during an emergency</li>
+</ul>
+</li>
+<li>
+<p><strong>Document your setup</strong></p>
+<ul>
+<li>Note which card holds which key’s subkeys</li>
+<li>Store card serial numbers with your backups</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h2 id="next-steps-4"><a class="header" href="#next-steps-4">Next steps</a></h2>
+<ul>
+<li>Learn about encryption &amp; signing — see <a href="#file-operations">File Operations</a></li>
+<li>Publish keys with migrated subkeys — see <a href="#keyserver--sharing">Keyserver &amp; Sharing</a></li>
+<li>Diagnose issues — see <a href="#troubleshooting-4">Troubleshooting</a></li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="faq"><a class="header" href="#faq">FAQ</a></h1>
+<p>Frequently asked questions about pgpilot and OpenPGP.</p>
+<h2 id="general"><a class="header" href="#general">General</a></h2>
+<h3 id="whats-the-difference-between-a-public-and-private-key"><a class="header" href="#whats-the-difference-between-a-public-and-private-key">What’s the difference between a public and private key?</a></h3>
+<ul>
+<li><strong>Public key</strong>: Safe to share. Used to encrypt messages <em>to</em> you. Anyone can have it.</li>
+<li><strong>Private key</strong>: Secret. Used to decrypt messages and sign. <strong>Never share.</strong></li>
+</ul>
+<p>Think: public key = mailbox (anyone can drop letters); private key = key to your mailbox (only you).</p>
+<h3 id="why-dont-my-keys-expire"><a class="header" href="#why-dont-my-keys-expire">Why don’t my keys expire?</a></h3>
+<p>pgpilot creates keys that <strong>never expire by design</strong>. Subkeys expire (after 1, 2, or 5 years), but the master key is permanent.</p>
+<p><strong>Why?</strong> Expiring master keys is more complex and rare. Subkey rotation (Replace) is the modern best practice.</p>
+<p>If you need expiring keys, use <code>gpg</code> directly: <code>gpg --quick-gen-key "Name" ed25519 cert 1y</code>.</p>
+<h3 id="whats-a-fingerprint-whats-a-key-id"><a class="header" href="#whats-a-fingerprint-whats-a-key-id">What’s a fingerprint? What’s a Key ID?</a></h3>
+<ul>
+<li>
+<p><strong>Fingerprint</strong>: 40 hexadecimal characters. Unique identifier for your key.</p>
+<ul>
+<li>Example: <code>ABCD1234567890ABCD1234567890ABCD1234567890</code></li>
+<li>Always verify this in person before trusting someone’s key</li>
+</ul>
+</li>
+<li>
+<p><strong>Key ID</strong>: Last 16 characters of fingerprint (long ID) or last 8 characters (short ID).</p>
+<ul>
+<li>Long ID: <code>1234567890ABCDEF</code></li>
+<li>Short ID: <code>90ABCDEF</code> (⚠️ <strong>Not recommended</strong> — trivially collisible)</li>
+</ul>
+</li>
+</ul>
+<p>pgpilot always uses full 40-character fingerprints.</p>
+<h3 id="why-separate-subkeys"><a class="header" href="#why-separate-subkeys">Why separate subkeys?</a></h3>
+<p>Three subkeys (Sign, Encryption, Auth) allow:</p>
+<ul>
+<li><strong>Rotation</strong>: Refresh subkeys without changing your identity</li>
+<li><strong>Delegation</strong>: Share subkeys with services without sharing master key</li>
+<li><strong>Hardware</strong>: Move individual subkeys to YubiKey</li>
+<li><strong>Specialization</strong>: Each key optimized for its purpose</li>
+</ul>
+<p>This is modern best practice.</p>
+<h3 id="can-i-revoke-a-key"><a class="header" href="#can-i-revoke-a-key">Can I revoke a key?</a></h3>
+<p><strong>Revocation</strong> marks a key as no longer valid (e.g., it’s compromised or lost).</p>
+<p><strong>In pgpilot</strong>: You cannot revoke the master key (pgpilot has no UI for this). For emergencies, use:</p>
+<pre><code class="language-bash">gpg --gen-revoke &lt;fingerprint&gt; &gt; revocation.asc
+gpg --import revocation.asc
+gpg --keyserver keys.openpgp.org --send-keys &lt;fingerprint&gt;
+</code></pre>
+<p><strong>Subkeys</strong>: Use <strong>Replace</strong> in pgpilot to revoke old subkeys and create new ones.</p>
+<hr>
+<h2 id="keys-and-keyrings"><a class="header" href="#keys-and-keyrings">Keys and Keyrings</a></h2>
+<h3 id="where-does-pgpilot-store-my-keys"><a class="header" href="#where-does-pgpilot-store-my-keys">Where does pgpilot store my keys?</a></h3>
+<p>In the standard GnuPG home directory:</p>
+<ul>
+<li>Linux: <code>~/.gnupg/</code></li>
+<li>macOS: <code>~/.gnupg/</code> or <code>/Users/&lt;username&gt;/.gnupg/</code></li>
+<li>Windows: <code>%APPDATA%\gnupg\</code></li>
+</ul>
+<p>pgpilot doesn’t create its own keyring — it delegates to <code>gpg</code>.</p>
+<h3 id="can-i-use-pgpilot-with-keys-created-by-gpg"><a class="header" href="#can-i-use-pgpilot-with-keys-created-by-gpg">Can I use pgpilot with keys created by <code>gpg</code>?</a></h3>
+<p>Yes! pgpilot reads and manages any GPG keyring. You can:</p>
+<ul>
+<li>Create keys with <code>gpg</code> and manage them in pgpilot</li>
+<li>Create keys in pgpilot and use them with <code>gpg</code></li>
+</ul>
+<p>They’re fully compatible.</p>
+<h3 id="how-do-i-backup-my-private-key"><a class="header" href="#how-do-i-backup-my-private-key">How do I backup my private key?</a></h3>
+<ol>
+<li>In pgpilot: Select your key → Click <strong>Backup</strong> → Choose a folder</li>
+<li>pgpilot exports:
+<ul>
+<li><code>&lt;KeyID&gt;_secret.asc</code> — your private key (encrypted)</li>
+<li><code>&lt;KeyID&gt;_revocation.rev</code> — revocation certificate</li>
+</ul>
+</li>
+</ol>
+<p>Store the backup somewhere secure (offline, encrypted external drive, safe).</p>
+<h3 id="how-do-i-restore-a-backup"><a class="header" href="#how-do-i-restore-a-backup">How do I restore a backup?</a></h3>
+<ol>
+<li>Copy the <code>_secret.asc</code> file to a safe location</li>
+<li>In pgpilot: Click <strong>Import</strong> → <strong>File</strong> → choose the <code>.asc</code> file</li>
+<li>pgpilot imports your key back</li>
+</ol>
+<p>Your backup passphrase is required to re-import.</p>
+<hr>
+<h2 id="trust-and-verification"><a class="header" href="#trust-and-verification">Trust and Verification</a></h2>
+<h3 id="whats-trust-level"><a class="header" href="#whats-trust-level">What’s “trust level”?</a></h3>
+<p>Trust tells pgpilot how much you believe in someone’s identity:</p>
+<ul>
+<li><strong>Undefined</strong>: You haven’t verified (default)</li>
+<li><strong>Marginal</strong>: You’ve partially verified (e.g., verified identity but not fingerprint)</li>
+<li><strong>Full</strong>: You’ve fully verified (met in person, compared fingerprints)</li>
+<li><strong>Ultimate</strong>: You own this key (your own keys auto-set to Ultimate)</li>
+</ul>
+<p>pgpilot warns before encrypting to Undefined keys.</p>
+<h3 id="when-should-i-set-trust"><a class="header" href="#when-should-i-set-trust">When should I set trust?</a></h3>
+<p>After you:</p>
+<ol>
+<li>Meet someone in person</li>
+<li>Ask them to say their fingerprint</li>
+<li>Verify it matches their key in pgpilot</li>
+<li>Set trust to Full</li>
+</ol>
+<p><strong>Never</strong> set trust to Full based on email alone.</p>
+<h3 id="how-do-i-verify-a-signature"><a class="header" href="#how-do-i-verify-a-signature">How do I verify a signature?</a></h3>
+<ol>
+<li>Get the file (e.g., <code>document.pdf</code>)</li>
+<li>Get the signature (e.g., <code>document.pdf.sig</code>)</li>
+<li>In pgpilot: Click <strong>Verify</strong> → choose file and signature</li>
+<li>pgpilot shows result (Valid / Bad Sig / Unknown Key / Expired / Revoked)</li>
+</ol>
+<p>If Valid and signer trust is Full/Ultimate, the document is authentic and from who you think.</p>
+<hr>
+<h2 id="sharing-and-publishing"><a class="header" href="#sharing-and-publishing">Sharing and Publishing</a></h2>
+<h3 id="should-i-publish-my-key-to-a-keyserver"><a class="header" href="#should-i-publish-my-key-to-a-keyserver">Should I publish my key to a keyserver?</a></h3>
+<p><strong>Yes</strong>, if you want people to find you by email. Once published:</p>
+<ul>
+<li>Others search for <code>your@email.com</code></li>
+<li>They find and download your public key</li>
+<li>They can send you encrypted messages</li>
+</ul>
+<p>Publishing is safe — it’s public information.</p>
+<h3 id="which-keyserver-should-i-use"><a class="header" href="#which-keyserver-should-i-use">Which keyserver should I use?</a></h3>
+<ul>
+<li><strong>keys.openpgp.org</strong> (recommended): Privacy-respecting, requires email verification</li>
+<li><strong>keyserver.ubuntu.com</strong>: Traditional, lists emails publicly</li>
+</ul>
+<p>Most people use keys.openpgp.org now.</p>
+<h3 id="what-happens-when-i-publish"><a class="header" href="#what-happens-when-i-publish">What happens when I publish?</a></h3>
+<p>pgpilot calls <code>gpg --send-keys &lt;fingerprint&gt;</code> to:</p>
+<ol>
+<li>Upload your <strong>public key</strong> (not private!)</li>
+<li>Keyserver indexes it by fingerprint + email</li>
+<li>Anyone can now download your public key</li>
+</ol>
+<p>Your private key <strong>never</strong> leaves your computer.</p>
+<h3 id="can-i-remove-my-key-from-a-keyserver"><a class="header" href="#can-i-remove-my-key-from-a-keyserver">Can I remove my key from a keyserver?</a></h3>
+<p>Once published, keys persist (they can’t be truly deleted from distributed keyservers). You can:</p>
+<ol>
+<li>Revoke the key (marks it as invalid)</li>
+<li>Set privacy options (keys.openpgp.org supports hiding your email)</li>
+</ol>
+<p>For complete removal, contact the keyserver admins.</p>
+<hr>
+<h2 id="subkeys"><a class="header" href="#subkeys">Subkeys</a></h2>
+<h3 id="why-do-subkeys-expire"><a class="header" href="#why-do-subkeys-expire">Why do subkeys expire?</a></h3>
+<p>Expiring subkeys force you to rotate them periodically. If a subkey leaks, you only need to rotate that subkey, not your identity.</p>
+<p>pgpilot defaults to 2 years, but you can choose 1 or 5 years.</p>
+<h3 id="whats-the-difference-between-renew-and-replace"><a class="header" href="#whats-the-difference-between-renew-and-replace">What’s the difference between “Renew” and “Replace”?</a></h3>
+<ul>
+<li>
+<p><strong>Renew</strong>: Extend the expiry date of the same subkey</p>
+<ul>
+<li>Use if the subkey is still good, just old</li>
+<li>Quick operation</li>
+</ul>
+</li>
+<li>
+<p><strong>Replace</strong>: Create a new subkey and revoke the old one</p>
+<ul>
+<li>Use if the subkey is compromised or you want to refresh</li>
+<li>Creates a new key with fresh parameters</li>
+<li>Old key is marked revoked</li>
+</ul>
+</li>
+</ul>
+<h3 id="can-i-have-multiple-sign-keys"><a class="header" href="#can-i-have-multiple-sign-keys">Can I have multiple Sign keys?</a></h3>
+<p>Yes. Use <strong>Add Subkey</strong> to add extra Sign subkeys. You can have:</p>
+<ul>
+<li>Multiple Sign keys (e.g., one for work, one for personal)</li>
+<li>Multiple Encrypt keys (for future algorithm migration)</li>
+<li>Multiple Auth keys (for different SSH identities)</li>
+</ul>
+<p>But you need at least one of each for most operations.</p>
+<hr>
+<h2 id="encryption-1"><a class="header" href="#encryption-1">Encryption</a></h2>
+<h3 id="who-can-decrypt-my-encrypted-files"><a class="header" href="#who-can-decrypt-my-encrypted-files">Who can decrypt my encrypted files?</a></h3>
+<p>Only the recipients you specified. Each recipient uses their <strong>private key</strong> to decrypt.</p>
+<p>You cannot decrypt files encrypted for others (even if you created them).</p>
+<h3 id="what-if-i-lose-my-private-key"><a class="header" href="#what-if-i-lose-my-private-key">What if I lose my private key?</a></h3>
+<p>Without the private key:</p>
+<ul>
+<li>You cannot decrypt files encrypted to you</li>
+<li>You cannot sign documents as you</li>
+<li>You cannot use SSH with your Auth key</li>
+</ul>
+<p>This is why backup is critical. If lost:</p>
+<ol>
+<li>Revoke the key (publish revocation)</li>
+<li>Create a new key</li>
+<li>Tell everyone your new key</li>
+</ol>
+<p><strong>Prevention</strong>: Back up now (see “How do I backup my private key?” above).</p>
+<h3 id="should-i-encrypt-files-to-myself"><a class="header" href="#should-i-encrypt-files-to-myself">Should I encrypt files to myself?</a></h3>
+<p>Often, yes! Before sending to someone:</p>
+<ol>
+<li>Encrypt a test file to yourself</li>
+<li>Decrypt it to verify it works</li>
+<li>Then encrypt to the real recipient</li>
+</ol>
+<p>This catches mistakes before sending.</p>
+<hr>
+<h2 id="security"><a class="header" href="#security">Security</a></h2>
+<h3 id="is-pgpilot-secure"><a class="header" href="#is-pgpilot-secure">Is pgpilot secure?</a></h3>
+<p>pgpilot is a <strong>GUI wrapper</strong> around <code>gpg</code>. Security depends on:</p>
+<ul>
+<li><strong>GnuPG</strong>: Mature, battle-tested (used by billions)</li>
+<li><strong>Your system</strong>: Protect your computer, keep OS updated</li>
+<li><strong>Your keys</strong>: Use strong passphrases, back up, rotate compromised keys</li>
+<li><strong>Your choices</strong>: Verify fingerprints before trusting</li>
+</ul>
+<p>pgpilot is no worse than using <code>gpg</code> directly.</p>
+<h3 id="what-if-my-computer-is-hacked"><a class="header" href="#what-if-my-computer-is-hacked">What if my computer is hacked?</a></h3>
+<p>Hacker gains access to:</p>
+<ul>
+<li>Your private keys (on disk, if not on YubiKey)</li>
+<li>Your passphrases (if typed after infection)</li>
+<li>Decrypted files (if stolen or read)</li>
+</ul>
+<p><strong>Mitigation</strong>:</p>
+<ul>
+<li>Use a YubiKey (keys never leave hardware)</li>
+<li>Use strong passphrases (slows brute-force)</li>
+<li>Keep OS patched (fewer zero-days)</li>
+<li>Revoke compromised keys immediately</li>
+</ul>
+<h3 id="whats-the-master-key-for"><a class="header" href="#whats-the-master-key-for">What’s the master key for?</a></h3>
+<p>The master key certifies (signs) your subkeys. Only the master key can:</p>
+<ul>
+<li>Create new subkeys</li>
+<li>Revoke subkeys</li>
+<li>Add user IDs (email addresses)</li>
+<li>Sign other keys (for key signing parties)</li>
+</ul>
+<p>The master key is long-term and should be kept secure (ideally offline or on hardware).</p>
+<h3 id="should-i-keep-my-master-key-on-disk"><a class="header" href="#should-i-keep-my-master-key-on-disk">Should I keep my master key on disk?</a></h3>
+<p>Best practice:</p>
+<ul>
+<li><strong>On disk</strong>: Keep a backup offline (USB in safe)</li>
+<li><strong>On hardware</strong>: Migrate subkeys to YubiKey, leave master key on disk (you rarely use it)</li>
+<li><strong>Offline</strong>: Air-gapped machine (most paranoid, rarely needed)</li>
+</ul>
+<p>For most people: on disk with a strong passphrase is fine.</p>
+<hr>
+<h2 id="troubleshooting-3"><a class="header" href="#troubleshooting-3">Troubleshooting</a></h2>
+<h3 id="pgpilot-wont-start"><a class="header" href="#pgpilot-wont-start">pgpilot won’t start</a></h3>
+<p>See <a href="#installation">Installation</a> — verify GnuPG and <code>pinentry</code> are installed.</p>
+<h3 id="password-prompt-doesnt-appear"><a class="header" href="#password-prompt-doesnt-appear">Password prompt doesn’t appear</a></h3>
+<p>See <a href="#troubleshooting-4">Troubleshooting</a> — pinentry section.</p>
+<h3 id="keys-wont-import"><a class="header" href="#keys-wont-import">Keys won’t import</a></h3>
+<p>Check <a href="#troubleshooting-4">Troubleshooting</a> — import section.</p>
+<h3 id="yubikey-not-detected"><a class="header" href="#yubikey-not-detected">YubiKey not detected</a></h3>
+<p>See <a href="#troubleshooting-4">Troubleshooting</a> — YubiKey section.</p>
+<hr>
+<h2 id="more-questions"><a class="header" href="#more-questions">More questions?</a></h2>
+<ul>
+<li>See <a href="#troubleshooting-4">Troubleshooting</a> for common issues</li>
+<li>See <a href="#security-1">Security</a> for threat models</li>
+<li>Email: guillaume+code@friloux.me (not monitored 24/7; use GitHub issues for bugs)</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="troubleshooting-4"><a class="header" href="#troubleshooting-4">Troubleshooting</a></h1>
+<p>Diagnose and fix common issues with pgpilot.</p>
+<h2 id="getting-help"><a class="header" href="#getting-help">Getting Help</a></h2>
+<p>Before trying fixes, collect diagnostic info:</p>
+<ol>
+<li>Open pgpilot, click <strong>Diagnostic</strong> (sidebar)</li>
+<li>Take a screenshot of the results</li>
+<li>Note any red “Error” entries</li>
+<li>Include this info when reporting bugs</li>
+</ol>
+<hr>
+<h2 id="installation--startup"><a class="header" href="#installation--startup">Installation &amp; Startup</a></h2>
+<h3 id="pgpilot-command-not-found"><a class="header" href="#pgpilot-command-not-found">“pgpilot: command not found”</a></h3>
+<p><strong>Cause</strong>: Binary not in PATH.</p>
+<p><strong>Fix</strong>:</p>
+<ul>
+<li>If downloaded: move to <code>/usr/local/bin/</code>:
+<pre><code class="language-bash">sudo mv /path/to/pgpilot /usr/local/bin/
+pgpilot  # should work now
+</code></pre>
+</li>
+<li>If built from source: add to PATH:
+<pre><code class="language-bash">export PATH="$PATH:$(pwd)/target/release"
+</code></pre>
+</li>
+</ul>
+<h3 id="gpg-not-found-or-gpg-command-not-found"><a class="header" href="#gpg-not-found-or-gpg-command-not-found">“GPG not found” or “gpg: command not found”</a></h3>
+<p><strong>Cause</strong>: GnuPG not installed.</p>
+<p><strong>Fix</strong>: Install GnuPG:</p>
+<ul>
+<li>Ubuntu/Debian: <code>sudo apt install gnupg</code></li>
+<li>Fedora/RHEL: <code>sudo dnf install gnupg</code></li>
+<li>Arch: <code>sudo pacman -S gnupg</code></li>
+<li>macOS: <code>brew install gnupg</code></li>
+</ul>
+<p>Then restart pgpilot.</p>
+<h3 id="pgpilot-window-wont-appear-on-startup"><a class="header" href="#pgpilot-window-wont-appear-on-startup">pgpilot window won’t appear on startup</a></h3>
+<p><strong>Cause</strong>: X11/Wayland display issue.</p>
+<p><strong>Fix</strong>:</p>
+<ol>
+<li>Check display is running:
+<pre><code class="language-bash">echo $DISPLAY     # X11 should show :0 or similar
+echo $WAYLAND_DISPLAY  # Wayland should show wayland-0 or similar
+</code></pre>
+</li>
+<li>If empty, start a display server or SSH with display forwarding:
+<pre><code class="language-bash">ssh -X user@server  # X11 forward
+</code></pre>
+</li>
+<li>Try running pgpilot again</li>
+</ol>
+<p><strong>Note</strong>: Wayland + iced can be finicky; if stuck, try X11 or GNOME/KDE Plasma.</p>
+<hr>
+<h2 id="gpg-and-keys"><a class="header" href="#gpg-and-keys">GPG and Keys</a></h2>
+<h3 id="no-keys-found--empty-my-keys-list"><a class="header" href="#no-keys-found--empty-my-keys-list">“No keys found” / Empty My Keys list</a></h3>
+<p><strong>Cause</strong>: GnuPG keyring is empty or corrupted.</p>
+<p><strong>Fix</strong>:</p>
+<ol>
+<li>List keys manually:
+<pre><code class="language-bash">gpg --list-keys
+</code></pre>
+</li>
+<li>If empty, create your first key in pgpilot: <strong>Create</strong> → fill form → <strong>Create Key</strong></li>
+<li>If <code>gpg --list-keys</code> shows keys but pgpilot doesn’t:
+<ul>
+<li>Check GNUPGHOME env var:
+<pre><code class="language-bash">echo $GNUPGHOME  # should be empty (uses ~/.gnupg) or set to custom dir
+</code></pre>
+</li>
+<li>If custom dir set, make sure it exists and contains keys</li>
+<li>Restart pgpilot</li>
+</ul>
+</li>
+</ol>
+<h3 id="invalid-fingerprint-error-during-import"><a class="header" href="#invalid-fingerprint-error-during-import">“Invalid fingerprint” error during import</a></h3>
+<p><strong>Cause</strong>: File isn’t a valid PGP key or is corrupted.</p>
+<p><strong>Fix</strong>:</p>
+<ol>
+<li>Verify file is a valid key:
+<pre><code class="language-bash">gpg --import &lt; /path/to/file.asc
+</code></pre>
+</li>
+<li>If GnuPG rejects it, the file is invalid</li>
+<li>Ask the sender for a fresh export:
+<ul>
+<li>Have them run: <code>gpg --export --armor &lt;email&gt;</code></li>
+<li>Send you the output</li>
+</ul>
+</li>
+</ol>
+<h3 id="passphrase-required-prompt-hangs"><a class="header" href="#passphrase-required-prompt-hangs">“Passphrase required” prompt hangs</a></h3>
+<p><strong>Cause</strong>: <code>pinentry</code> (password UI) is not running or misconfigured.</p>
+<p><strong>Fix</strong>:</p>
+<ol>
+<li>
+<p>Check pinentry is installed:</p>
+<pre><code class="language-bash">which pinentry
+</code></pre>
+<p>If not found:</p>
+<ul>
+<li>Ubuntu/Debian: <code>sudo apt install pinentry</code> (or <code>pinentry-gtk2</code> for GUI)</li>
+<li>Fedora: <code>sudo dnf install pinentry</code></li>
+<li>Arch: <code>sudo pacman -S pinentry</code></li>
+</ul>
+</li>
+<li>
+<p>If <code>pinentry</code> exists but hangs:</p>
+<ul>
+<li>Kill stuck processes:
+<pre><code class="language-bash">pkill -f pinentry
+pkill -f gpg-agent
+</code></pre>
+</li>
+<li>Start fresh:
+<pre><code class="language-bash">gpg-agent --daemon
+pgpilot
+</code></pre>
+</li>
+</ul>
+</li>
+<li>
+<p>If using remote SSH, ensure X11/Wayland forwarding:</p>
+<pre><code class="language-bash">ssh -X user@server  # Enable X11 forwarding
+</code></pre>
+</li>
+<li>
+<p>Last resort: use pinentry-tty (terminal-based, no GUI):</p>
+<pre><code class="language-bash">echo "pinentry-program $(which pinentry-tty)" &gt;&gt; ~/.gnupg/gpg-agent.conf
+pkill gpg-agent
+pgpilot
+</code></pre>
+</li>
+</ol>
+<h3 id="failed-to-encrypt-or-trust-level-too-low"><a class="header" href="#failed-to-encrypt-or-trust-level-too-low">“Failed to encrypt” or “Trust level too low”</a></h3>
+<p><strong>Cause</strong>: Recipient’s key has insufficient trust (Undefined/Marginal).</p>
+<p><strong>Fix</strong>:</p>
+<ol>
+<li>Verify recipient’s key:
+<ul>
+<li>Select their key in pgpilot</li>
+<li>Check fingerprint (ask them for it in person)</li>
+<li>Click <strong>Trust</strong> badge → <strong>Full</strong></li>
+</ul>
+</li>
+<li>Try encrypting again</li>
+</ol>
+<p>Or override trust for one-off:</p>
+<ul>
+<li>Click <strong>Encrypt</strong></li>
+<li>Check untrusted recipient</li>
+<li>Click <strong>Encrypt</strong></li>
+<li>When warning appears, click <strong>Continue</strong></li>
+</ul>
+<p>This uses <code>--trust-model always</code> (bypasses trust check without modifying trust database).</p>
+<hr>
+<h2 id="keyserver--publishing"><a class="header" href="#keyserver--publishing">Keyserver &amp; Publishing</a></h2>
+<h3 id="publication-failed--keyserver-error"><a class="header" href="#publication-failed--keyserver-error">“Publication failed” / “Keyserver error”</a></h3>
+<p><strong>Cause</strong>: Network issue, keyserver down, or key already published.</p>
+<p><strong>Fix</strong>:</p>
+<ol>
+<li>
+<p>Check network:</p>
+<pre><code class="language-bash">ping keys.openpgp.org
+</code></pre>
+</li>
+<li>
+<p>Wait a few minutes, retry</p>
+</li>
+<li>
+<p>Try different keyserver:</p>
+<ul>
+<li>Click <strong>Publish</strong></li>
+<li>Choose <strong>keyserver.ubuntu.com</strong> instead of <strong>keys.openpgp.org</strong></li>
+</ul>
+</li>
+<li>
+<p>If key was published, verify it’s there:</p>
+<pre><code class="language-bash">gpg --keyserver keys.openpgp.org --recv-keys &lt;your-fingerprint&gt;
+</code></pre>
+</li>
+</ol>
+<h3 id="key-not-found-after-publishing"><a class="header" href="#key-not-found-after-publishing">“Key not found after publishing”</a></h3>
+<p><strong>Cause</strong>: Publication succeeded, but indexing hasn’t completed yet (keys.openpgp.org takes ~5 min).</p>
+<p><strong>Fix</strong>:</p>
+<ol>
+<li>Wait 5-10 minutes</li>
+<li>Refresh in pgpilot (select key again or restart)</li>
+<li>If still not found after 30 min:
+<ul>
+<li>Check email from keys.openpgp.org (they may require email verification)</li>
+<li>Click verification link in email</li>
+<li>Republish: Click <strong>Publish</strong> again</li>
+</ul>
+</li>
+</ol>
+<h3 id="only-find-wrong-key-when-searching"><a class="header" href="#only-find-wrong-key-when-searching">“Only find wrong key when searching”</a></h3>
+<p><strong>Cause</strong>: Multiple keys exist for that email, or old key hasn’t been revoked.</p>
+<p><strong>Fix</strong>:</p>
+<ol>
+<li>Verify fingerprint when importing:
+<ul>
+<li>In <strong>Import</strong> → <strong>Keyserver</strong>, check the full fingerprint</li>
+<li>Match with what sender provided</li>
+</ul>
+</li>
+<li>If it’s the wrong key:
+<ul>
+<li>Don’t import it</li>
+<li>Contact sender for correct fingerprint</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h2 id="file-operations-1"><a class="header" href="#file-operations-1">File Operations</a></h2>
+<h3 id="file-already-exists-when-encryptingdecrypting"><a class="header" href="#file-already-exists-when-encryptingdecrypting">“File already exists” when encrypting/decrypting</a></h3>
+<p><strong>Cause</strong>: Output file already exists (pgpilot doesn’t overwrite).</p>
+<p><strong>Fix</strong>:</p>
+<ul>
+<li>pgpilot auto-adds counters: <code>document_1.gpg</code>, <code>document_2.gpg</code>, etc.</li>
+<li>Delete the old output file if you want to overwrite</li>
+<li>Or rename the old file before re-encrypting</li>
+</ul>
+<h3 id="signature-file-not-found-during-verification"><a class="header" href="#signature-file-not-found-during-verification">“Signature file not found” during verification</a></h3>
+<p><strong>Cause</strong>: <code>.sig</code> file in different folder than original file.</p>
+<p><strong>Fix</strong>:</p>
+<ol>
+<li>Move both files to same folder:
+<pre><code class="language-bash"># Both in ~/Downloads/
+~/Downloads/document.pdf
+~/Downloads/document.pdf.sig
+</code></pre>
+</li>
+<li>In pgpilot, choose both files (pgpilot will auto-find <code>.sig</code> if same folder)</li>
+</ol>
+<p>Or manually specify both:</p>
+<ul>
+<li>Click <strong>Choose file</strong> → document.pdf</li>
+<li>Click <strong>Choose signature</strong> → document.pdf.sig</li>
+</ul>
+<h3 id="cant-decrypt--missing-key"><a class="header" href="#cant-decrypt--missing-key">“Can’t decrypt — missing key”</a></h3>
+<p><strong>Cause</strong>: File was encrypted for someone else; you lack their public key (and your private key).</p>
+<p><strong>Fix</strong>:</p>
+<ol>
+<li>Ask sender to re-encrypt for you</li>
+<li>Or, ask original sender for a copy (unencrypted or re-encrypted for you)</li>
+</ol>
+<p>There’s no way to decrypt files encrypted for others.</p>
+<hr>
+<h2 id="yubikey--smartcard-1"><a class="header" href="#yubikey--smartcard-1">YubiKey / Smartcard</a></h2>
+<h3 id="card-not-detected"><a class="header" href="#card-not-detected">“Card not detected”</a></h3>
+<p><strong>Cause</strong>: YubiKey not plugged in, or <code>scdaemon</code> not running.</p>
+<p><strong>Fix</strong>:</p>
+<ol>
+<li>Plug in the YubiKey (USB-A, USB-C, or NFC depending on model)</li>
+<li>Check <code>scdaemon</code> is running:
+<pre><code class="language-bash">ps aux | grep scdaemon
+</code></pre>
+</li>
+<li>If not running, start it:
+<pre><code class="language-bash">gpg-agent --daemon
+gpg --card-status  # Forces scdaemon to start
+</code></pre>
+</li>
+<li>Restart pgpilot</li>
+</ol>
+<h3 id="migration-failed--wrong-pin"><a class="header" href="#migration-failed--wrong-pin">“Migration failed / Wrong PIN”</a></h3>
+<p><strong>Cause</strong>: Incorrect admin PIN (default: <code>12345678</code>).</p>
+<p><strong>Fix</strong>:</p>
+<ol>
+<li>Try again with default PIN: <code>12345678</code></li>
+<li>If that fails, you may have changed the PIN previously
+<ul>
+<li>Check your records</li>
+<li>If lost, reset the card (see below — <strong>data loss</strong>)</li>
+</ul>
+</li>
+</ol>
+<h3 id="card-full--cant-migrate-third-subkey"><a class="header" href="#card-full--cant-migrate-third-subkey">“Card full” / “Can’t migrate third subkey”</a></h3>
+<p><strong>Cause</strong>: OpenPGP Card 3.x holds max 3 subkeys (Sign, Encr, Auth).</p>
+<p><strong>Fix</strong>:</p>
+<ul>
+<li>You already have 3 subkeys on this card</li>
+<li>Options:
+<ol>
+<li>Use a second card for a different key</li>
+<li>Overwrite an existing subkey (delete from card, re-migrate new one)</li>
+</ol>
+</li>
+</ul>
+<h3 id="reset--factory-reset-the-card"><a class="header" href="#reset--factory-reset-the-card">“Reset / Factory reset the card”</a></h3>
+<p><strong>⚠️ WARNING</strong>: This erases ALL keys on the card irreversibly.</p>
+<p>Only do if:</p>
+<ul>
+<li>Card is lost/found</li>
+<li>PIN is forgotten and can’t be recovered</li>
+<li>Card is physically damaged</li>
+</ul>
+<p><strong>To reset</strong>:</p>
+<pre><code class="language-bash">gpg --card-edit
+admin
+factoryreset
+# Type "yes" to confirm
+quit
+</code></pre>
+<p>Then reinitialize:</p>
+<pre><code class="language-bash">gpg --card-edit
+admin
+passwd  # Set new PIN
+quit
+</code></pre>
+<hr>
+<h2 id="health-checks"><a class="header" href="#health-checks">Health Checks</a></h2>
+<p>pgpilot’s <strong>Diagnostic</strong> page checks 8 common issues. Red “Error” means:</p>
+<ol>
+<li><strong>GPG installed</strong>: GnuPG binary not found → Install GnuPG</li>
+<li><strong>GPG version ≥ 2.1</strong>: Too old → Update GnuPG</li>
+<li><strong>gpg-agent running</strong>: Agent crashed → Restart: <code>gpg-agent --daemon</code></li>
+<li><strong>pinentry found</strong>: No password UI → Install pinentry (see above)</li>
+<li><strong>default-cache-ttl</strong>: Passphrase cached 0 seconds → Edit <code>~/.gnupg/gpg-agent.conf</code></li>
+<li><strong>max-cache-ttl</strong>: Passphrase never cached → Edit config</li>
+<li><strong>~/.gnupg permissions</strong>: Not 700 → Fix: <code>chmod 700 ~/.gnupg</code></li>
+<li><strong>Revocation certs exist</strong>: Missing <code>.rev</code> files → Restore from backup or accept warning</li>
+</ol>
+<hr>
+<h2 id="still-stuck"><a class="header" href="#still-stuck">Still Stuck?</a></h2>
+<ol>
+<li><strong>Check Diagnostic page</strong> (sidebar) — tells you which checks are failing</li>
+<li><strong>Search FAQ</strong> — see <a href="#faq">FAQ</a></li>
+<li><strong>Search GitHub issues</strong>: https://github.com/gfriloux/pgpilot/issues</li>
+<li><strong>Report a bug</strong>: Include:
+<ul>
+<li>Diagnostic output (screenshot)</li>
+<li>OS (Ubuntu 24.04, Fedora 39, macOS 14, etc.)</li>
+<li>GnuPG version: <code>gpg --version</code></li>
+<li>Exact error message</li>
+<li>Steps to reproduce</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h2 id="manual-commands"><a class="header" href="#manual-commands">Manual Commands</a></h2>
+<p>If pgpilot UI doesn’t work, try command-line:</p>
+<pre><code class="language-bash"># List your keys
+gpg --list-keys
+
+# Export public key
+gpg --export --armor &lt;fingerprint&gt; &gt; mykey.pub.asc
+
+# Import a key
+gpg --import theirkey.asc
+
+# Encrypt a file
+gpg --encrypt --recipient &lt;email&gt; --armor document.pdf
+
+# Decrypt
+gpg --decrypt document.pdf.asc
+
+# Sign
+gpg --detach-sign --armor document.pdf
+
+# Verify
+gpg --verify document.pdf.asc document.pdf
+
+# Card status
+gpg --card-status
+
+# Set trust
+echo '&lt;fingerprint&gt;:5:' | gpg --import-ownertrust
+</code></pre>
+<p>These commands do exactly what pgpilot does behind the scenes.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="security-1"><a class="header" href="#security-1">Security</a></h1>
+<p>Threat model, best practices, and limitations.</p>
+<h2 id="threat-model"><a class="header" href="#threat-model">Threat Model</a></h2>
+<p>pgpilot is designed to protect against these threats:</p>
+<h3 id="data-eavesdropping"><a class="header" href="#data-eavesdropping">Data Eavesdropping</a></h3>
+<p><strong>Threat</strong>: Attacker intercepts your files in transit (email, cloud, USB).</p>
+<p><strong>Protection</strong>: File encryption.</p>
+<ul>
+<li><strong>How</strong>: Use pgpilot to encrypt files before sending.</li>
+<li><strong>Result</strong>: Only recipients with private keys can decrypt.</li>
+</ul>
+<h3 id="forged-messages"><a class="header" href="#forged-messages">Forged Messages</a></h3>
+<p><strong>Threat</strong>: Attacker sends a message claiming to be you (impersonation).</p>
+<p><strong>Protection</strong>: Digital signatures.</p>
+<ul>
+<li><strong>How</strong>: Use pgpilot to sign files. Recipients verify with your public key.</li>
+<li><strong>Result</strong>: Only you could have signed (proves authenticity).</li>
+</ul>
+<h3 id="key-theft-disk"><a class="header" href="#key-theft-disk">Key Theft (Disk)</a></h3>
+<p><strong>Threat</strong>: Attacker steals your computer or disk.</p>
+<p><strong>Protection</strong>: Hardware keys (YubiKey) or passphrases.</p>
+<ul>
+<li><strong>Hardware</strong>: Private keys never leave the card. Attacker gets nothing.</li>
+<li><strong>Passphrase</strong>: Private key is encrypted on disk. Attacker must crack passphrase.</li>
+</ul>
+<h3 id="subkey-compromise"><a class="header" href="#subkey-compromise">Subkey Compromise</a></h3>
+<p><strong>Threat</strong>: One subkey (e.g., Encryption) is compromised, but you don’t know.</p>
+<p><strong>Protection</strong>: Subkey rotation and revocation.</p>
+<ul>
+<li><strong>How</strong>: Use pgpilot <strong>Replace</strong> to create new subkey and revoke old.</li>
+<li><strong>Result</strong>: Old subkey marked revoked; new one is active.</li>
+</ul>
+<h3 id="key-loss"><a class="header" href="#key-loss">Key Loss</a></h3>
+<p><strong>Threat</strong>: You lose access to your private key (hardware failure, deletion).</p>
+<p><strong>Protection</strong>: Backups.</p>
+<ul>
+<li><strong>How</strong>: Use pgpilot <strong>Backup</strong> to export secret key and revocation cert.</li>
+<li><strong>Result</strong>: If you lose key, you can restore from backup. If you can’t restore, you can revoke and create new key.</li>
+</ul>
+<hr>
+<h2 id="what-pgpilot-does-not-protect-against"><a class="header" href="#what-pgpilot-does-not-protect-against">What pgpilot Does NOT Protect Against</a></h2>
+<h3 id="compromised-computer"><a class="header" href="#compromised-computer">Compromised Computer</a></h3>
+<p><strong>Threat</strong>: Malware installs on your computer and reads private keys, passphrases, or plaintext files.</p>
+<p><strong>Limitations</strong>:</p>
+<ul>
+<li>pgpilot uses <code>gpg</code> on your computer. If OS is compromised, attacker can intercept.</li>
+<li>If using a YubiKey, keys themselves are protected, but attacker could intercept commands to sign/decrypt.</li>
+<li>Decrypted files on disk are readable to malware.</li>
+</ul>
+<p><strong>Mitigation</strong>:</p>
+<ul>
+<li>Keep OS patched (fewer vulnerabilities)</li>
+<li>Use antivirus / malware scanner</li>
+<li>Don’t run untrusted binaries</li>
+<li>Use a hardware key (harder to extract secrets)</li>
+</ul>
+<h3 id="weak-passphrases"><a class="header" href="#weak-passphrases">Weak Passphrases</a></h3>
+<p><strong>Threat</strong>: Attacker brute-forces your private key password.</p>
+<p><strong>Limitations</strong>:</p>
+<ul>
+<li>If passphrase is weak (e.g., “password123”), attacker can try all possibilities.</li>
+<li>2024 GPUs can test billions of passphrases per second.</li>
+</ul>
+<p><strong>Mitigation</strong>:</p>
+<ul>
+<li>Use strong passphrases: 15+ characters, mixed case, numbers, symbols</li>
+<li>Use a passphrase manager (Bitwarden, 1Password, KeePass)</li>
+<li>Use a hardware key (no passphrase needed, can’t be brute-forced)</li>
+</ul>
+<h3 id="trust-mistakes"><a class="header" href="#trust-mistakes">Trust Mistakes</a></h3>
+<p><strong>Threat</strong>: You trust the wrong person’s key (you don’t actually verify their identity).</p>
+<p><strong>Limitations</strong>:</p>
+<ul>
+<li>pgpilot relies on you to verify fingerprints in person.</li>
+<li>If you skip verification, you might encrypt to an attacker’s key.</li>
+</ul>
+<p><strong>Mitigation</strong>:</p>
+<ul>
+<li><strong>Always</strong> verify fingerprints by comparing in person or via a secure channel.</li>
+<li>Use pgpilot’s trust levels (Marginal / Full) to mark who you’ve verified.</li>
+<li>Encrypt test files to yourself first; only encrypt to strangers after verification.</li>
+</ul>
+<h3 id="network-eavesdropping-keyserver-lookups"><a class="header" href="#network-eavesdropping-keyserver-lookups">Network Eavesdropping (Keyserver Lookups)</a></h3>
+<p><strong>Threat</strong>: Attacker monitors your network and sees which keys you’re searching for (privacy leak).</p>
+<p><strong>Limitations</strong>:</p>
+<ul>
+<li>When you search a keyserver, your search query is visible (unless VPN/Tor).</li>
+<li>Attacker can infer who you’re communicating with.</li>
+</ul>
+<p><strong>Mitigation</strong>:</p>
+<ul>
+<li>Use VPN or Tor for keyserver lookups</li>
+<li>Use keys.openpgp.org (doesn’t return email addresses in searches, more private)</li>
+<li>Avoid searching by email; search by fingerprint instead</li>
+</ul>
+<h3 id="gpg-bugs"><a class="header" href="#gpg-bugs">GPG Bugs</a></h3>
+<p><strong>Threat</strong>: Undiscovered vulnerability in GnuPG could leak keys or signatures.</p>
+<p><strong>Limitations</strong>:</p>
+<ul>
+<li>pgpilot delegates all crypto to <code>gpg</code>. If <code>gpg</code> is broken, pgpilot is broken.</li>
+</ul>
+<p><strong>Mitigation</strong>:</p>
+<ul>
+<li>Keep GnuPG updated: <code>gpg --version</code> should show latest version</li>
+<li>Monitor security advisories: https://gnupg.org/security.html</li>
+<li>Use a hardware key (reduces attack surface; much of crypto happens on-chip)</li>
+</ul>
+<hr>
+<h2 id="best-practices-3"><a class="header" href="#best-practices-3">Best Practices</a></h2>
+<h3 id="key-creation"><a class="header" href="#key-creation">Key Creation</a></h3>
+<ol>
+<li><strong>Create via pgpilot or <code>gpg --batch</code></strong> (not interactive; avoids mistakes)</li>
+<li><strong>No expiry on master key</strong> (pgpilot default; correct design)</li>
+<li><strong>2-year expiry on subkeys</strong> (pgpilot default; balance freshness + usability)</li>
+<li><strong>Use ed25519 / cv25519</strong> (pgpilot default; modern, secure)</li>
+</ol>
+<h3 id="passphrases"><a class="header" href="#passphrases">Passphrases</a></h3>
+<ol>
+<li><strong>Strong</strong>: 15+ characters, mix of case + numbers + symbols</li>
+<li><strong>Unique</strong>: Don’t reuse passwords from other accounts</li>
+<li><strong>Backed up</strong>: Store securely in a password manager</li>
+<li><strong>Reviewed regularly</strong>: Ensure you still remember it</li>
+</ol>
+<h3 id="backups"><a class="header" href="#backups">Backups</a></h3>
+<ol>
+<li><strong>Backup immediately after key creation</strong> (use pgpilot <strong>Backup</strong>)</li>
+<li><strong>Store offline</strong>: USB in a safe, not on your computer</li>
+<li><strong>Encrypt the backup</strong> (use VeraCrypt, LUKS, BitLocker)</li>
+<li><strong>Test annual recovery</strong>: Restore to temp machine, verify it works</li>
+<li><strong>Document passphrases</strong>: Store separately from key backup (in password manager)</li>
+</ol>
+<h3 id="trust--verification"><a class="header" href="#trust--verification">Trust &amp; Verification</a></h3>
+<ol>
+<li><strong>Verify fingerprints in person</strong> (meet face-to-face if possible)</li>
+<li><strong>Or via trusted channel</strong> (video call, phone call from known number)</li>
+<li><strong>Never trust email/text</strong> (attacker can intercept)</li>
+<li><strong>Set trust explicitly</strong> (don’t encrypt to Undefined-trust keys)</li>
+<li><strong>Review trust annually</strong> (revoke if person is no longer trustworthy)</li>
+</ol>
+<h3 id="key-rotation"><a class="header" href="#key-rotation">Key Rotation</a></h3>
+<ol>
+<li><strong>Renew subkeys before expiry</strong> (1-2 months before expiration date)</li>
+<li><strong>Rotate compromised subkeys immediately</strong> (use pgpilot <strong>Replace</strong>)</li>
+<li><strong>Publish rotations to keyserver</strong> (use pgpilot <strong>Publish</strong>)</li>
+<li><strong>Announce to contacts</strong> (email with new key details)</li>
+</ol>
+<h3 id="hardware-keys-yubikey"><a class="header" href="#hardware-keys-yubikey">Hardware Keys (YubiKey)</a></h3>
+<ol>
+<li><strong>Change default PIN</strong> (from <code>12345678</code> to strong PIN)</li>
+<li><strong>Keep with you</strong> (don’t leave unattended)</li>
+<li><strong>Backup master key offline</strong> (YubiKey only holds subkeys)</li>
+<li><strong>Test recovery</strong>: If card lost, can you restore from backup?</li>
+<li><strong>Document serial number</strong> (in case of loss/theft)</li>
+</ol>
+<h3 id="file-encryption"><a class="header" href="#file-encryption">File Encryption</a></h3>
+<ol>
+<li><strong>Test encryption/decryption</strong> (encrypt to yourself first)</li>
+<li><strong>Use armor format</strong> (<code>.asc</code>) for plain text / email</li>
+<li><strong>Use binary format</strong> (<code>.gpg</code>) for files, archives</li>
+<li><strong>Keep signatures with files</strong> (store <code>.sig</code> next to encrypted file)</li>
+<li><strong>Verify signatures before trusting</strong> (always check signer trust)</li>
+</ol>
+<hr>
+<h2 id="limitations-of-pgpilot"><a class="header" href="#limitations-of-pgpilot">Limitations of pgpilot</a></h2>
+<h3 id="no-master-key-expiry"><a class="header" href="#no-master-key-expiry">No Master Key Expiry</a></h3>
+<p>pgpilot doesn’t let you set master key expiry. This is intentional:</p>
+<ul>
+<li>Master key expiry is complex and rarely needed</li>
+<li>Modern practice: keep master key forever; rotate subkeys instead</li>
+<li>If you need expiring master keys, use <code>gpg --quick-gen-key "Name" ed25519 cert 1y</code></li>
+</ul>
+<h3 id="no-key-server-pulling-search-only"><a class="header" href="#no-key-server-pulling-search-only">No Key Server Pulling (Search Only)</a></h3>
+<p>pgpilot can import keys from keyservers (pull), but cannot pull <strong>updates</strong> to your existing keys.</p>
+<p><strong>Workaround</strong>: Periodically re-import your contacts’ keys to get latest versions:</p>
+<pre><code class="language-bash">gpg --keyserver keys.openpgp.org --recv-keys &lt;their-fingerprint&gt;
+</code></pre>
+<p>Or use external tools:</p>
+<pre><code class="language-bash">gpg --auto-key-retrieve  # Fetches unknown signing keys automatically
+</code></pre>
+<h3 id="no-expiry-modification-master-key"><a class="header" href="#no-expiry-modification-master-key">No Expiry Modification (Master Key)</a></h3>
+<p>You cannot change master key expiry in pgpilot. Use <code>gpg</code> directly:</p>
+<pre><code class="language-bash">gpg --quick-set-expire &lt;master-fp&gt; &lt;duration&gt;
+</code></pre>
+<h3 id="no-user-id-management"><a class="header" href="#no-user-id-management">No User ID Management</a></h3>
+<p>pgpilot doesn’t add/remove user IDs (email addresses) on keys.</p>
+<p><strong>Workaround</strong>: Use <code>gpg --edit-key &lt;fp&gt;</code> → <code>adduid</code> / <code>deluid</code>.</p>
+<h3 id="no-direct-ssh-key-export-auth-subkey"><a class="header" href="#no-direct-ssh-key-export-auth-subkey">No Direct SSH Key Export (Auth Subkey)</a></h3>
+<p>pgpilot doesn’t export Auth subkeys as SSH public keys. Use:</p>
+<pre><code class="language-bash">gpg --export-ssh-key &lt;fingerprint&gt; &gt; ~/.ssh/id_pgp.pub
+</code></pre>
+<p>pgpilot may add this in a future version.</p>
+<h3 id="no-key-signing-web-of-trust"><a class="header" href="#no-key-signing-web-of-trust">No Key Signing (Web of Trust)</a></h3>
+<p>pgpilot doesn’t sign other keys (key signing parties). Use:</p>
+<pre><code class="language-bash">gpg --default-key &lt;your-fp&gt; --sign-key &lt;their-fp&gt;
+</code></pre>
+<h3 id="no-revocation-generation-master-key"><a class="header" href="#no-revocation-generation-master-key">No Revocation Generation (Master Key)</a></h3>
+<p>pgpilot cannot generate revocation certificates for master keys. Use:</p>
+<pre><code class="language-bash">gpg --gen-revoke &lt;master-fp&gt; &gt; revocation.asc
+</code></pre>
+<p>Keep this file offline in case of emergency.</p>
+<hr>
+<h2 id="reporting-security-issues"><a class="header" href="#reporting-security-issues">Reporting Security Issues</a></h2>
+<p>If you discover a security vulnerability in pgpilot:</p>
+<ol>
+<li><strong>Do NOT post on GitHub issues</strong> (public disclosure could harm users)</li>
+<li><strong>Email</strong>: guillaume+code@friloux.me</li>
+<li><strong>Include</strong>:
+<ul>
+<li>Detailed description of vulnerability</li>
+<li>Steps to reproduce</li>
+<li>Potential impact</li>
+<li>Suggested fix (if any)</li>
+</ul>
+</li>
+<li><strong>Allow time</strong> for pgpilot maintainers to respond and patch</li>
+</ol>
+<p>Responsible disclosure is appreciated. Security researchers will be credited.</p>
+<hr>
+<h2 id="openpgp-standards"><a class="header" href="#openpgp-standards">OpenPGP Standards</a></h2>
+<p>pgpilot uses:</p>
+<ul>
+<li><strong>OpenPGP RFC 4880</strong> (IETF standard)</li>
+<li><strong>Modern algorithms</strong>: ed25519 (sign), cv25519 (encrypt), SHA-256+</li>
+<li><strong>Deprecated algorithms avoided</strong>: RSA 1024, SHA-1, MD5, IDEA, 3DES, etc.</li>
+</ul>
+<p>GnuPG enforces these standards, preventing weak keys.</p>
+<hr>
+<h2 id="further-reading"><a class="header" href="#further-reading">Further Reading</a></h2>
+<ul>
+<li><strong>GnuPG Manual</strong>: https://gnupg.org/documentation/manuals/gnupg/</li>
+<li><strong>RFC 4880</strong> (OpenPGP spec): https://tools.ietf.org/html/rfc4880</li>
+<li><strong>keys.openpgp.org privacy policy</strong>: https://keys.openpgp.org/about</li>
+<li><strong>YubiKey documentation</strong>: https://support.yubico.com/</li>
+<li><strong>NIST Cybersecurity Framework</strong>: https://www.nist.gov/cyberframework</li>
+</ul>
+<hr>
+<h2 id="questions"><a class="header" href="#questions">Questions?</a></h2>
+<p>See <a href="#faq">FAQ</a> or <a href="#troubleshooting-4">Troubleshooting</a> for answers to common questions.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="settings"><a class="header" href="#settings">Settings</a></h1>
+<p>Configure pgpilot appearance and language preferences.</p>
+<h2 id="accessing-settings"><a class="header" href="#accessing-settings">Accessing Settings</a></h2>
+<p>Click <strong>Settings</strong> (gear icon) at the bottom of the sidebar.</p>
+<hr>
+<h2 id="theme"><a class="header" href="#theme">Theme</a></h2>
+<p>pgpilot offers two visual themes:</p>
+<p><strong>Catppuccin Frappé</strong> (default)</p>
+<ul>
+<li>Dark interface with Mauve accent color</li>
+<li>Based on the <a href="https://catppuccin.com/">Catppuccin</a> color palette</li>
+<li>Suits most environments and lighting conditions</li>
+</ul>
+<p><strong>USSR</strong></p>
+<ul>
+<li>Soviet-inspired theme with cream content areas and near-black sidebar</li>
+<li>Red accent color, Bebas Neue font for navigation, Russo One for content</li>
+<li>Page titles display humorous Soviet-flavored text (“Chiffrer pour le Peuple”, “Rapport au Commissariat”…)</li>
+<li>Best experienced as a fun easter egg</li>
+</ul>
+<p>To change the theme:</p>
+<ol>
+<li>Open <strong>Settings</strong></li>
+<li>Under <strong>Theme</strong>, select <strong>Catppuccin Frappé</strong> or <strong>USSR</strong></li>
+<li>The theme applies immediately — no restart required</li>
+</ol>
+<hr>
+<h2 id="ui-scale"><a class="header" href="#ui-scale">UI Scale</a></h2>
+<p>The scale factor adjusts the size of the entire interface. This is useful when:</p>
+<ul>
+<li>The interface appears <strong>too large</strong> on a 1080p monitor → reduce to 75% or 50%</li>
+<li>The interface appears <strong>too small</strong> on a HiDPI / 4K monitor → increase to 125% or 150%</li>
+</ul>
+<p>Available values: 50%, 75%, <strong>100% (default)</strong>, 125%, 150%, 175%, 200%</p>
+<p>To change the scale:</p>
+<ol>
+<li>Open <strong>Settings</strong></li>
+<li>Under <strong>UI Scale</strong>, select the desired percentage</li>
+<li>The change applies immediately</li>
+</ol>
+<blockquote>
+<p><strong>Note</strong>: The scale factor is stored in your preferences and restored on next launch. If the interface becomes unusable after a scale change, delete <code>~/.config/pgpilot/config.yaml</code> to reset to defaults.</p>
+</blockquote>
+<hr>
+<h2 id="language"><a class="header" href="#language">Language</a></h2>
+<p>pgpilot supports English and French.</p>
+<p>On first launch, the language is auto-detected from your system locale (<code>$LANG</code> / <code>$LC_ALL</code>). If your locale starts with <code>fr</code>, French is used; otherwise English.</p>
+<p>To change the language:</p>
+<ol>
+<li>Open <strong>Settings</strong></li>
+<li>Under <strong>Language</strong>, select <strong>English</strong> or <strong>French</strong></li>
+<li>The interface updates immediately</li>
+</ol>
+<hr>
+<h2 id="preferences-file"><a class="header" href="#preferences-file">Preferences file</a></h2>
+<p>All settings are stored in <code>~/.config/pgpilot/config.yaml</code>. Example:</p>
+<pre><code class="language-yaml">language: english
+theme: catppuccin
+scale_factor: 1.0
+</code></pre>
+<p>This file is created automatically on first launch. Deleting it resets all preferences to defaults. It does <strong>not</strong> contain any GPG keys or sensitive data.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr-ef4e11c1.min.js"></script>
+        <script src="mark-09e88c2c.min.js"></script>
+        <script src="searcher-c2a407aa.js"></script>
+
+        <script src="clipboard-1626706a.min.js"></script>
+        <script src="highlight-abc7f01d.js"></script>
+        <script src="book-a0b12cfe.js"></script>
+
+        <!-- Custom JS scripts -->
+
+        <script>
+        window.addEventListener('load', function() {
+            window.setTimeout(window.print, 100);
+        });
+        </script>
+
+
+    </div>
+    </body>
+</html>
