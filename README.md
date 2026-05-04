@@ -2,7 +2,7 @@
 
 A desktop GUI for day-to-day PGP key management, built with [iced](https://github.com/iced-rs/iced) 0.14 and [sequoia-openpgp](https://sequoia-pgp.org/) 2.
 
-pgpilot wraps GnuPG's command-line interface behind a keyboard-friendly, themeable interface. All cryptographic operations are performed by the `gpg` binary on your system; sequoia-openpgp is used solely to parse binary key exports.
+pgpilot wraps GnuPG's command-line interface behind a themeable graphical interface. All cryptographic operations are performed by the `gpg` binary on your system; sequoia-openpgp is used solely to parse binary key exports.
 
 [![CI](https://github.com/gfriloux/pgpilot/actions/workflows/ci.yml/badge.svg)](https://github.com/gfriloux/pgpilot/actions/workflows/ci.yml)
 ![License](https://img.shields.io/badge/license-Apache%202.0-blue)
