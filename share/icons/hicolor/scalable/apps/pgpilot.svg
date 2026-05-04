@@ -1,28 +1,190 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
-  <!-- Fond transparent (SVG autoportant) -->
+  <!--
+    pgpilot application icon
+    Concept: HUD reticle (navigation / pilot) enclosing a lock with integrated key (GPG / security)
+    Palette: Catppuccin Frappé
+      Mauve   #ca9ee6  — lock body, key (primary accent)
+      Blue    #8caaee  — outer ring, shackle
+      Crust   #232634  — deep shadow fill
+      Surface1 #414559 — inner ring, structural elements
+      Text    #c6d0f5  — highlights
+      Green   #a6d189  — accent markers (valid / OK)
+  -->
   <defs>
-    <style type="text/css">
-      .key-shaft { fill: #ca9ee6; }
-      .key-head { fill: #ca9ee6; }
-      .key-ring { fill: none; stroke: #ca9ee6; stroke-width: 2.5; stroke-linecap: round; }
-      .accent { fill: #c6d0f5; }
-    </style>
+
+    <!-- Radial gradient: lock face depth -->
+    <radialGradient id="lockFace" cx="44%" cy="38%" r="60%" fx="44%" fy="38%">
+      <stop offset="0%"   stop-color="#ddb8f5"/>
+      <stop offset="60%"  stop-color="#ca9ee6"/>
+      <stop offset="100%" stop-color="#9b72c4"/>
+    </radialGradient>
+
+    <!-- Radial gradient: outer ring glow -->
+    <radialGradient id="ringGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="75%"  stop-color="#8caaee" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#8caaee" stop-opacity="0.18"/>
+    </radialGradient>
+
+    <!-- Linear gradient: shackle (Blue arc) -->
+    <linearGradient id="shackleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"   stop-color="#c6d0f5"/>
+      <stop offset="100%" stop-color="#8caaee"/>
+    </linearGradient>
+
+    <!-- Clip: keep shackle arc above lock body -->
+    <clipPath id="shackleClip">
+      <rect x="0" y="0" width="128" height="56"/>
+    </clipPath>
+
   </defs>
 
-  <!-- Clef stylisée (concept : clef GPG) -->
-  <!-- Tige de la clef (diagonale) -->
-  <rect x="24" y="52" width="56" height="8" rx="4" class="key-shaft" transform="rotate(-25 52 56)"/>
+  <!-- ═══════════════════════════════════════════════
+       LAYER 1 — HUD outer ring + glow halo
+       Outer ring: Blue #8caaee, stroke only
+       ═══════════════════════════════════════════════ -->
 
-  <!-- Tête de la clef (cercle avec dent) -->
-  <circle cx="76" cy="36" r="14" class="key-head"/>
+  <!-- Glow halo behind ring -->
+  <circle cx="64" cy="64" r="60" fill="url(#ringGlow)"/>
 
-  <!-- Dent distinctive de clef (petit rectangle) -->
-  <rect x="82" y="48" width="6" height="8" class="key-shaft" rx="2"/>
+  <!-- Outer ring -->
+  <circle cx="64" cy="64" r="56"
+          fill="none"
+          stroke="#8caaee"
+          stroke-width="3.5"
+          opacity="0.85"/>
 
-  <!-- Anneau de la clef (symbole GPG) -->
-  <circle cx="26" cy="72" r="12" class="key-ring"/>
+  <!-- ═══════════════════════════════════════════════
+       LAYER 2 — HUD tick marks (12h 3h 6h 9h)
+       Long ticks at cardinal points, short at 45° diagonals
+       ═══════════════════════════════════════════════ -->
 
-  <!-- Point d'accent central (Mauve sur Text pour contraste) -->
-  <circle cx="26" cy="72" r="5" class="accent"/>
+  <!-- Cardinal ticks (long, Blue) -->
+  <!-- 12 o'clock -->
+  <line x1="64" y1="4"  x2="64" y2="16"  stroke="#8caaee" stroke-width="4"   stroke-linecap="round"/>
+  <!-- 6 o'clock -->
+  <line x1="64" y1="112" x2="64" y2="124" stroke="#8caaee" stroke-width="4"   stroke-linecap="round"/>
+  <!-- 9 o'clock -->
+  <line x1="4"  y1="64"  x2="16"  y2="64" stroke="#8caaee" stroke-width="4"   stroke-linecap="round"/>
+  <!-- 3 o'clock -->
+  <line x1="112" y1="64" x2="124" y2="64" stroke="#8caaee" stroke-width="4"   stroke-linecap="round"/>
+
+  <!-- Diagonal ticks (short, muted Blue) -->
+  <!-- NE 45° -->
+  <line x1="101.5" y1="26.5" x2="109" y2="19"   stroke="#8caaee" stroke-width="2.5" stroke-linecap="round" opacity="0.5"/>
+  <!-- SE 135° -->
+  <line x1="101.5" y1="101.5" x2="109" y2="109"  stroke="#8caaee" stroke-width="2.5" stroke-linecap="round" opacity="0.5"/>
+  <!-- SW 225° -->
+  <line x1="26.5"  y1="101.5" x2="19"  y2="109"  stroke="#8caaee" stroke-width="2.5" stroke-linecap="round" opacity="0.5"/>
+  <!-- NW 315° -->
+  <line x1="26.5"  y1="26.5"  x2="19"  y2="19"   stroke="#8caaee" stroke-width="2.5" stroke-linecap="round" opacity="0.5"/>
+
+  <!-- ═══════════════════════════════════════════════
+       LAYER 3 — Inner guide ring (Surface1 #414559)
+       Thin ring inside the lock body perimeter
+       ═══════════════════════════════════════════════ -->
+
+  <circle cx="64" cy="64" r="43"
+          fill="none"
+          stroke="#414559"
+          stroke-width="1.5"
+          opacity="0.7"/>
+
+  <!-- ═══════════════════════════════════════════════
+       LAYER 4 — Lock shackle (Blue arc above lock body)
+       A bold arc representing an open-style padlock shackle
+       ═══════════════════════════════════════════════ -->
+
+  <!-- Shackle: thick arc, only visible above lock top (y < 56) -->
+  <!-- Arc path: start bottom-left of shackle, arc up and over, end bottom-right -->
+  <!-- Center at (64, 64), shackle legs at x=50 and x=78, top arc radius=20 -->
+  <g clip-path="url(#shackleClip)">
+    <path d="M 50 60 L 50 46 A 14 14 0 0 1 78 46 L 78 60"
+          fill="none"
+          stroke="url(#shackleGrad)"
+          stroke-width="7"
+          stroke-linecap="round"
+          stroke-linejoin="round"/>
+  </g>
+
+  <!-- ═══════════════════════════════════════════════
+       LAYER 5 — Lock body (Mauve rounded rectangle)
+       Centered, with gradient fill for depth
+       ═══════════════════════════════════════════════ -->
+
+  <!-- Lock body shadow/depth layer (Crust, slightly offset) -->
+  <rect x="38" y="59" width="52" height="42" rx="7" ry="7"
+        fill="#232634"
+        opacity="0.45"/>
+
+  <!-- Lock body main fill -->
+  <rect x="37" y="57" width="54" height="43" rx="8" ry="8"
+        fill="url(#lockFace)"/>
+
+  <!-- Lock body top edge highlight -->
+  <rect x="37" y="57" width="54" height="4" rx="4" ry="4"
+        fill="#ddb8f5"
+        opacity="0.35"/>
+
+  <!-- Lock body inner border (depth) -->
+  <rect x="37" y="57" width="54" height="43" rx="8" ry="8"
+        fill="none"
+        stroke="#9b72c4"
+        stroke-width="1.2"
+        opacity="0.6"/>
+
+  <!-- ═══════════════════════════════════════════════
+       LAYER 6 — Keyhole
+       Classic keyhole: circle on top + triangle channel below
+       ═══════════════════════════════════════════════ -->
+
+  <!-- Keyhole circle -->
+  <circle cx="64" cy="74" r="7"
+          fill="#232634"/>
+
+  <!-- Keyhole slot (rounded rectangle below circle) -->
+  <rect x="61" y="78" width="6" height="11" rx="3" ry="3"
+        fill="#232634"/>
+
+  <!-- Keyhole inner highlight ring (very subtle) -->
+  <circle cx="64" cy="74" r="7"
+          fill="none"
+          stroke="#9b72c4"
+          stroke-width="1"
+          opacity="0.4"/>
+
+  <!-- ═══════════════════════════════════════════════
+       LAYER 7 — HUD accent markers (Green diamonds)
+       Small diamond shapes at 12h and 6h tick positions
+       Signal "lock confirmed / nav target acquired"
+       ═══════════════════════════════════════════════ -->
+
+  <!-- 12 o'clock diamond -->
+  <polygon points="64,5  67,10  64,15  61,10"
+           fill="#a6d189"
+           opacity="0.9"/>
+
+  <!-- 6 o'clock diamond (above key shaft start) -->
+  <polygon points="64,113  67,118  64,123  61,118"
+           fill="#a6d189"
+           opacity="0.9"/>
+
+  <!-- ═══════════════════════════════════════════════
+       LAYER 9 — Crosshair cross-wires (very subtle)
+       Fine horizontal and vertical center lines inside inner ring
+       Evokes HUD/cockpit targeting reticle
+       ═══════════════════════════════════════════════ -->
+
+  <!-- Horizontal crosshair (left gap + right gap, split around lock) -->
+  <line x1="21" y1="64" x2="37" y2="64"
+        stroke="#8caaee" stroke-width="1" opacity="0.4" stroke-linecap="round"/>
+  <line x1="91" y1="64" x2="107" y2="64"
+        stroke="#8caaee" stroke-width="1" opacity="0.4" stroke-linecap="round"/>
+
+  <!-- Vertical crosshair (top gap, split above shackle and below key) -->
+  <line x1="64" y1="21" x2="64" y2="46"
+        stroke="#8caaee" stroke-width="1" opacity="0.4" stroke-linecap="round"/>
+  <line x1="64" y1="101" x2="64" y2="107"
+        stroke="#8caaee" stroke-width="1" opacity="0.4" stroke-linecap="round"/>
+
 </svg>
