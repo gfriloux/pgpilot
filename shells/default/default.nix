@@ -16,6 +16,7 @@ mkShell {
     rust-analyzer
     cargo-audit
     git-cliff
+    mdbook
     just
     # sequoia-openpgp (nettle backend)
     clang
@@ -29,6 +30,8 @@ mkShell {
     vulkan-loader
     # rfd (native file dialog)
     gtk3
+    # gpg (for testing)
+    gnupg
   ];
 
   shellHook = ''
