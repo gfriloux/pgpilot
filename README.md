@@ -49,9 +49,11 @@ pgpilot wraps GnuPG's command-line interface behind a themeable graphical interf
 - Migrate private subkeys to a YubiKey
 
 **UI**
-- Catppuccin Frappé theme with Mauve accent
+- Two themes: **Catppuccin Frappé** (default, Mauve accent) and **USSR** (Soviet-inspired, Bebas Neue + Russo One fonts)
+- Configurable UI scale factor (0.5× to 2.0×) — useful on 1080p (too large) or HiDPI screens
 - Dark sidebar with Nerd Font icons
 - Timed status bar (auto-dismisses after 4 seconds)
+- English and French UI (auto-detected from system locale, configurable in Settings)
 - Minimum window size 1000 × 540 px
 
 ---
@@ -165,13 +167,25 @@ All state that references a key uses the full 40-hex fingerprint, never a list i
 
 ## Configuration
 
+### GnuPG location
+
 pgpilot reads GnuPG from the standard location (`~/.gnupg`) unless the `GNUPGHOME` environment variable is set:
 
 ```bash
 GNUPGHOME=/path/to/custom/gnupg cargo run
 ```
 
-No other configuration file is required or supported.
+### Application preferences
+
+pgpilot stores its preferences (language, theme, UI scale) in `~/.config/pgpilot/config.yaml`. This file is created automatically on first launch and contains:
+
+```yaml
+language: english           # or french
+theme: catppuccin          # or ussr
+scale_factor: 1.0          # 0.5 to 2.0
+```
+
+This file does **not** contain any GPG keys or sensitive data — only user interface preferences. You can safely delete it to reset pgpilot to defaults; it will not affect your GPG keyring or any other data.
 
 ---
 
@@ -183,7 +197,7 @@ On NixOS, `pkgs.dbus` must be present in `LD_LIBRARY_PATH` for the native file d
 
 ## Roadmap
 
-The following items are implemented in the current release (v0.4.0):
+The following items are implemented in the current release (v0.5.0):
 
 - Key listing and detail panel
 - Export, backup, import, delete
@@ -195,6 +209,10 @@ The following items are implemented in the current release (v0.4.0):
 - File signing and signature verification
 - Trust level management
 - GPG health diagnostics
+- Multi-language UI (English and French, auto-detected from system locale)
+- Two visual themes: Catppuccin Frappé and USSR (configurable in Settings)
+- Configurable UI scale factor (0.5× to 2.0×)
+- Application icon (HUD Lock design) and `.desktop` file for system integration
 
 Planned / in progress:
 
