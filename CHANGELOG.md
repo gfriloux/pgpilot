@@ -3,6 +3,40 @@
 All notable changes to pgpilot are documented here.
 Releases follow [Semantic Versioning](https://semver.org/).
 
+## [0.5.1] — 2026-05-04
+
+### Features
+
+- **all**: bump version to v0.5.1 ([`8a345f4`](https://github.com/gfriloux/pgpilot/commit/8a345f4efe4f66dedcbc81921e6a6a8eeb3d3bc5))
+## [0.5.0] — 2026-05-04
+
+### Bug Fixes
+
+- **all**: fix desktop logo ([`27df491`](https://github.com/gfriloux/pgpilot/commit/27df4911e66f940d8fbc0375fc3326e59ec8ea00))
+- **ui**: various things related to ussr theme ([`4cb6357`](https://github.com/gfriloux/pgpilot/commit/4cb635717f4701a2bc2bfbcee4641494b5142c2c))
+
+### Documentation
+
+- **mdbook**: first real doc ([`206c08f`](https://github.com/gfriloux/pgpilot/commit/206c08f05a43de174e8d4b4ce7c9cafafc37d8cf))
+- **mdbook**: whoops, build output ([`cb2c2e0`](https://github.com/gfriloux/pgpilot/commit/cb2c2e04f1c497013511d77d5ea4fbe203d4dfb0))
+- **README**: add desktop files infos ([`76528c5`](https://github.com/gfriloux/pgpilot/commit/76528c51d4e40a60d50a6885f0ca6b5a68d544b9))
+- **mdbook**: Add caution about .gnupg ([`b804818`](https://github.com/gfriloux/pgpilot/commit/b804818fabdb4b0f88629b5fff782814fc1c7100))
+- **mdbook**: remove french words ([`1240377`](https://github.com/gfriloux/pgpilot/commit/1240377c1fd0c01766e0232d233b1271658dd37b))
+- **README**: fix terrible mistake ([`064b8aa`](https://github.com/gfriloux/pgpilot/commit/064b8aaeca02721945127eee4d98a5beabb804af))
+- **mdbook**: Add documentation about settings ([`c63e15b`](https://github.com/gfriloux/pgpilot/commit/c63e15b9fbcba4b171d427b0afc86e07be3bf310))
+- **README**: Update roadmap, v0.5.0 changes ([`c3239e5`](https://github.com/gfriloux/pgpilot/commit/c3239e5e842e97d06b2ee18e8ad6c10d604e7913))
+
+### Features
+
+- **all**: add i18n support (en/fr) ([`46e0bf6`](https://github.com/gfriloux/pgpilot/commit/46e0bf664d480bc47cd58dd2fee47a6f626c9b5e))
+- **all**: add desktop files ([`84aa743`](https://github.com/gfriloux/pgpilot/commit/84aa743e06366aad4727cbeeda9fbea6f68796a5))
+- **all**: some UI rework + code review ([`fb0c4a4`](https://github.com/gfriloux/pgpilot/commit/fb0c4a42490bfc8e061ff337bd044ba5ef001d68))
+- **ui**: enhance themes ([`74a5b17`](https://github.com/gfriloux/pgpilot/commit/74a5b178d6e796797db054f9cf9d50ff1cb8e986))
+- **ui**: add 2 new fonts ([`7318a2b`](https://github.com/gfriloux/pgpilot/commit/7318a2bf580981eb74e77f9ec51193e0e314e966))
+
+### Testing
+
+- **all**: first time having tests ([`6fa6d02`](https://github.com/gfriloux/pgpilot/commit/6fa6d0227d0af781f6392ef51c2ee0dbdbe90c34))
 ## [0.4.0] — 2026-05-03
 
 ### Bug Fixes
