@@ -1,4 +1,4 @@
-use iced::{Color, Font};
+use iced::{font, Color, Font};
 use std::cell::Cell;
 
 // Re-export ThemeVariant from config so UI code can use theme::ThemeVariant.
@@ -10,6 +10,10 @@ pub const ICONS: Font = Font::with_name("Symbols Nerd Font Mono");
 /// Uses the iced default font — do not point this to ICONS (symbol-only font,
 /// lacks ASCII characters and will render fingerprints as blank boxes).
 pub const MONO: Font = Font::DEFAULT;
+/// Bebas Neue — used for sidebar/navigation labels in the USSR theme (all-caps condensed).
+pub const USSR_NAV_FONT: Font = Font::with_name("Bebas Neue");
+/// Russo One — used for headings and body text in the USSR theme.
+pub const USSR_HEADING_FONT: Font = Font::with_name("Russo One");
 
 // ---------------------------------------------------------------------------
 // Active theme — thread-local so UI rendering always reads current selection.
@@ -23,7 +27,7 @@ pub fn set_active(v: ThemeVariant) {
   ACTIVE.with(|c| c.set(v));
 }
 
-fn active() -> ThemeVariant {
+pub(crate) fn active() -> ThemeVariant {
   ACTIVE.with(|c| c.get())
 }
 
@@ -206,7 +210,7 @@ pub const WARNING_BG: Color = Color {
 };
 
 // ---------------------------------------------------------------------------
-// USSR / Soviet palette constants
+// USSR palette constants
 // ---------------------------------------------------------------------------
 
 const USSR_SIDEBAR_BG: Color = Color {
@@ -549,5 +553,53 @@ pub fn warning_bg() -> Color {
   match active() {
     ThemeVariant::Catppuccin => WARNING_BG,
     ThemeVariant::Ussr => USSR_WARNING_BG,
+  }
+}
+
+/// Returns the navigation/sidebar font for the active theme.
+/// USSR: Bebas Neue (all-caps condensed). Others: default.
+pub fn nav_font() -> Font {
+  match active() {
+    ThemeVariant::Ussr => USSR_NAV_FONT,
+    ThemeVariant::Catppuccin => Font::DEFAULT,
+  }
+}
+
+/// Returns the heading/body font for the active theme.
+/// USSR: Russo One (bold geometric). Others: default.
+pub fn heading_font() -> Font {
+  match active() {
+    ThemeVariant::Ussr => USSR_HEADING_FONT,
+    ThemeVariant::Catppuccin => Font::DEFAULT,
+  }
+}
+
+/// Returns `ussr` string when the USSR theme is active, `normal` otherwise.
+/// Used for Soviet-flavored UI copy in the USSR theme.
+pub fn flavor(normal: &'static str, ussr: &'static str) -> &'static str {
+  match active() {
+    ThemeVariant::Ussr => ussr,
+    ThemeVariant::Catppuccin => normal,
+  }
+}
+
+/// Font for Soviet flavor page titles.
+/// USSR: Bebas Neue (all-caps condensed, same as nav). Catppuccin: default bold.
+pub fn flavor_title_font() -> Font {
+  match active() {
+    ThemeVariant::Ussr => nav_font(),
+    ThemeVariant::Catppuccin => Font {
+      weight: font::Weight::Bold,
+      ..Font::DEFAULT
+    },
+  }
+}
+
+/// FA4 icon for the "published on keyserver" badge.
+/// USSR: red star (\u{f005}). Others: check-circle (\u{f058}).
+pub fn icon_published() -> &'static str {
+  match active() {
+    ThemeVariant::Ussr => "\u{f005}",
+    ThemeVariant::Catppuccin => "\u{f058}",
   }
 }

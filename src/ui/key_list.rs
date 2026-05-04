@@ -55,14 +55,14 @@ pub fn view(app: &App) -> Element<'_, Message> {
 
   let bold = Font {
     weight: font::Weight::Bold,
-    ..Font::DEFAULT
+    ..theme::heading_font()
   };
 
   let header = container(
     row![
       text("Nom / Email").size(11).width(Length::Fill).font(bold),
       text("Expire").size(11).width(80).font(bold),
-      text("État").size(11).width(56),
+      text("État").size(11).width(56).font(theme::heading_font()),
     ]
     .padding([0, 12])
     .spacing(8),
@@ -89,7 +89,7 @@ pub fn view(app: &App) -> Element<'_, Message> {
         .copied()
         .unwrap_or_default()
       {
-        KeyserverStatus::Published => ("\u{f058}", theme::success()),
+        KeyserverStatus::Published => (theme::icon_published(), theme::success()),
         KeyserverStatus::NotPublished => ("\u{f10c}", theme::text_muted()),
         _ => ("", theme::text_muted()),
       };
@@ -103,7 +103,7 @@ pub fn view(app: &App) -> Element<'_, Message> {
       };
 
       let name_col = column![
-        text(key.name.clone()).size(13),
+        text(key.name.clone()).size(13).font(theme::heading_font()),
         text(key.email.clone()).size(11).style(|_: &iced::Theme| {
           iced::widget::text::Style {
             color: Some(theme::text_muted()),

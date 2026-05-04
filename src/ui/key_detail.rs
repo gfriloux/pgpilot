@@ -34,7 +34,7 @@ pub fn view<'a>(key: &'a KeyInfo, ctx: ViewCtx, s: &'static dyn Strings) -> Elem
 
   let bold = Font {
     weight: font::Weight::Bold,
-    ..Font::DEFAULT
+    ..theme::heading_font()
   };
 
   // Use MONO for hex identifiers (fingerprints, key IDs)
@@ -225,7 +225,7 @@ fn keyserver_badge<'a>(
       );
       container(
         row![
-          text("\u{f058}")
+          text(theme::icon_published())
             .font(theme::ICONS)
             .size(11)
             .color(theme::success()),

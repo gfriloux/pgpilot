@@ -24,7 +24,12 @@ pub fn view<'a>(
   };
 
   let title_section = column![
-    text(s.health_diagnostics_title()).size(22).font(bold),
+    text(theme::flavor(
+      s.health_diagnostics_title(),
+      "Rapport au Commissariat",
+    ))
+    .size(22)
+    .font(theme::flavor_title_font()),
     container(text(s.health_diagnostics_desc()).size(13),).style(|_: &iced::Theme| {
       container::Style {
         text_color: Some(theme::text_secondary()),

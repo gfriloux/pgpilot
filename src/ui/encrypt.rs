@@ -571,7 +571,9 @@ pub fn view<'a>(
   let card = container(
     column![
       column![
-        text(s.encrypt_title()).size(22).font(bold),
+        text(theme::flavor(s.encrypt_title(), "Chiffrer pour le Peuple"))
+          .size(22)
+          .font(theme::flavor_title_font()),
         container(text("Sélectionnez les destinataires et les fichiers.").size(13)).style(
           |_: &iced::Theme| container::Style {
             text_color: Some(theme::text_secondary()),

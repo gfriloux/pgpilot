@@ -292,7 +292,7 @@ impl Strings for FrenchStrings {
     "Catppuccin Frappe"
   }
   fn settings_theme_ussr(&self) -> &'static str {
-    "USSR Soviet"
+    "USSR"
   }
 
   fn health_diagnostics_title(&self) -> &'static str {

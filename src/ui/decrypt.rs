@@ -253,7 +253,12 @@ pub fn view<'a>(form: &'a DecryptForm, s: &'static dyn Strings) -> Element<'a, M
       column![
         row![
           text("\u{f13e}").font(theme::ICONS).size(20),
-          text(s.decrypt_title()).size(22).font(bold),
+          text(theme::flavor(
+            s.decrypt_title(),
+            "Décrypter par Ordre du Soviet"
+          ))
+          .size(22)
+          .font(theme::flavor_title_font()),
         ]
         .spacing(10)
         .align_y(Alignment::Center),

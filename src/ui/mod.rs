@@ -112,9 +112,12 @@ fn sidebar(app: &App) -> Element<'_, Message> {
   let nav_btn = |icon: &'static str, label: &'static str, view: View| {
     let active = app.view == view;
     button(
-      row![text(icon).font(theme::ICONS).size(14), text(label).size(13),]
-        .spacing(8)
-        .align_y(Alignment::Center),
+      row![
+        text(icon).font(theme::ICONS).size(14),
+        text(label).size(13).font(theme::nav_font()),
+      ]
+      .spacing(8)
+      .align_y(Alignment::Center),
     )
     .on_press(Message::NavChanged(view))
     .width(Length::Fill)
@@ -148,15 +151,37 @@ fn sidebar(app: &App) -> Element<'_, Message> {
 
   let title_font = Font {
     weight: font::Weight::Bold,
-    ..Font::DEFAULT
+    ..theme::nav_font()
   };
 
-  let section_label = |label: &'static str| {
-    text(label)
-      .size(10)
-      .style(|_: &iced::Theme| iced::widget::text::Style {
-        color: Some(theme::text_muted()),
-      })
+  let section_label = |label: &'static str| -> Element<Message> {
+    if matches!(theme::active(), theme::ThemeVariant::Ussr) {
+      row![
+        text("\u{f005}")
+          .font(theme::ICONS)
+          .size(9)
+          .style(|_: &iced::Theme| iced::widget::text::Style {
+            color: Some(theme::accent()),
+          }),
+        text(label)
+          .size(10)
+          .font(theme::nav_font())
+          .style(|_: &iced::Theme| iced::widget::text::Style {
+            color: Some(theme::text_muted()),
+          }),
+      ]
+      .spacing(4)
+      .align_y(Alignment::Center)
+      .into()
+    } else {
+      text(label)
+        .size(10)
+        .font(theme::nav_font())
+        .style(|_: &iced::Theme| iced::widget::text::Style {
+          color: Some(theme::text_muted()),
+        })
+        .into()
+    }
   };
 
   let sep = || {

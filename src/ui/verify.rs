@@ -354,7 +354,12 @@ pub fn view<'a>(form: &'a SignForm, s: &'static dyn Strings) -> Element<'a, Mess
       column![
         row![
           text("\u{f00c}").font(theme::ICONS).size(20),
-          text(s.verify_title()).size(22).font(bold),
+          text(theme::flavor(
+            s.verify_title(),
+            "Inspecter le Tampon du Commissariat"
+          ))
+          .size(22)
+          .font(theme::flavor_title_font()),
         ]
         .spacing(10)
         .align_y(Alignment::Center),

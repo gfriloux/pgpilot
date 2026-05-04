@@ -10,6 +10,8 @@ fn main() -> iced::Result {
   iced::application(App::new, App::update, App::view)
     .title("PGPilot")
     .font(include_bytes!("../assets/SymbolsNerdFontMono-Regular.ttf").as_slice())
+    .font(include_bytes!("../assets/BebasNeue-Regular.ttf").as_slice())
+    .font(include_bytes!("../assets/RussoOne-Regular.ttf").as_slice())
     .subscription(App::subscription)
     // Apply the persisted scale factor at startup.
     // iced 0.14 exposes `.scale_factor()` on the application builder;

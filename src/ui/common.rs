@@ -1,5 +1,5 @@
 use iced::{
-  widget::{button, row, scrollable, text},
+  widget::{button, radio, row, scrollable, text},
   Alignment, Background, Border, Color, Element,
 };
 
@@ -51,6 +51,46 @@ pub fn scroll_style(_theme: &iced::Theme, status: scrollable::Status) -> scrolla
       shadow: iced::Shadow::default(),
       icon: Color::TRANSPARENT,
     },
+  }
+}
+
+/// Style function for radio buttons — adapts to the active theme colours.
+///
+/// Active border and dot use `theme::accent()`. Hovered uses `theme::accent_hover()`.
+/// Background switches to `theme::accent_subtle()` on hover when unselected.
+pub fn radio_style(_theme: &iced::Theme, status: radio::Status) -> radio::Style {
+  let is_selected = match status {
+    radio::Status::Active { is_selected } => is_selected,
+    radio::Status::Hovered { is_selected } => is_selected,
+  };
+  let is_hovered = matches!(status, radio::Status::Hovered { .. });
+
+  let border_color = if is_selected {
+    theme::accent()
+  } else if is_hovered {
+    theme::accent_hover()
+  } else {
+    theme::border()
+  };
+
+  let dot_color = if is_selected {
+    theme::accent()
+  } else {
+    Color::TRANSPARENT
+  };
+
+  let bg = if is_hovered && !is_selected {
+    theme::accent_subtle()
+  } else {
+    theme::detail_bg()
+  };
+
+  radio::Style {
+    background: Background::Color(bg),
+    dot_color,
+    border_width: 2.0,
+    border_color,
+    text_color: None,
   }
 }
 

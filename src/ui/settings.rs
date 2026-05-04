@@ -13,7 +13,7 @@ pub fn view(app: &App) -> Element<'_, Message> {
   let s = app.strings;
   let bold = Font {
     weight: font::Weight::Bold,
-    ..Font::DEFAULT
+    ..theme::heading_font()
   };
 
   let separator = || {
@@ -31,13 +31,15 @@ pub fn view(app: &App) -> Element<'_, Message> {
     ThemeVariant::Catppuccin,
     Some(app.config.theme),
     Message::ThemeChanged,
-  );
+  )
+  .style(common::radio_style);
   let theme_ussr = radio(
     s.settings_theme_ussr(),
     ThemeVariant::Ussr,
     Some(app.config.theme),
     Message::ThemeChanged,
-  );
+  )
+  .style(common::radio_style);
 
   // --- Scale factor section ---
   // Radio buttons for scale values
@@ -65,6 +67,7 @@ pub fn view(app: &App) -> Element<'_, Message> {
       radio(*label, i as u32, current_scale_selection, move |_| {
         Message::ScaleFactorChanged(v)
       })
+      .style(common::radio_style)
       .into()
     })
     .collect();
@@ -75,14 +78,16 @@ pub fn view(app: &App) -> Element<'_, Message> {
     Language::English,
     Some(app.config.language),
     Message::ChangeLanguage,
-  );
+  )
+  .style(common::radio_style);
 
   let lang_fr = radio(
     s.settings_language_french(),
     Language::French,
     Some(app.config.language),
     Message::ChangeLanguage,
-  );
+  )
+  .style(common::radio_style);
 
   let mut scale_section_children: Vec<Element<'_, Message>> = vec![
     text(s.settings_scale_factor()).size(12).font(bold).into(),
@@ -97,7 +102,9 @@ pub fn view(app: &App) -> Element<'_, Message> {
 
   let card = container(
     column![
-      text(s.settings_title()).size(22).font(bold),
+      text(s.settings_title())
+        .size(22)
+        .font(theme::heading_font()),
       separator(),
       // Theme section (first — most visual)
       column![

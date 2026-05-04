@@ -133,7 +133,12 @@ pub fn view<'a>(form: &'a CreateKeyForm, s: &'static dyn Strings) -> Element<'a,
   let card = container(
     column![
       column![
-        text("Nouvelle clef PGP").size(22).font(bold),
+        text(theme::flavor(
+          "Nouvelle clef PGP",
+          "Forger une Arme du Peuple"
+        ))
+        .size(22)
+        .font(theme::flavor_title_font()),
         container(text("Génère une clef maître et ses sous-clefs dédiées.").size(13),).style(
           |_: &iced::Theme| container::Style {
             text_color: Some(theme::text_secondary()),

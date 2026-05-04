@@ -202,7 +202,12 @@ pub fn view<'a>(
       column![
         row![
           text("\u{f14b}").font(theme::ICONS).size(20),
-          text(s.sign_title()).size(22).font(bold),
+          text(theme::flavor(
+            s.sign_title(),
+            "Apposer le Sceau du Camarade"
+          ))
+          .size(22)
+          .font(theme::flavor_title_font()),
         ]
         .spacing(10)
         .align_y(Alignment::Center),

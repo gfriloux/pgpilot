@@ -152,7 +152,12 @@ pub fn view<'a>(form: &'a ImportForm, s: &'static dyn Strings) -> Element<'a, Me
   let card = container(
     column![
       column![
-        text(s.import_title()).size(22).font(bold),
+        text(theme::flavor(
+          s.import_title(),
+          "Accueillir un Camarade Étranger"
+        ))
+        .size(22)
+        .font(theme::flavor_title_font()),
         container(text("Choisissez la source de la clef à importer.").size(13),).style(
           |_: &iced::Theme| container::Style {
             text_color: Some(theme::text_secondary()),
