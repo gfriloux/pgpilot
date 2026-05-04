@@ -118,10 +118,31 @@ sudo rm /usr/local/bin/pgpilot
 
 # To also remove config and cached data:
 rm ~/.config/pgpilot/config.yaml
-rm -rf ~/.gnupg/  # CAUTION: This removes all GPG keys! Only do this if you have backups.
 ```
 
 **Note**: pgpilot does not modify your GPG keyring directly — all operations delegate to the `gpg` binary. Your keys remain in `~/.gnupg/` and are safe to back up independently.
+
+---
+
+## Removing GnuPG keyring data
+
+> **Warning: This is NOT part of uninstalling pgpilot.**
+> 
+> `~/.gnupg/` is GnuPG's own data directory. It contains **all your GPG keys**, including keys from other applications, keys you've imported over years, and your private keys. Deleting it is **permanent and irreversible** unless you have a backup.
+>
+> pgpilot does not own or modify this directory — it delegates all operations to the `gpg` binary which reads from `~/.gnupg/`.
+
+Only proceed if you intend to **completely destroy your GPG keyring** and have verified your backups.
+
+**Prerequisites before proceeding:**
+1. Export and securely store all private keys you want to keep
+2. Back up your revocation certificates
+3. Verify your backups can be restored
+
+```bash
+# IRREVERSIBLE — destroys all GPG keys
+rm -rf ~/.gnupg/
+```
 
 ---
 
