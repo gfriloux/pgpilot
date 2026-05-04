@@ -16,7 +16,7 @@
 - **YubiKey support** — Migrate subkeys to hardware security keys for offline storage
 - **Hardware check** — Diagnostic page to validate GPG setup and detect issues
 - **Backup & recovery** — Export private keys and revocation certificates for disaster recovery
-- **Multi-language** — English and French UI
+- **Themes & customization** — Two visual themes (Catppuccin Frappé and USSR), configurable scale factor, English/French UI
 
 ## What pgpilot does NOT do
 

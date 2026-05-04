@@ -10,3 +10,4 @@
 - [FAQ](7-faq.md)
 - [Troubleshooting](8-troubleshooting.md)
 - [Security](9-security.md)
+- [Settings](10-settings.md)
