@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=pgpilot
+GenericName=GPG Key Manager
+Comment=Manage your GPG keys — create, import, export, sign, encrypt
+Exec=pgpilot
+Icon=pgpilot
+Categories=Utility;Security;
+Keywords=gpg;pgp;encryption;keys;security;yubikey;
+StartupNotify=true
