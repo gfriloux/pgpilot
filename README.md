@@ -212,6 +212,26 @@ Planned / in progress:
 
 ---
 
+## Packaging
+
+The following assets are provided for downstream packaging:
+
+| File | Install path |
+|------|-------------|
+| `share/applications/pgpilot.desktop` | `$out/share/applications/pgpilot.desktop` |
+| `share/icons/hicolor/scalable/apps/pgpilot.svg` | `$out/share/icons/hicolor/scalable/apps/pgpilot.svg` |
+
+A Nix package can install them with:
+
+```nix
+install -Dm644 share/applications/pgpilot.desktop \
+  $out/share/applications/pgpilot.desktop
+install -Dm644 share/icons/hicolor/scalable/apps/pgpilot.svg \
+  $out/share/icons/hicolor/scalable/apps/pgpilot.svg
+```
+
+---
+
 ## License
 
 Apache License, Version 2.0. See [LICENSE](LICENSE) for the full text.
