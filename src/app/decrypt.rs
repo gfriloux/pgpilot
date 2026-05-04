@@ -81,7 +81,7 @@ impl App {
     if files.is_empty() {
       return self.set_status(
         StatusKind::Error,
-        "Aucun fichier déchiffrable sélectionné.".to_string(),
+        self.strings.err_no_decryptable_file().to_string(),
       );
     }
 
@@ -97,18 +97,18 @@ impl App {
     self.decrypt_form.decrypting = false;
     match result {
       Ok(names) => {
-        let summary = if names.len() == 1 {
-          format!("Déchiffré : {}", names[0])
-        } else {
-          format!("{} fichiers déchiffrés", names.len())
-        };
+        let summary = format!(
+          "{}: {}",
+          self.strings.status_files_decrypted(),
+          names.join(", ")
+        );
         self.decrypt_form.files.clear();
         self.decrypt_form.file_statuses.clear();
         self.set_status(StatusKind::Success, summary)
       }
       Err(e) => self.set_status(
         StatusKind::Error,
-        truncate_error(format!("Erreur déchiffrement : {e}")),
+        truncate_error(format!("{}: {e}", self.strings.err_decrypt_failed())),
       ),
     }
   }

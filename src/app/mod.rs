@@ -6,6 +6,7 @@ mod export;
 mod import;
 mod keyserver;
 mod nav;
+mod settings;
 mod sign;
 mod subkeys;
 
@@ -15,7 +16,9 @@ use std::path::PathBuf;
 use iced::widget::text_editor;
 use iced::Task;
 
+use crate::config::Config;
 use crate::gpg::{HealthCheck, KeyExpiry, KeyInfo, Keyserver, TrustLevel, VerifyResult};
+use crate::i18n::{self, Language, Strings};
 use crate::ui;
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
@@ -30,6 +33,7 @@ pub enum View {
   Decrypt,
   Sign,
   Verify,
+  Settings,
 }
 
 pub struct ImportForm {
@@ -120,7 +124,6 @@ pub struct SignForm {
   pub verifying: bool,
 }
 
-#[derive(Default)]
 pub struct App {
   pub view: View,
   pub keys: Vec<KeyInfo>,
@@ -140,6 +143,8 @@ pub struct App {
   pub health_loading: bool,
   pub sign_form: SignForm,
   pub previous_view: Option<View>,
+  pub config: Config,
+  pub strings: &'static dyn Strings,
 }
 
 #[derive(Debug, Clone)]
@@ -232,6 +237,7 @@ pub enum Message {
   VerifyDone(Result<VerifyResult, String>),
   DismissStatus(u32),
   NavBack,
+  ChangeLanguage(Language),
 }
 
 pub(crate) fn truncate_error(msg: String) -> String {
@@ -309,11 +315,31 @@ pub(crate) async fn backup_key_to_dir(
 
 impl App {
   pub fn new() -> (Self, Task<Message>) {
+    let config = Config::load().unwrap_or_default();
+    let strings = i18n::strings_for(config.language);
     let task = Task::perform(blocking_task(crate::gpg::list_keys), Message::KeysLoaded);
     (
       Self {
+        view: View::MyKeys,
+        keys: Vec::new(),
+        selected: None,
+        error: None,
+        status: None,
+        status_generation: 0,
         loading: true,
-        ..Default::default()
+        card_connected: false,
+        pending: None,
+        keyserver_statuses: HashMap::new(),
+        create_form: CreateKeyForm::default(),
+        import_form: ImportForm::default(),
+        encrypt_form: EncryptForm::default(),
+        decrypt_form: DecryptForm::default(),
+        health_report: Vec::new(),
+        health_loading: false,
+        sign_form: SignForm::default(),
+        previous_view: None,
+        config,
+        strings,
       },
       task,
     )
@@ -425,7 +451,10 @@ impl App {
       }
       Message::HealthChecksLoaded(Err(e)) => {
         self.health_loading = false;
-        self.set_status(StatusKind::Error, format!("Erreur diagnostic : {e}"))
+        self.set_status(
+          StatusKind::Error,
+          format!("{}: {e}", self.strings.err_diagnostic_failed()),
+        )
       }
       // Delegated handlers
       Message::KeysLoaded(r) => self.on_keys_loaded(r),
@@ -548,6 +577,7 @@ impl App {
           Task::none()
         }
       }
+      Message::ChangeLanguage(lang) => self.on_language_changed(lang),
     }
   }
 

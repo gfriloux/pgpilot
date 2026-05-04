@@ -67,7 +67,7 @@ impl App {
       }
       Err(e) => self.set_status(
         StatusKind::Error,
-        truncate_error(format!("Erreur signature : {e}")),
+        truncate_error(format!("{}: {e}", self.strings.err_sign_failed())),
       ),
     }
   }

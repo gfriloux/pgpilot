@@ -6,6 +6,7 @@ use iced::{
 
 use crate::app::{EncryptForm, Message};
 use crate::gpg::KeyInfo;
+use crate::i18n::Strings;
 use crate::ui::theme;
 
 fn key_row(key: &KeyInfo, selected: bool) -> Element<'static, Message> {
@@ -76,7 +77,11 @@ fn key_row(key: &KeyInfo, selected: bool) -> Element<'static, Message> {
   .into()
 }
 
-pub fn view<'a>(form: &'a EncryptForm, keys: &'a [KeyInfo]) -> Element<'a, Message> {
+pub fn view<'a>(
+  form: &'a EncryptForm,
+  keys: &'a [KeyInfo],
+  s: &'static dyn Strings,
+) -> Element<'a, Message> {
   let bold = Font {
     weight: font::Weight::Bold,
     ..Font::DEFAULT
@@ -155,7 +160,7 @@ pub fn view<'a>(form: &'a EncryptForm, keys: &'a [KeyInfo]) -> Element<'a, Messa
   }
 
   let recipients_col: Element<'_, Message> = column![
-    container(text("Destinataires").size(12).font(bold)).style(|_: &iced::Theme| {
+    container(text(s.encrypt_recipients()).size(12).font(bold)).style(|_: &iced::Theme| {
       container::Style {
         text_color: Some(theme::TEXT_SECONDARY),
         ..Default::default()
@@ -234,7 +239,7 @@ pub fn view<'a>(form: &'a EncryptForm, keys: &'a [KeyInfo]) -> Element<'a, Messa
   });
 
   let header_label =
-    container(text("Fichiers à chiffrer").size(12).font(bold)).style(|_: &iced::Theme| {
+    container(text(s.encrypt_add_files()).size(12).font(bold)).style(|_: &iced::Theme| {
       container::Style {
         text_color: Some(theme::TEXT_SECONDARY),
         ..Default::default()
@@ -319,13 +324,13 @@ pub fn view<'a>(form: &'a EncryptForm, keys: &'a [KeyInfo]) -> Element<'a, Messa
 
   let n = form.files.len();
   let encrypt_label = if form.encrypting {
-    "Chiffrement en cours...".to_string()
+    s.encrypt_in_progress().to_string()
   } else if n == 0 {
-    "Chiffrer".to_string()
+    s.btn_encrypt().to_string()
   } else if n == 1 {
-    "Chiffrer 1 fichier".to_string()
+    format!("{} 1 fichier", s.btn_encrypt())
   } else {
-    format!("Chiffrer {n} fichiers")
+    format!("{} {n} fichiers", s.btn_encrypt())
   };
 
   let armor = form.armor;
@@ -404,8 +409,16 @@ pub fn view<'a>(form: &'a EncryptForm, keys: &'a [KeyInfo]) -> Element<'a, Messa
   let action_bar: Element<'_, Message> = row![
     column![
       row![
-        fmt_btn(".gpg (binaire)", !armor, Message::EncryptSetArmor(false)),
-        fmt_btn(".asc (ASCII)", armor, Message::EncryptSetArmor(true)),
+        fmt_btn(
+          s.encrypt_format_binary(),
+          !armor,
+          Message::EncryptSetArmor(false)
+        ),
+        fmt_btn(
+          s.encrypt_format_armor(),
+          armor,
+          Message::EncryptSetArmor(true)
+        ),
       ]
       .spacing(4),
       container(text(fmt_hint).size(11)).style(|_: &iced::Theme| container::Style {
@@ -440,7 +453,7 @@ pub fn view<'a>(form: &'a EncryptForm, keys: &'a [KeyInfo]) -> Element<'a, Messa
       })
       .collect();
 
-    let cancel_btn = button(text("Annuler").size(13))
+    let cancel_btn = button(text(s.btn_cancel()).size(13))
       .on_press(Message::EncryptTrustPromptCancel)
       .padding([6, 14])
       .style(|_: &iced::Theme, status| button::Style {
@@ -458,7 +471,7 @@ pub fn view<'a>(form: &'a EncryptForm, keys: &'a [KeyInfo]) -> Element<'a, Messa
         snap: false,
       });
 
-    let confirm_btn = button(text("Chiffrer quand même").size(13))
+    let confirm_btn = button(text(s.btn_confirm()).size(13))
       .on_press(Message::EncryptTrustPromptConfirm)
       .padding([6, 14])
       .style(|_: &iced::Theme, status| button::Style {
@@ -485,21 +498,15 @@ pub fn view<'a>(form: &'a EncryptForm, keys: &'a [KeyInfo]) -> Element<'a, Messa
             .style(|_: &iced::Theme| iced::widget::text::Style {
               color: Some(theme::PEACH),
             }),
-          text("Clefs non vérifiées").size(13).font(bold),
+          text(s.encrypt_trust_warning_title()).size(13).font(bold),
         ]
         .spacing(6)
         .align_y(Alignment::Center),
-        container(
-          text(
-            "GPG ne peut pas confirmer que ces clefs appartiennent aux personnes indiquées. \
-             Vous pouvez chiffrer quand même — le destinataire pourra toujours déchiffrer, \
-             mais vous ne pouvez pas garantir son identité."
-          )
-          .size(12)
-        )
-        .style(|_: &iced::Theme| container::Style {
-          text_color: Some(theme::TEXT_SECONDARY),
-          ..Default::default()
+        container(text(s.encrypt_trust_warning_body()).size(12)).style(|_: &iced::Theme| {
+          container::Style {
+            text_color: Some(theme::TEXT_SECONDARY),
+            ..Default::default()
+          }
         }),
         column(key_labels).spacing(4),
         row![cancel_btn, confirm_btn].spacing(8),
@@ -560,7 +567,7 @@ pub fn view<'a>(form: &'a EncryptForm, keys: &'a [KeyInfo]) -> Element<'a, Messa
   let card = container(
     column![
       column![
-        text("Chiffrement de fichiers").size(22).font(bold),
+        text(s.encrypt_title()).size(22).font(bold),
         container(text("Sélectionnez les destinataires et les fichiers.").size(13)).style(
           |_: &iced::Theme| container::Style {
             text_color: Some(theme::TEXT_SECONDARY),

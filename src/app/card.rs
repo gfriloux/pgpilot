@@ -25,14 +25,14 @@ impl App {
         self.selected = None;
         let s = self.set_status(
           StatusKind::Success,
-          "Clef migrée sur YubiKey avec succès".to_string(),
+          self.strings.status_card_migrated().to_string(),
         );
         let reload = self.reload_keys();
         Task::batch([s, reload])
       }
       Err(e) => self.set_status(
         StatusKind::Error,
-        truncate_error(format!("Erreur migration : {e}")),
+        truncate_error(format!("{}: {e}", self.strings.err_delete_failed())),
       ),
     }
   }
@@ -59,13 +59,16 @@ impl App {
     match result {
       Ok(()) => {
         self.selected = None;
-        let s = self.set_status(StatusKind::Success, "Clef supprimée".to_string());
+        let s = self.set_status(
+          StatusKind::Success,
+          self.strings.status_key_deleted().to_string(),
+        );
         let reload = self.reload_keys();
         Task::batch([s, reload])
       }
       Err(e) => self.set_status(
         StatusKind::Error,
-        truncate_error(format!("Erreur suppression : {e}")),
+        truncate_error(format!("{}: {e}", self.strings.err_delete_failed())),
       ),
     }
   }
@@ -73,7 +76,7 @@ impl App {
   pub(super) fn on_copy_to_clipboard(&mut self, text: String) -> Task<Message> {
     let s = self.set_status(
       StatusKind::Success,
-      "Copié dans le presse-papier".to_string(),
+      self.strings.status_key_copied().to_string(),
     );
     Task::batch([s, iced::clipboard::write(text)])
   }
@@ -90,14 +93,14 @@ impl App {
       Ok(()) => {
         let s = self.set_status(
           StatusKind::Success,
-          "Niveau de confiance mis à jour".to_string(),
+          self.strings.status_trust_updated().to_string(),
         );
         let reload = self.reload_keys();
         Task::batch([s, reload])
       }
       Err(e) => self.set_status(
         StatusKind::Error,
-        truncate_error(format!("Erreur confiance : {e}")),
+        truncate_error(format!("{}: {e}", self.strings.err_trust_failed())),
       ),
     }
   }

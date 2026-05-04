@@ -31,7 +31,10 @@ impl App {
   pub(super) fn on_renew_subkey_done(&mut self, result: Result<(), String>) -> Task<Message> {
     match result {
       Ok(()) => {
-        let s = self.set_status(StatusKind::Success, "Sous-clef renouvelée".to_string());
+        let s = self.set_status(
+          StatusKind::Success,
+          self.strings.status_subkey_renewed().to_string(),
+        );
         let reload = self.reload_keys();
         if let Some(ref fp) = self.selected.clone() {
           if let Some(publish) = self.auto_republish_task(fp) {
@@ -42,7 +45,7 @@ impl App {
       }
       Err(e) => self.set_status(
         StatusKind::Error,
-        truncate_error(format!("Erreur renouvellement : {e}")),
+        truncate_error(format!("{}: {e}", self.strings.err_subkey_renew_failed())),
       ),
     }
   }
@@ -68,7 +71,10 @@ impl App {
   pub(super) fn on_add_subkey_done(&mut self, result: Result<(), String>) -> Task<Message> {
     match result {
       Ok(()) => {
-        let s = self.set_status(StatusKind::Success, "Sous-clef créée".to_string());
+        let s = self.set_status(
+          StatusKind::Success,
+          self.strings.status_subkey_created().to_string(),
+        );
         let reload = self.reload_keys();
         if let Some(ref fp) = self.selected.clone() {
           if let Some(publish) = self.auto_republish_task(fp) {
@@ -79,7 +85,7 @@ impl App {
       }
       Err(e) => self.set_status(
         StatusKind::Error,
-        truncate_error(format!("Erreur création sous-clef : {e}")),
+        truncate_error(format!("{}: {e}", self.strings.err_subkey_add_failed())),
       ),
     }
   }
@@ -122,7 +128,7 @@ impl App {
       Ok(()) => {
         let s = self.set_status(
           StatusKind::Success,
-          "Sous-clef remplacée avec succès".to_string(),
+          self.strings.status_subkey_rotated().to_string(),
         );
         let reload = self.reload_keys();
         if let Some(ref fp) = self.selected.clone() {
@@ -134,7 +140,7 @@ impl App {
       }
       Err(e) => self.set_status(
         StatusKind::Error,
-        truncate_error(format!("Erreur rotation : {e}")),
+        truncate_error(format!("{}: {e}", self.strings.err_subkey_renew_failed())),
       ),
     }
   }

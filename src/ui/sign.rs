@@ -6,9 +6,14 @@ use iced::{
 
 use crate::app::{Message, SignForm};
 use crate::gpg::KeyInfo;
+use crate::i18n::Strings;
 use crate::ui::{common, theme};
 
-pub fn view<'a>(form: &'a SignForm, keys: &'a [KeyInfo]) -> Element<'a, Message> {
+pub fn view<'a>(
+  form: &'a SignForm,
+  keys: &'a [KeyInfo],
+  s: &'static dyn Strings,
+) -> Element<'a, Message> {
   let bold = Font {
     weight: font::Weight::Bold,
     ..Font::DEFAULT
@@ -44,7 +49,7 @@ pub fn view<'a>(form: &'a SignForm, keys: &'a [KeyInfo]) -> Element<'a, Message>
     })
     .into()
   } else {
-    container(text("Aucun fichier sélectionné").size(13))
+    container(text(s.no_file_selected()).size(13))
       .style(|_: &iced::Theme| container::Style {
         text_color: Some(theme::TEXT_MUTED),
         ..Default::default()
@@ -53,7 +58,7 @@ pub fn view<'a>(form: &'a SignForm, keys: &'a [KeyInfo]) -> Element<'a, Message>
   };
 
   let file_row: Element<'_, Message> = row![
-    common::pick_btn("\u{f15b}", "Choisir un fichier...", Message::SignPickFile),
+    common::pick_btn("\u{f15b}", s.sign_select_file(), Message::SignPickFile),
     sign_file_label,
   ]
   .spacing(12)
@@ -145,7 +150,7 @@ pub fn view<'a>(form: &'a SignForm, keys: &'a [KeyInfo]) -> Element<'a, Message>
             color: Some(theme::SUCCESS),
           }),
         column![
-          text("Signature créée avec succès").size(14).font(bold),
+          text(s.status_file_signed()).size(14).font(bold),
           text(sig_name).size(12).style(|_: &iced::Theme| {
             iced::widget::text::Style {
               color: Some(theme::TEXT_SECONDARY),
@@ -171,7 +176,7 @@ pub fn view<'a>(form: &'a SignForm, keys: &'a [KeyInfo]) -> Element<'a, Message>
     })
     .into()
   } else if form.signing {
-    container(text("Signature en cours...").size(13))
+    container(text(s.verify_in_progress()).size(13))
       .style(|_: &iced::Theme| container::Style {
         text_color: Some(theme::TEXT_MUTED),
         ..Default::default()
@@ -197,7 +202,7 @@ pub fn view<'a>(form: &'a SignForm, keys: &'a [KeyInfo]) -> Element<'a, Message>
       column![
         row![
           text("\u{f14b}").font(theme::ICONS).size(20),
-          text("Signer un fichier").size(22).font(bold),
+          text(s.sign_title()).size(22).font(bold),
         ]
         .spacing(10)
         .align_y(Alignment::Center),
@@ -219,7 +224,7 @@ pub fn view<'a>(form: &'a SignForm, keys: &'a [KeyInfo]) -> Element<'a, Message>
       file_row,
       rule_sep(),
       column![
-        container(text("Clef signataire").size(12).font(bold)).style(|_: &iced::Theme| {
+        container(text(s.sign_select_key()).size(12).font(bold)).style(|_: &iced::Theme| {
           container::Style {
             text_color: Some(theme::TEXT_SECONDARY),
             ..Default::default()
@@ -242,7 +247,7 @@ pub fn view<'a>(form: &'a SignForm, keys: &'a [KeyInfo]) -> Element<'a, Message>
       {
         let sign_action: Element<'_, Message> = row![
           iced::widget::Space::new().width(Length::Fill),
-          common::action_btn("Signer", can_sign, Message::SignExecute)
+          common::action_btn(s.btn_sign(), can_sign, Message::SignExecute)
         ]
         .into();
         sign_action

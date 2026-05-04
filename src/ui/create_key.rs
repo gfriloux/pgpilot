@@ -8,9 +8,10 @@ use iced::{
 
 use crate::app::{CreateKeyForm, Message};
 use crate::gpg::KeyExpiry;
+use crate::i18n::Strings;
 use crate::ui::theme;
 
-pub fn view(form: &CreateKeyForm) -> Element<'_, Message> {
+pub fn view<'a>(form: &'a CreateKeyForm, s: &'static dyn Strings) -> Element<'a, Message> {
   let bold = Font {
     weight: font::Weight::Bold,
     ..Font::DEFAULT
@@ -69,7 +70,7 @@ pub fn view(form: &CreateKeyForm) -> Element<'_, Message> {
   let label = if form.submitting {
     "Génération..."
   } else {
-    "Créer la clef"
+    s.btn_create()
   };
   let can_submit = !form.name.is_empty() && !form.email.is_empty() && !form.submitting;
 
@@ -105,7 +106,7 @@ pub fn view(form: &CreateKeyForm) -> Element<'_, Message> {
     }
   };
 
-  let cancel_btn = button(text("Annuler").size(13))
+  let cancel_btn = button(text(s.btn_cancel()).size(13))
     .on_press(Message::NavBack)
     .style(|_: &iced::Theme, status: button::Status| button::Style {
       background: Some(Background::Color(match status {

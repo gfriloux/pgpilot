@@ -8,6 +8,7 @@ use iced::{
 use crate::app::{KeyserverStatus, Message};
 use crate::gpg::types::SubkeyInfo;
 use crate::gpg::{KeyExpiry, KeyInfo, Keyserver, SubkeyType, TrustLevel};
+use crate::i18n::Strings;
 use crate::ui::theme;
 
 pub struct ViewCtx {
@@ -20,7 +21,7 @@ pub struct ViewCtx {
   pub keyserver_status: KeyserverStatus,
 }
 
-pub fn view(key: &KeyInfo, ctx: ViewCtx) -> Element<'_, Message> {
+pub fn view<'a>(key: &'a KeyInfo, ctx: ViewCtx, s: &'static dyn Strings) -> Element<'a, Message> {
   let ViewCtx {
     card_connected,
     confirming,
@@ -53,13 +54,14 @@ pub fn view(key: &KeyInfo, ctx: ViewCtx) -> Element<'_, Message> {
     publish_confirming,
     bold,
     mono,
+    s,
   );
 
   if key.subkeys.is_empty() && !can_edit {
     return left_col.into();
   }
 
-  let right_col = subkey_column(key, can_edit, renewing_subkey, bold, mono);
+  let right_col = subkey_column(key, can_edit, renewing_subkey, bold, mono, s);
 
   row![
     left_col,
@@ -79,6 +81,7 @@ fn action_buttons<'a>(
   key: &'a KeyInfo,
   keyserver_status: KeyserverStatus,
   card_connected: bool,
+  s: &'static dyn Strings,
 ) -> Element<'a, Message> {
   let icon_btn = |icon: &'static str, label: &'static str| {
     row![text(icon).font(theme::ICONS).size(12), text(label).size(12)]
@@ -87,7 +90,7 @@ fn action_buttons<'a>(
   };
 
   // Ligne 1 : actions non-destructives (export + backup)
-  let mut row1: Vec<Element<Message>> = vec![button(icon_btn("\u{f019}", "Exporter pub"))
+  let mut row1: Vec<Element<Message>> = vec![button(icon_btn("\u{f019}", s.btn_export_public()))
     .on_press(Message::ExportPublicKeyMenu(key.fingerprint.clone()))
     .style(|_: &iced::Theme, status: button::Status| button::Style {
       background: Some(Background::Color(match status {
@@ -107,7 +110,7 @@ fn action_buttons<'a>(
 
   if key.has_secret {
     row1.push(
-      button(icon_btn("\u{f0c7}", "Sauvegarder"))
+      button(icon_btn("\u{f0c7}", s.btn_backup_key()))
         .on_press(Message::BackupKey(key.fingerprint.clone()))
         .style(|_: &iced::Theme, status: button::Status| button::Style {
           background: Some(Background::Color(match status {
@@ -131,7 +134,7 @@ fn action_buttons<'a>(
   let mut row2: Vec<Element<Message>> = vec![];
 
   if key.has_secret && !key.on_card {
-    let migrate_btn = button(icon_btn("\u{f287}", "Migrer vers YubiKey")).style(
+    let migrate_btn = button(icon_btn("\u{f287}", s.btn_migrate_yubikey())).style(
       |_: &iced::Theme, status: button::Status| button::Style {
         background: Some(Background::Color(match status {
           button::Status::Hovered | button::Status::Pressed => theme::ACCENT_HOVER,
@@ -163,7 +166,7 @@ fn action_buttons<'a>(
 
   if keyserver_status != KeyserverStatus::Published {
     row2.push(
-      button(icon_btn("\u{f1d8}", "Publier"))
+      button(icon_btn("\u{f1d8}", s.btn_publish()))
         .on_press(Message::PublishKey)
         .style(|_: &iced::Theme, status: button::Status| button::Style {
           background: Some(Background::Color(match status {
@@ -184,7 +187,7 @@ fn action_buttons<'a>(
   }
 
   row2.push(
-    button(icon_btn("\u{f1f8}", "Supprimer"))
+    button(icon_btn("\u{f1f8}", s.btn_delete()))
       .on_press(Message::DeleteKey(key.fingerprint.clone()))
       .style(|_: &iced::Theme, status: button::Status| button::Style {
         background: Some(Background::Color(match status {
@@ -211,7 +214,11 @@ fn action_buttons<'a>(
   .into()
 }
 
-fn keyserver_badge(status: KeyserverStatus, fingerprint: &str) -> Element<'_, Message> {
+fn keyserver_badge<'a>(
+  status: KeyserverStatus,
+  fingerprint: &'a str,
+  s: &'static dyn Strings,
+) -> Element<'a, Message> {
   match status {
     KeyserverStatus::Published => {
       let share_url = format!(
@@ -224,14 +231,14 @@ fn keyserver_badge(status: KeyserverStatus, fingerprint: &str) -> Element<'_, Me
             .font(theme::ICONS)
             .size(11)
             .color(theme::SUCCESS),
-          text("Publiée sur keys.openpgp.org")
+          text(s.keyserver_badge_published())
             .size(11)
             .color(theme::SUCCESS)
             .width(Length::Fill),
           button(
             row![
               text("\u{f0c1}").font(theme::ICONS).size(10),
-              text("Lien").size(10),
+              text(s.keyserver_badge_link_btn()).size(10),
             ]
             .spacing(3)
             .align_y(Alignment::Center),
@@ -263,14 +270,16 @@ fn keyserver_badge(status: KeyserverStatus, fingerprint: &str) -> Element<'_, Me
           .font(theme::ICONS)
           .size(11)
           .color(theme::TEXT_MUTED),
-        text("Pas encore publiée").size(11).color(theme::TEXT_MUTED),
+        text(s.keyserver_badge_not_published())
+          .size(11)
+          .color(theme::TEXT_MUTED),
       ]
       .spacing(5)
       .align_y(Alignment::Center),
     )
     .into(),
     KeyserverStatus::Checking => container(
-      text("Vérification sur keys.openpgp.org\u{2026}")
+      text(s.keyserver_badge_checking())
         .size(11)
         .color(theme::TEXT_MUTED),
     )
@@ -279,7 +288,11 @@ fn keyserver_badge(status: KeyserverStatus, fingerprint: &str) -> Element<'_, Me
   }
 }
 
-fn migration_modal(key: &KeyInfo, bold: Font) -> Element<'_, Message> {
+fn migration_modal<'a>(
+  key: &'a KeyInfo,
+  bold: Font,
+  s: &'static dyn Strings,
+) -> Element<'a, Message> {
   let icon_row = |icon: &'static str, label: &'static str| {
     row![text(icon).font(theme::ICONS).size(12), text(label).size(12),]
       .spacing(6)
@@ -288,16 +301,10 @@ fn migration_modal(key: &KeyInfo, bold: Font) -> Element<'_, Message> {
 
   container(
     column![
-      text("Opération irréversible : la clef privée va être déplacée sur la YubiKey.")
-        .size(12)
-        .font(bold),
-      text(
-        "Sans backup, si la YubiKey est perdue ou détruite, \
-         les données chiffrées seront irrécupérables.",
-      )
-      .size(12),
+      text(s.modal_migration_irreversible()).size(12).font(bold),
+      text(s.modal_migration_backup_warning()).size(12),
       column![
-        button(icon_row("\u{f0c7}", "Sauvegarder d'abord"))
+        button(icon_row("\u{f0c7}", s.modal_migration_backup_btn()))
           .on_press(Message::BackupKey(key.fingerprint.clone()))
           .width(Length::Fill)
           .style(|_: &iced::Theme, status: button::Status| button::Style {
@@ -314,7 +321,7 @@ fn migration_modal(key: &KeyInfo, bold: Font) -> Element<'_, Message> {
             shadow: Default::default(),
             snap: false,
           }),
-        button(icon_row("\u{f00c}", "J'ai un backup \u{2192} Continuer"))
+        button(icon_row("\u{f00c}", s.modal_migration_confirm_btn()))
           .on_press(Message::MoveToCardExecute(key.fingerprint.clone()))
           .width(Length::Fill)
           .style(|_: &iced::Theme, status: button::Status| button::Style {
@@ -331,7 +338,7 @@ fn migration_modal(key: &KeyInfo, bold: Font) -> Element<'_, Message> {
             shadow: Default::default(),
             snap: false,
           }),
-        button(icon_row("\u{f00d}", "Annuler"))
+        button(icon_row("\u{f00d}", s.modal_migration_cancel_btn()))
           .on_press(Message::MoveToCardCancel)
           .width(Length::Fill)
           .style(|_: &iced::Theme, status: button::Status| button::Style {
@@ -370,7 +377,7 @@ fn migration_modal(key: &KeyInfo, bold: Font) -> Element<'_, Message> {
   .into()
 }
 
-fn delete_modal(key: &KeyInfo, bold: Font) -> Element<'_, Message> {
+fn delete_modal<'a>(key: &'a KeyInfo, bold: Font, s: &'static dyn Strings) -> Element<'a, Message> {
   let icon_row = |icon: &'static str, label: &'static str| {
     row![text(icon).font(theme::ICONS).size(12), text(label).size(12),]
       .spacing(6)
@@ -378,26 +385,17 @@ fn delete_modal(key: &KeyInfo, bold: Font) -> Element<'_, Message> {
   };
 
   let (warn_title, warn_body) = if key.on_card {
-    (
-      "Seul le stub local de la clef sera supprimé.",
-      "La clef physique sur la YubiKey ne sera pas affectée.",
-    )
+    (s.modal_delete_stub_only(), s.modal_delete_stub_body())
   } else if key.has_secret {
-    (
-      "Opération irréversible : la clef privée sera détruite.",
-      "Sans backup, vos données chiffrées seront définitivement irrécupérables.",
-    )
+    (s.modal_delete_secret(), s.modal_delete_secret_body())
   } else {
-    (
-      "La clef publique sera supprimée de votre trousseau.",
-      "Cette opération peut être annulée en réimportant la clef.",
-    )
+    (s.modal_delete_public(), s.modal_delete_public_body())
   };
 
   let mut del_btns: Vec<Element<Message>> = Vec::new();
   if key.has_secret && !key.on_card {
     del_btns.push(
-      button(icon_row("\u{f019}", "Exporter d'abord"))
+      button(icon_row("\u{f019}", s.modal_delete_export_first_btn()))
         .on_press(Message::BackupKey(key.fingerprint.clone()))
         .width(Length::Fill)
         .style(|_: &iced::Theme, status: button::Status| button::Style {
@@ -418,7 +416,7 @@ fn delete_modal(key: &KeyInfo, bold: Font) -> Element<'_, Message> {
     );
   }
   del_btns.push(
-    button(icon_row("\u{f1f8}", "Confirmer la suppression"))
+    button(icon_row("\u{f1f8}", s.modal_delete_confirm_btn()))
       .on_press(Message::DeleteKeyExecute(key.fingerprint.clone()))
       .width(Length::Fill)
       .style(|_: &iced::Theme, status: button::Status| button::Style {
@@ -438,7 +436,7 @@ fn delete_modal(key: &KeyInfo, bold: Font) -> Element<'_, Message> {
       .into(),
   );
   del_btns.push(
-    button(icon_row("\u{f00d}", "Annuler"))
+    button(icon_row("\u{f00d}", s.modal_delete_cancel_btn()))
       .on_press(Message::DeleteKeyCancel)
       .width(Length::Fill)
       .style(|_: &iced::Theme, status: button::Status| button::Style {
@@ -483,7 +481,12 @@ fn delete_modal(key: &KeyInfo, bold: Font) -> Element<'_, Message> {
   .into()
 }
 
-fn publish_modal(key: &KeyInfo, selected_ks: Keyserver, bold: Font) -> Element<'_, Message> {
+fn publish_modal<'a>(
+  key: &'a KeyInfo,
+  selected_ks: Keyserver,
+  bold: Font,
+  s: &'static dyn Strings,
+) -> Element<'a, Message> {
   let icon_row = |icon: &'static str, label: &'static str| {
     row![text(icon).font(theme::ICONS).size(12), text(label).size(12),]
       .spacing(6)
@@ -492,15 +495,11 @@ fn publish_modal(key: &KeyInfo, selected_ks: Keyserver, bold: Font) -> Element<'
 
   let description = match selected_ks {
     Keyserver::Openpgp => format!(
-      "Recommandé · Respecte le RGPD. \
-       Un email de validation sera envoyé à {} \
-       pour rendre votre identité visible dans les recherches.",
-      key.email
+      "{} {}",
+      s.modal_publish_recommended(),
+      s.modal_publish_openpgp_desc()
     ),
-    Keyserver::Ubuntu => "Publication immédiate sans validation. \
-       Votre clef sera visible dans les recherches instantanément \
-       et ne pourra jamais être supprimée du keyserver."
-      .to_string(),
+    Keyserver::Ubuntu => s.modal_publish_ubuntu_desc().to_string(),
   };
 
   let ks_btn = |label: &'static str, value: Keyserver| {
@@ -539,7 +538,7 @@ fn publish_modal(key: &KeyInfo, selected_ks: Keyserver, bold: Font) -> Element<'
           .font(theme::ICONS)
           .size(12)
           .color(theme::ACCENT),
-        text("Publier sur un keyserver")
+        text(s.modal_publish_select_keyserver())
           .size(12)
           .font(bold)
           .color(theme::ACCENT),
@@ -547,8 +546,8 @@ fn publish_modal(key: &KeyInfo, selected_ks: Keyserver, bold: Font) -> Element<'
       .spacing(6)
       .align_y(Alignment::Center),
       row![
-        ks_btn("keys.openpgp.org", Keyserver::Openpgp),
-        ks_btn("keyserver.ubuntu.com", Keyserver::Ubuntu),
+        ks_btn(s.keyserver_openpgp(), Keyserver::Openpgp),
+        ks_btn(s.keyserver_ubuntu(), Keyserver::Ubuntu),
       ]
       .spacing(8),
       container(text(description).size(11))
@@ -564,7 +563,7 @@ fn publish_modal(key: &KeyInfo, selected_ks: Keyserver, bold: Font) -> Element<'
           ..Default::default()
         }),
       column![
-        button(icon_row("\u{f1d8}", "Publier"))
+        button(icon_row("\u{f1d8}", s.modal_publish_confirm_btn()))
           .on_press(Message::PublishKeyExecute(key.fingerprint.clone()))
           .width(Length::Fill)
           .style(|_: &iced::Theme, status: button::Status| button::Style {
@@ -581,7 +580,7 @@ fn publish_modal(key: &KeyInfo, selected_ks: Keyserver, bold: Font) -> Element<'
             shadow: Default::default(),
             snap: false,
           }),
-        button(icon_row("\u{f00d}", "Annuler"))
+        button(icon_row("\u{f00d}", s.btn_cancel()))
           .on_press(Message::PublishKeyCancel)
           .width(Length::Fill)
           .style(|_: &iced::Theme, status: button::Status| button::Style {
@@ -619,7 +618,11 @@ fn publish_modal(key: &KeyInfo, selected_ks: Keyserver, bold: Font) -> Element<'
   .into()
 }
 
-fn export_pub_modal(key: &KeyInfo, bold: Font) -> Element<'_, Message> {
+fn export_pub_modal<'a>(
+  key: &'a KeyInfo,
+  bold: Font,
+  s: &'static dyn Strings,
+) -> Element<'a, Message> {
   let menu_btn = |icon: &'static str, label: &'static str, msg: Message| {
     button(
       row![text(icon).font(theme::ICONS).size(12), text(label).size(12)]
@@ -644,6 +647,8 @@ fn export_pub_modal(key: &KeyInfo, bold: Font) -> Element<'_, Message> {
     })
   };
 
+  // These three labels are specific to this menu — not covered by generic btn_* methods.
+  // They describe sub-actions of the export menu. Using inline strings here is intentional.
   container(
     column![
       row![
@@ -651,7 +656,7 @@ fn export_pub_modal(key: &KeyInfo, bold: Font) -> Element<'_, Message> {
           .font(theme::ICONS)
           .size(12)
           .color(theme::ACCENT),
-        text("Exporter la clef publique")
+        text(s.btn_export_public())
           .size(12)
           .font(bold)
           .color(theme::ACCENT),
@@ -673,7 +678,7 @@ fn export_pub_modal(key: &KeyInfo, bold: Font) -> Element<'_, Message> {
         "Obtenir un lien public (paste.rs)",
         Message::ExportPublicKeyUpload(key.fingerprint.clone())
       ),
-      button(text("Annuler").size(12))
+      button(text(s.btn_cancel()).size(12))
         .on_press(Message::ExportPublicKeyMenuCancel)
         .style(|_: &iced::Theme, status: button::Status| button::Style {
           background: Some(Background::Color(match status {
@@ -709,8 +714,8 @@ fn export_pub_modal(key: &KeyInfo, bold: Font) -> Element<'_, Message> {
 }
 
 #[allow(clippy::too_many_arguments)]
-fn left_column_items(
-  key: &KeyInfo,
+fn left_column_items<'a>(
+  key: &'a KeyInfo,
   keyserver_status: KeyserverStatus,
   card_connected: bool,
   confirming: bool,
@@ -719,8 +724,9 @@ fn left_column_items(
   publish_confirming: Option<Keyserver>,
   bold: Font,
   mono: Font,
-) -> Column<'_, Message> {
-  let expires = key.expires.as_deref().unwrap_or("Aucune expiration");
+  s: &'static dyn Strings,
+) -> Column<'a, Message> {
+  let expires = key.expires.as_deref().unwrap_or(s.key_never_expires());
   let key_type = if key.on_card {
     "Sur YubiKey"
   } else if key.has_secret {
@@ -763,7 +769,7 @@ fn left_column_items(
       ..Default::default()
     })
     .into(),
-    keyserver_badge(keyserver_status, &key.fingerprint),
+    keyserver_badge(keyserver_status, &key.fingerprint, s),
     container(
       column![
         row![
@@ -773,9 +779,9 @@ fn left_column_items(
         ]
         .spacing(6),
         row![
-          text(format!("Créée : {}", key.created)).size(12),
+          text(format!("{}: {}", s.key_created(), key.created)).size(12),
           text("·").size(12),
-          text(format!("Expire : {expires}")).size(12),
+          text(format!("{}: {expires}", s.key_expires())).size(12),
         ]
         .spacing(6),
       ]
@@ -790,9 +796,9 @@ fn left_column_items(
 
   if !key.has_secret && !key.on_card {
     let (trust_icon, trust_color, trust_label) = match &key.trust {
-      TrustLevel::Ultimate | TrustLevel::Full => ("\u{f058}", theme::SUCCESS, "Vérifiée"),
-      TrustLevel::Marginal => ("\u{f06a}", theme::PEACH, "Marginale"),
-      TrustLevel::Undefined => ("\u{f071}", theme::PEACH, "Non vérifiée"),
+      TrustLevel::Ultimate | TrustLevel::Full => ("\u{f058}", theme::SUCCESS, s.trust_full()),
+      TrustLevel::Marginal => ("\u{f06a}", theme::PEACH, s.trust_marginal()),
+      TrustLevel::Undefined => ("\u{f071}", theme::PEACH, s.trust_undefined()),
     };
 
     let trust_btn = |label: &'static str, level: TrustLevel, active: bool| {
@@ -838,7 +844,7 @@ fn left_column_items(
               .font(theme::ICONS)
               .size(11)
               .color(trust_color),
-            text(format!("Confiance : {trust_label}")).size(12),
+            text(format!("{}: {trust_label}", s.key_trust())).size(12),
           ]
           .spacing(6)
           .align_y(Alignment::Center),
@@ -849,17 +855,17 @@ fn left_column_items(
         }),
         row![
           trust_btn(
-            "Non définie",
+            s.trust_undefined(),
             TrustLevel::Undefined,
             key.trust == TrustLevel::Undefined
           ),
           trust_btn(
-            "Marginale",
+            s.trust_marginal(),
             TrustLevel::Marginal,
             key.trust == TrustLevel::Marginal
           ),
           trust_btn(
-            "Pleine confiance",
+            s.trust_full(),
             TrustLevel::Full,
             key.trust == TrustLevel::Full
           ),
@@ -890,15 +896,15 @@ fn left_column_items(
   }
 
   if confirming {
-    items.push(migration_modal(key, bold));
+    items.push(migration_modal(key, bold, s));
   } else if delete_confirming {
-    items.push(delete_modal(key, bold));
+    items.push(delete_modal(key, bold, s));
   } else if let Some(selected_ks) = publish_confirming {
-    items.push(publish_modal(key, selected_ks, bold));
+    items.push(publish_modal(key, selected_ks, bold, s));
   } else if export_pub_menu {
-    items.push(export_pub_modal(key, bold));
+    items.push(export_pub_modal(key, bold, s));
   } else {
-    items.push(action_buttons(key, keyserver_status, card_connected));
+    items.push(action_buttons(key, keyserver_status, card_connected, s));
   }
 
   Column::with_children(items)
@@ -912,6 +918,7 @@ fn subkey_renewal_form<'a>(
   type_color: Color,
   key_fp: &'a str,
   subkey_fp: &'a str,
+  s: &'static dyn Strings,
 ) -> Element<'a, Message> {
   let until = expiry_until_date(renewal_expiry);
 
@@ -951,7 +958,7 @@ fn subkey_renewal_form<'a>(
   let subkey_fp = subkey_fp.to_string();
 
   column![
-    text(format!("Valide jusqu'au : {until}"))
+    text(format!("{}: {until}", s.key_expires()))
       .size(11)
       .color(theme::TEXT_STRONG),
     row![
@@ -961,7 +968,7 @@ fn subkey_renewal_form<'a>(
     ]
     .spacing(4),
     row![
-      button(text("↺ Renouveler").size(11))
+      button(text(format!("↺ {}", s.btn_renew())).size(11))
         .on_press(Message::RenewSubkeyExecute)
         .width(Length::Fill)
         .style(
@@ -983,7 +990,7 @@ fn subkey_renewal_form<'a>(
             snap: false,
           }
         ),
-      button(text("⟲ Remplacer").size(11))
+      button(text(format!("⟲ {}", s.btn_rotate())).size(11))
         .on_press(Message::RotateSubkeyExecute(
           key_fp.clone(),
           subkey_fp.clone()
@@ -1008,7 +1015,7 @@ fn subkey_renewal_form<'a>(
         }),
     ]
     .spacing(4),
-    button(text("Annuler").size(11))
+    button(text(s.btn_cancel()).size(11))
       .on_press(Message::RenewSubkeyCancel)
       .style(|_: &iced::Theme, status: button::Status| button::Style {
         background: Some(Background::Color(match status {
@@ -1034,8 +1041,9 @@ fn subkey_card_body<'a>(
   key_fp: &'a str,
   can_edit: bool,
   mono: Font,
+  s: &'static dyn Strings,
 ) -> Element<'a, Message> {
-  let expires_str = sk.expires.as_deref().unwrap_or("Aucune expiration");
+  let expires_str = sk.expires.as_deref().unwrap_or(s.key_never_expires());
   column![
     row![
       column![
@@ -1106,6 +1114,7 @@ fn subkey_ghost_card<'a>(
   type_color: Color,
   key_fp: &'a str,
   bold: Font,
+  s: &'static dyn Strings,
 ) -> Element<'a, Message> {
   let dimmed = Color {
     a: 0.45,
@@ -1123,7 +1132,7 @@ fn subkey_ghost_card<'a>(
       button(
         row![
           text("\u{f067}").font(theme::ICONS).size(11),
-          text("Créer").size(11),
+          text(s.btn_create()).size(11),
         ]
         .spacing(4)
         .align_y(Alignment::Center),
@@ -1175,13 +1184,14 @@ fn subkey_ghost_card<'a>(
   .into()
 }
 
-fn subkey_column(
-  key: &KeyInfo,
+fn subkey_column<'a>(
+  key: &'a KeyInfo,
   can_edit: bool,
   renewing_subkey: Option<(String, KeyExpiry)>,
   bold: Font,
   mono: Font,
-) -> Column<'_, Message> {
+  s: &'static dyn Strings,
+) -> Column<'a, Message> {
   let standard_types = [
     (SubkeyType::Sign, "\u{f040}", "Signature", theme::ACCENT),
     (SubkeyType::Encr, "\u{f023}", "Chiffrement", theme::SUCCESS),
@@ -1218,9 +1228,10 @@ fn subkey_column(
             type_color,
             &key.fingerprint,
             &sk.fingerprint,
+            s,
           )
         } else {
-          subkey_card_body(sk, &key.fingerprint, can_edit, mono)
+          subkey_card_body(sk, &key.fingerprint, can_edit, mono, s)
         };
 
         Some(
@@ -1247,6 +1258,7 @@ fn subkey_column(
           type_color,
           &key.fingerprint,
           bold,
+          s,
         ))
       } else {
         None

@@ -7,6 +7,7 @@ pub mod health;
 pub mod import;
 pub mod key_detail;
 pub mod key_list;
+pub mod settings;
 pub mod sign;
 pub mod theme;
 pub mod verify;
@@ -22,13 +23,14 @@ use crate::app::{App, Message, StatusKind, View};
 pub fn root(app: &App) -> Element<'_, Message> {
   let content = match app.view {
     View::MyKeys | View::PublicKeys => key_list::view(app),
-    View::CreateKey => create_key::view(&app.create_form),
-    View::Import => import::view(&app.import_form),
-    View::Health => health::view(&app.health_report, app.health_loading),
-    View::Encrypt => encrypt::view(&app.encrypt_form, &app.keys),
-    View::Decrypt => decrypt::view(&app.decrypt_form),
-    View::Sign => sign::view(&app.sign_form, &app.keys),
-    View::Verify => verify::view(&app.sign_form),
+    View::CreateKey => create_key::view(&app.create_form, app.strings),
+    View::Import => import::view(&app.import_form, app.strings),
+    View::Health => health::view(&app.health_report, app.health_loading, app.strings),
+    View::Encrypt => encrypt::view(&app.encrypt_form, &app.keys, app.strings),
+    View::Decrypt => decrypt::view(&app.decrypt_form, app.strings),
+    View::Sign => sign::view(&app.sign_form, &app.keys, app.strings),
+    View::Verify => verify::view(&app.sign_form, app.strings),
+    View::Settings => settings::view(app),
   };
 
   let main: Element<Message> = match &app.status {
@@ -106,6 +108,7 @@ pub fn root(app: &App) -> Element<'_, Message> {
 }
 
 fn sidebar(app: &App) -> Element<'_, Message> {
+  let s = app.strings;
   let nav_btn = |icon: &'static str, label: &'static str, view: View| {
     let active = app.view == view;
     button(
@@ -174,27 +177,28 @@ fn sidebar(app: &App) -> Element<'_, Message> {
     .align_y(Alignment::Center),
     sep(),
     column![
-      section_label("CLEFS"),
-      nav_btn("\u{f084}", "Mes clefs", View::MyKeys),
-      nav_btn("\u{f0c0}", "Clefs publiques", View::PublicKeys),
+      section_label(s.sidebar_section_keys()),
+      nav_btn("\u{f084}", s.nav_my_keys(), View::MyKeys),
+      nav_btn("\u{f0c0}", s.nav_public_keys(), View::PublicKeys),
     ]
     .spacing(2),
     sep(),
     column![
-      section_label("OPÉRATIONS"),
-      nav_btn("\u{f023}", "Chiffrer", View::Encrypt),
-      nav_btn("\u{f13e}", "Déchiffrer", View::Decrypt),
-      nav_btn("\u{f14b}", "Signer", View::Sign),
-      nav_btn("\u{f00c}", "Vérifier", View::Verify),
+      section_label(s.sidebar_section_operations()),
+      nav_btn("\u{f023}", s.nav_encrypt(), View::Encrypt),
+      nav_btn("\u{f13e}", s.nav_decrypt(), View::Decrypt),
+      nav_btn("\u{f14b}", s.nav_sign(), View::Sign),
+      nav_btn("\u{f00c}", s.nav_verify(), View::Verify),
     ]
     .spacing(2),
     sep(),
     Space::new().height(Length::Fill),
     column![
-      section_label("OUTILS"),
-      nav_btn("\u{f093}", "Importer", View::Import),
-      nav_btn("\u{f067}", "Créer une clef", View::CreateKey),
-      nav_btn("\u{f132}", "Diagnostic", View::Health),
+      section_label(s.sidebar_section_tools()),
+      nav_btn("\u{f093}", s.nav_import(), View::Import),
+      nav_btn("\u{f067}", s.nav_create_key(), View::CreateKey),
+      nav_btn("\u{f132}", s.nav_health(), View::Health),
+      nav_btn("\u{f013}", s.nav_settings(), View::Settings),
     ]
     .spacing(2),
   ]

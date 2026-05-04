@@ -6,9 +6,10 @@ use iced::{
 
 use crate::app::{DecryptForm, Message};
 use crate::gpg::DecryptStatus;
+use crate::i18n::Strings;
 use crate::ui::theme;
 
-pub fn view<'a>(form: &'a DecryptForm) -> Element<'a, Message> {
+pub fn view<'a>(form: &'a DecryptForm, s: &'static dyn Strings) -> Element<'a, Message> {
   let bold = Font {
     weight: font::Weight::Bold,
     ..Font::DEFAULT
@@ -146,7 +147,7 @@ pub fn view<'a>(form: &'a DecryptForm) -> Element<'a, Message> {
   });
 
   let mut files_section_children: Vec<Element<'_, Message>> = vec![
-    container(text("Fichiers à déchiffrer").size(12).font(bold))
+    container(text(s.decrypt_add_files()).size(12).font(bold))
       .style(|_: &iced::Theme| container::Style {
         text_color: Some(theme::TEXT_SECONDARY),
         ..Default::default()
@@ -201,11 +202,11 @@ pub fn view<'a>(form: &'a DecryptForm) -> Element<'a, Message> {
 
   let n = form.files.len();
   let decrypt_label = if form.decrypting {
-    "Déchiffrement en cours...".to_string()
+    s.decrypt_in_progress().to_string()
   } else if n == 1 {
-    "Déchiffrer 1 fichier".to_string()
+    format!("{} 1 fichier", s.btn_decrypt())
   } else {
-    format!("Déchiffrer {n} fichier(s)")
+    format!("{} {n} fichier(s)", s.btn_decrypt())
   };
 
   let decrypt_btn = {
@@ -251,7 +252,7 @@ pub fn view<'a>(form: &'a DecryptForm) -> Element<'a, Message> {
       column![
         row![
           text("\u{f13e}").font(theme::ICONS).size(20),
-          text("Déchiffrement de fichiers").size(22).font(bold),
+          text(s.decrypt_title()).size(22).font(bold),
         ]
         .spacing(10)
         .align_y(Alignment::Center),

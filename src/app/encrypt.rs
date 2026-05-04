@@ -80,17 +80,17 @@ impl App {
     self.encrypt_form.encrypting = false;
     match result {
       Ok(names) => {
-        let summary = if names.len() == 1 {
-          format!("Chiffré : {}", names[0])
-        } else {
-          format!("{} fichiers chiffrés", names.len())
-        };
+        let summary = format!(
+          "{}: {}",
+          self.strings.status_files_encrypted(),
+          names.join(", ")
+        );
         self.encrypt_form.files.clear();
         self.set_status(StatusKind::Success, summary)
       }
       Err(e) => self.set_status(
         StatusKind::Error,
-        truncate_error(format!("Erreur chiffrement : {e}")),
+        truncate_error(format!("{}: {e}", self.strings.err_encrypt_failed())),
       ),
     }
   }

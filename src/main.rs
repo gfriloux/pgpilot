@@ -1,5 +1,7 @@
 mod app;
+mod config;
 mod gpg;
+mod i18n;
 mod ui;
 
 use app::App;

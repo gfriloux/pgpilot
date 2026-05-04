@@ -42,14 +42,14 @@ impl App {
         self.selected = None;
         let s = self.set_status(
           StatusKind::Success,
-          format!("Clef importée depuis {filename}"),
+          format!("{}: {filename}", self.strings.status_key_imported()),
         );
         let reload = self.reload_keys();
         Task::batch([s, reload])
       }
       Err(e) => self.set_status(
         StatusKind::Error,
-        truncate_error(format!("Erreur import : {e}")),
+        truncate_error(format!("{}: {e}", self.strings.err_import_failed())),
       ),
     }
   }
@@ -75,7 +75,7 @@ impl App {
         self.import_form.submitting = false;
         self.set_status(
           StatusKind::Error,
-          truncate_error(format!("Erreur import URL : {e}")),
+          truncate_error(format!("{}: {e}", self.strings.err_import_failed())),
         )
       }
     }
@@ -106,7 +106,7 @@ impl App {
         self.import_form.submitting = false;
         self.set_status(
           StatusKind::Error,
-          truncate_error(format!("Erreur import keyserver : {e}")),
+          truncate_error(format!("{}: {e}", self.strings.err_import_failed())),
         )
       }
     }
@@ -133,7 +133,7 @@ impl App {
         self.import_form.submitting = false;
         self.set_status(
           StatusKind::Error,
-          truncate_error(format!("Erreur import : {e}")),
+          truncate_error(format!("{}: {e}", self.strings.err_import_failed())),
         )
       }
     }

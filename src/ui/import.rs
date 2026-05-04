@@ -8,9 +8,10 @@ use iced::{
 
 use crate::app::{ImportForm, Message};
 use crate::gpg::Keyserver;
+use crate::i18n::Strings;
 use crate::ui::theme;
 
-pub fn view(form: &ImportForm) -> Element<'_, Message> {
+pub fn view<'a>(form: &'a ImportForm, s: &'static dyn Strings) -> Element<'a, Message> {
   let bold = Font {
     weight: font::Weight::Bold,
     ..Font::DEFAULT
@@ -25,10 +26,10 @@ pub fn view(form: &ImportForm) -> Element<'_, Message> {
     })
   };
 
-  let section_label = |s: &'static str| text(s).size(12).font(bold);
+  let section_label = |lbl: &'static str| text(lbl).size(12).font(bold);
 
-  let hint = |s: &'static str| {
-    container(text(s).size(11)).style(|_: &iced::Theme| container::Style {
+  let hint = |lbl: &'static str| {
+    container(text(lbl).size(11)).style(|_: &iced::Theme| container::Style {
       text_color: Some(theme::TEXT_MUTED),
       ..Default::default()
     })
@@ -66,7 +67,7 @@ pub fn view(form: &ImportForm) -> Element<'_, Message> {
     }
   };
 
-  let cancel_btn = button(text("Annuler").size(13))
+  let cancel_btn = button(text(s.btn_cancel()).size(13))
     .on_press(Message::NavBack)
     .style(|_: &iced::Theme, status: button::Status| button::Style {
       background: Some(Background::Color(match status {
@@ -151,7 +152,7 @@ pub fn view(form: &ImportForm) -> Element<'_, Message> {
   let card = container(
     column![
       column![
-        text("Importer une clef").size(22).font(bold),
+        text(s.import_title()).size(22).font(bold),
         container(text("Choisissez la source de la clef à importer.").size(13),).style(
           |_: &iced::Theme| container::Style {
             text_color: Some(theme::TEXT_SECONDARY),
@@ -164,7 +165,7 @@ pub fn view(form: &ImportForm) -> Element<'_, Message> {
       file_btn,
       separator(),
       column![
-        section_label("Depuis une URL"),
+        section_label(s.import_tab_url()),
         hint("Collez une URL pointant vers une clef armored (paste.rs, page web, etc.)."),
         text_input("https://paste.rs/abc123", &form.url)
           .on_input(Message::ImportUrlChanged)
@@ -194,7 +195,7 @@ pub fn view(form: &ImportForm) -> Element<'_, Message> {
       .spacing(8),
       separator(),
       column![
-        section_label("Depuis un keyserver"),
+        section_label(s.import_tab_keyserver()),
         hint("Fingerprint complet (40 hex), ID long (16 hex) ou adresse email."),
         text_input(
           "Fingerprint (40 hex), ID long (16 hex) ou email",
@@ -232,7 +233,7 @@ pub fn view(form: &ImportForm) -> Element<'_, Message> {
       .spacing(8),
       separator(),
       column![
-        section_label("Coller la clef"),
+        section_label(s.import_tab_paste()),
         hint("Collez directement le contenu d'une clef PGP armored (-----BEGIN PGP...)."),
         text_editor(&form.pasted_key)
           .on_action(Message::ImportPastedKeyChanged)

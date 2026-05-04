@@ -9,8 +9,10 @@ use crate::ui::key_detail::ViewCtx;
 use crate::ui::{key_detail, theme};
 
 pub fn view(app: &App) -> Element<'_, Message> {
+  let s = app.strings;
+
   if app.loading {
-    return container(text("Chargement...").size(14))
+    return container(text(s.loading()).size(14))
       .padding(24)
       .style(|_: &iced::Theme| container::Style {
         text_color: Some(theme::TEXT_MUTED),
@@ -40,7 +42,7 @@ pub fn view(app: &App) -> Element<'_, Message> {
     .collect();
 
   if keys.is_empty() {
-    return container(text("Aucune clef trouvée.").size(14))
+    return container(text(s.no_keys()).size(14))
       .padding(24)
       .center_x(Length::Fill)
       .height(Length::Fill)
@@ -193,6 +195,7 @@ pub fn view(app: &App) -> Element<'_, Message> {
           .copied()
           .unwrap_or_default(),
       },
+      s,
     ))
     .width(Length::Fill)
     .height(Length::Fill)

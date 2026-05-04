@@ -6,6 +6,7 @@ use iced::{
 
 use crate::app::{Message, SignForm};
 use crate::gpg::{types::TrustLevel, VerifyOutcome};
+use crate::i18n::Strings;
 use crate::ui::{common, theme};
 
 fn result_card<'a>(
@@ -58,7 +59,7 @@ fn result_card<'a>(
   .into()
 }
 
-pub fn view<'a>(form: &'a SignForm) -> Element<'a, Message> {
+pub fn view<'a>(form: &'a SignForm, s: &'static dyn Strings) -> Element<'a, Message> {
   let bold = Font {
     weight: font::Weight::Bold,
     ..Font::DEFAULT
@@ -77,7 +78,7 @@ pub fn view<'a>(form: &'a SignForm) -> Element<'a, Message> {
       })
       .into()
   } else {
-    container(text("Aucun fichier sélectionné").size(13))
+    container(text(s.no_file_selected()).size(13))
       .style(|_: &iced::Theme| container::Style {
         text_color: Some(theme::TEXT_MUTED),
         ..Default::default()
@@ -86,7 +87,7 @@ pub fn view<'a>(form: &'a SignForm) -> Element<'a, Message> {
   };
 
   let file_row: Element<'_, Message> = row![
-    common::pick_btn("\u{f15b}", "Fichier à vérifier...", Message::VerifyPickFile),
+    common::pick_btn("\u{f15b}", s.verify_select_file(), Message::VerifyPickFile),
     verify_file_label,
   ]
   .spacing(12)
@@ -116,7 +117,7 @@ pub fn view<'a>(form: &'a SignForm) -> Element<'a, Message> {
       );
       format!("Optionnel — cherchera automatiquement {auto_name}")
     } else {
-      "Optionnel — cherche automatiquement <fichier>.sig".to_string()
+      s.verify_sig_auto_hint().to_string()
     };
     container(text(hint).size(12))
       .style(|_: &iced::Theme| container::Style {
@@ -135,7 +136,7 @@ pub fn view<'a>(form: &'a SignForm) -> Element<'a, Message> {
   .into();
 
   let result_el: Element<'_, Message> = match &form.verify_result {
-    None if form.verifying => container(text("Vérification en cours...").size(13))
+    None if form.verifying => container(text(s.verify_in_progress()).size(13))
       .style(|_: &iced::Theme| container::Style {
         text_color: Some(theme::TEXT_MUTED),
         ..Default::default()
@@ -150,7 +151,7 @@ pub fn view<'a>(form: &'a SignForm) -> Element<'a, Message> {
           .style(|_: &iced::Theme| iced::widget::text::Style {
             color: Some(theme::ERROR),
           }),
-        text(format!("Erreur : {e}")).size(13),
+        text(format!("{}: {e}", s.verify_error_prefix())).size(13),
       ]
       .spacing(8)
       .align_y(Alignment::Center),
@@ -174,21 +175,21 @@ pub fn view<'a>(form: &'a SignForm) -> Element<'a, Message> {
           TrustLevel::Full | TrustLevel::Ultimate => (
             "\u{f058}",
             theme::SUCCESS,
-            "Signature valide",
+            s.verify_valid_full_trust(),
             theme::SUCCESS,
             theme::SUCCESS_BG,
           ),
           TrustLevel::Marginal => (
             "\u{f058}",
             theme::PEACH,
-            "Valide (confiance marginale)",
+            s.verify_valid_marginal_trust(),
             theme::PEACH,
             theme::WARNING_BG,
           ),
           TrustLevel::Undefined => (
             "\u{f071}",
             theme::PEACH,
-            "Signature correcte — identité non vérifiée",
+            s.verify_valid_no_trust(),
             theme::PEACH,
             theme::WARNING_BG,
           ),
@@ -223,11 +224,13 @@ pub fn view<'a>(form: &'a SignForm) -> Element<'a, Message> {
         if let Some(name) = &vr.signer_name {
           details.push(
             row![
-              text("Signataire :").size(12).style(|_: &iced::Theme| {
-                iced::widget::text::Style {
-                  color: Some(theme::TEXT_MUTED),
-                }
-              }),
+              text(format!("{} :", s.verify_signed_by()))
+                .size(12)
+                .style(|_: &iced::Theme| {
+                  iced::widget::text::Style {
+                    color: Some(theme::TEXT_MUTED),
+                  }
+                }),
               text(name.as_str()).size(13),
             ]
             .spacing(8)
@@ -254,11 +257,13 @@ pub fn view<'a>(form: &'a SignForm) -> Element<'a, Message> {
         if let Some(date) = &vr.signed_at {
           details.push(
             row![
-              text("Signé le :").size(12).style(|_: &iced::Theme| {
-                iced::widget::text::Style {
-                  color: Some(theme::TEXT_MUTED),
-                }
-              }),
+              text(format!("{} :", s.verify_signed_on()))
+                .size(12)
+                .style(|_: &iced::Theme| {
+                  iced::widget::text::Style {
+                    color: Some(theme::TEXT_MUTED),
+                  }
+                }),
               text(date.as_str()).size(13),
             ]
             .spacing(8)
@@ -286,7 +291,7 @@ pub fn view<'a>(form: &'a SignForm) -> Element<'a, Message> {
         "\u{f057}",
         theme::ERROR,
         theme::ERROR_BG,
-        "Signature incorrecte",
+        s.verify_outcome_bad_sig(),
         "La signature ne correspond pas à ce fichier. \
          Vérifiez que vous avez sélectionné le bon fichier et la bonne signature.",
         &vr.detail,
@@ -296,7 +301,7 @@ pub fn view<'a>(form: &'a SignForm) -> Element<'a, Message> {
         "\u{f071}",
         theme::PEACH,
         theme::WARNING_BG,
-        "Clef de signature inconnue",
+        s.verify_outcome_unknown_key(),
         "La clef publique du signataire n'est pas dans votre trousseau. \
          Importez-la pour vérifier l'identité du signataire.",
         &vr.detail,
@@ -306,7 +311,7 @@ pub fn view<'a>(form: &'a SignForm) -> Element<'a, Message> {
         "\u{f071}",
         theme::PEACH,
         theme::WARNING_BG,
-        "Clef expirée",
+        s.verify_outcome_expired_key(),
         "La signature est mathématiquement valide, mais la clef du signataire \
          était expirée au moment de la vérification.",
         &vr.detail,
@@ -316,7 +321,7 @@ pub fn view<'a>(form: &'a SignForm) -> Element<'a, Message> {
         "\u{f057}",
         theme::ERROR,
         theme::ERROR_BG,
-        "Clef révoquée",
+        s.verify_outcome_revoked_key(),
         "La clef ayant signé ce fichier a été révoquée. \
          La signature n'est plus considérée comme fiable.",
         &vr.detail,
@@ -326,7 +331,7 @@ pub fn view<'a>(form: &'a SignForm) -> Element<'a, Message> {
         "\u{f057}",
         theme::ERROR,
         theme::ERROR_BG,
-        "Erreur",
+        s.verify_error_prefix(),
         msg.as_str(),
         &vr.detail,
       ),
@@ -349,7 +354,7 @@ pub fn view<'a>(form: &'a SignForm) -> Element<'a, Message> {
       column![
         row![
           text("\u{f00c}").font(theme::ICONS).size(20),
-          text("Vérifier une signature").size(22).font(bold),
+          text(s.verify_title()).size(22).font(bold),
         ]
         .spacing(10)
         .align_y(Alignment::Center),
@@ -374,7 +379,7 @@ pub fn view<'a>(form: &'a SignForm) -> Element<'a, Message> {
       {
         let verify_action: Element<'_, Message> = row![
           iced::widget::Space::new().width(Length::Fill),
-          common::action_btn("Vérifier", can_verify, Message::VerifyExecute)
+          common::action_btn(s.btn_verify(), can_verify, Message::VerifyExecute)
         ]
         .into();
         verify_action

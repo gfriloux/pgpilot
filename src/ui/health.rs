@@ -6,9 +6,14 @@ use iced::{
 
 use crate::app::Message;
 use crate::gpg::{CheckStatus, HealthCheck};
+use crate::i18n::Strings;
 use crate::ui::theme;
 
-pub fn view(checks: &[HealthCheck], loading: bool) -> Element<'_, Message> {
+pub fn view<'a>(
+  checks: &'a [HealthCheck],
+  loading: bool,
+  s: &'static dyn Strings,
+) -> Element<'a, Message> {
   let bold = Font {
     weight: font::Weight::Bold,
     ..Font::DEFAULT
@@ -19,13 +24,13 @@ pub fn view(checks: &[HealthCheck], loading: bool) -> Element<'_, Message> {
   };
 
   let title_section = column![
-    text("Diagnostic GPG").size(22).font(bold),
-    container(text("État de votre installation et de votre configuration GnuPG.").size(13),).style(
-      |_: &iced::Theme| container::Style {
+    text(s.health_diagnostics_title()).size(22).font(bold),
+    container(text(s.health_diagnostics_desc()).size(13),).style(|_: &iced::Theme| {
+      container::Style {
         text_color: Some(theme::TEXT_SECONDARY),
         ..Default::default()
       }
-    ),
+    }),
   ]
   .spacing(6);
 
@@ -34,7 +39,7 @@ pub fn view(checks: &[HealthCheck], loading: bool) -> Element<'_, Message> {
       container(
         column![
           title_section,
-          container(text("Vérification en cours…").size(13)).style(|_: &iced::Theme| {
+          container(text(s.health_checking()).size(13)).style(|_: &iced::Theme| {
             container::Style {
               text_color: Some(theme::TEXT_MUTED),
               ..Default::default()
