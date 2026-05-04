@@ -7,7 +7,7 @@ use iced::{
 use crate::app::{DecryptForm, Message};
 use crate::gpg::DecryptStatus;
 use crate::i18n::Strings;
-use crate::ui::theme;
+use crate::ui::{common, theme};
 
 pub fn view<'a>(form: &'a DecryptForm, s: &'static dyn Strings) -> Element<'a, Message> {
   let bold = Font {
@@ -155,6 +155,7 @@ pub fn view<'a>(form: &'a DecryptForm, s: &'static dyn Strings) -> Element<'a, M
       .into(),
     scrollable(column(file_items).spacing(2).padding([0, 4]))
       .height(220)
+      .style(common::scroll_style)
       .into(),
     add_files_btn.into(),
   ];
@@ -294,7 +295,8 @@ pub fn view<'a>(form: &'a DecryptForm, s: &'static dyn Strings) -> Element<'a, M
         .width(Length::Fill),
     )
     .height(Length::Fill)
-    .width(Length::Fill),
+    .width(Length::Fill)
+    .style(common::scroll_style),
   )
   .height(Length::Fill)
   .width(Length::Fill)

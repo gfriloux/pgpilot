@@ -7,7 +7,7 @@ use iced::{
 use crate::app::Message;
 use crate::gpg::{CheckStatus, HealthCheck};
 use crate::i18n::Strings;
-use crate::ui::theme;
+use crate::ui::{common, theme};
 
 pub fn view<'a>(
   checks: &'a [HealthCheck],
@@ -62,6 +62,7 @@ pub fn view<'a>(
     )
     .height(Length::Fill)
     .width(Length::Fill)
+    .style(common::scroll_style)
     .into();
   }
 
@@ -186,7 +187,8 @@ pub fn view<'a>(
         .width(Length::Fill),
     )
     .height(Length::Fill)
-    .width(Length::Fill),
+    .width(Length::Fill)
+    .style(common::scroll_style),
   )
   .height(Length::Fill)
   .width(Length::Fill)

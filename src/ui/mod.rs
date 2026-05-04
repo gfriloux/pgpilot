@@ -171,7 +171,7 @@ fn sidebar(app: &App) -> Element<'_, Message> {
   column![
     row![
       text("\u{f21b}").font(theme::ICONS).size(18),
-      text("pgpilot").size(20).font(title_font),
+      text("PGPilot").size(20).font(title_font),
     ]
     .spacing(8)
     .align_y(Alignment::Center),

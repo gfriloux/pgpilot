@@ -6,9 +6,10 @@ pub use crate::config::ThemeVariant;
 
 /// Icon font — FA4 range only (\u{f000}–\u{f2e0}); codepoints above that range render as blank.
 pub const ICONS: Font = Font::with_name("Symbols Nerd Font Mono");
-/// Alias of ICONS used for monospace hex identifiers (fingerprints, key IDs).
-/// Both resolve to the same typeface; the distinction is semantic only.
-pub const MONO: Font = ICONS;
+/// Monospace font for hex identifiers (fingerprints, key IDs).
+/// Uses the iced default font — do not point this to ICONS (symbol-only font,
+/// lacks ASCII characters and will render fingerprints as blank boxes).
+pub const MONO: Font = Font::DEFAULT;
 
 // ---------------------------------------------------------------------------
 // Active theme — thread-local so UI rendering always reads current selection.
@@ -227,27 +228,27 @@ const USSR_SIDEBAR_HOVER_BG: Color = Color {
   a: 0.08,
 };
 const USSR_TEXT_STRONG: Color = Color {
-  r: 0.949,
-  g: 0.910,
-  b: 0.816,
+  r: 0.102,
+  g: 0.031,
+  b: 0.000,
   a: 1.0,
 };
 const USSR_TEXT_SECONDARY: Color = Color {
-  r: 0.851,
-  g: 0.788,
-  b: 0.659,
+  r: 0.239,
+  g: 0.102,
+  b: 0.000,
   a: 1.0,
 };
 const USSR_TEXT_MUTED: Color = Color {
-  r: 0.722,
-  g: 0.659,
-  b: 0.510,
+  r: 0.478,
+  g: 0.251,
+  b: 0.125,
   a: 1.0,
 };
 const USSR_TEXT_HEADER: Color = Color {
-  r: 0.541,
-  g: 0.478,
-  b: 0.361,
+  r: 0.604,
+  g: 0.376,
+  b: 0.251,
   a: 1.0,
 };
 const USSR_ACCENT: Color = Color {
@@ -266,13 +267,13 @@ const USSR_ACCENT_SUBTLE: Color = Color {
   r: 0.800,
   g: 0.133,
   b: 0.000,
-  a: 0.12,
+  a: 0.15,
 };
 const USSR_ACCENT_BORDER: Color = Color {
   r: 0.800,
   g: 0.133,
   b: 0.000,
-  a: 0.35,
+  a: 0.45,
 };
 const USSR_TEXT_ON_ACCENT: Color = Color {
   r: 0.949,
@@ -281,88 +282,88 @@ const USSR_TEXT_ON_ACCENT: Color = Color {
   a: 1.0,
 };
 const USSR_SUCCESS: Color = Color {
-  r: 0.722,
-  g: 0.525,
-  b: 0.043,
+  r: 0.290,
+  g: 0.408,
+  b: 0.125,
   a: 1.0,
 };
 const USSR_SUCCESS_BG: Color = Color {
-  r: 0.722,
-  g: 0.525,
-  b: 0.043,
-  a: 0.12,
+  r: 0.290,
+  g: 0.408,
+  b: 0.125,
+  a: 0.15,
 };
 const USSR_SUCCESS_HOVER: Color = Color {
-  r: 0.541,
-  g: 0.396,
-  b: 0.031,
+  r: 0.220,
+  g: 0.314,
+  b: 0.063,
   a: 1.0,
 };
 const USSR_ERROR: Color = Color {
-  r: 1.000,
-  g: 0.200,
+  r: 0.667,
+  g: 0.000,
   b: 0.000,
   a: 1.0,
 };
 const USSR_ERROR_BG: Color = Color {
-  r: 1.000,
-  g: 0.200,
+  r: 0.667,
+  g: 0.000,
   b: 0.000,
-  a: 0.12,
+  a: 0.15,
 };
 const USSR_BORDER: Color = Color {
-  r: 0.361,
-  g: 0.102,
-  b: 0.039,
+  r: 0.545,
+  g: 0.271,
+  b: 0.075,
   a: 1.0,
 };
 const USSR_HEADER_BG: Color = Color {
-  r: 0.165,
-  g: 0.039,
-  b: 0.039,
+  r: 0.831,
+  g: 0.753,
+  b: 0.627,
   a: 1.0,
 };
 const USSR_DETAIL_BG: Color = Color {
-  r: 0.133,
-  g: 0.047,
-  b: 0.047,
+  r: 0.929,
+  g: 0.878,
+  b: 0.769,
   a: 1.0,
 };
 const USSR_CARD_BG: Color = Color {
-  r: 0.180,
-  g: 0.063,
-  b: 0.063,
+  r: 0.961,
+  g: 0.929,
+  b: 0.831,
   a: 1.0,
 };
 const USSR_DESTRUCTIVE: Color = Color {
-  r: 0.867,
-  g: 0.067,
+  r: 0.533,
+  g: 0.000,
   b: 0.000,
   a: 1.0,
 };
 const USSR_DESTRUCTIVE_HOVER_BG: Color = Color {
-  r: 0.867,
-  g: 0.067,
+  r: 0.533,
+  g: 0.000,
   b: 0.000,
-  a: 0.15,
+  a: 0.18,
 };
 const USSR_DISABLED_BG: Color = Color {
-  r: 0.290,
-  g: 0.165,
-  b: 0.125,
+  r: 0.769,
+  g: 0.659,
+  b: 0.471,
   a: 1.0,
 };
 const USSR_PEACH: Color = Color {
   r: 0.800,
   g: 0.400,
-  b: 0.200,
+  b: 0.000,
   a: 1.0,
 };
 const USSR_WARNING_BG: Color = Color {
   r: 0.800,
   g: 0.400,
-  b: 0.200,
-  a: 0.12,
+  b: 0.000,
+  a: 0.15,
 };
 
 // ---------------------------------------------------------------------------

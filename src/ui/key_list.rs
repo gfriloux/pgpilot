@@ -6,7 +6,7 @@ use iced::{
 
 use crate::app::{App, KeyserverStatus, Message, View};
 use crate::ui::key_detail::ViewCtx;
-use crate::ui::{key_detail, theme};
+use crate::ui::{common, key_detail, theme};
 
 pub fn view(app: &App) -> Element<'_, Message> {
   let s = app.strings;
@@ -158,7 +158,8 @@ pub fn view(app: &App) -> Element<'_, Message> {
     })
     .collect();
 
-  let list_scrollable = scrollable(Column::with_children(key_rows).spacing(2).padding([4, 8]));
+  let list_scrollable = scrollable(Column::with_children(key_rows).spacing(2).padding([4, 8]))
+    .style(common::scroll_style);
 
   let list_panel = column![header, list_scrollable.height(Length::Fill)]
     .spacing(0)

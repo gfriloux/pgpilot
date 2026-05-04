@@ -230,17 +230,21 @@ pub fn view<'a>(
             ..Default::default()
           }
         }),
-        container(scrollable(column(signer_items).spacing(2).padding([0, 2])).height(140))
-          .padding(4)
-          .style(|_: &iced::Theme| container::Style {
-            background: Some(Background::Color(theme::header_bg())),
-            border: Border {
-              color: theme::border(),
-              width: 1.0,
-              radius: 4.0.into(),
-            },
-            ..Default::default()
-          }),
+        container(
+          scrollable(column(signer_items).spacing(2).padding([0, 2]))
+            .height(140)
+            .style(common::scroll_style),
+        )
+        .padding(4)
+        .style(|_: &iced::Theme| container::Style {
+          background: Some(Background::Color(theme::header_bg())),
+          border: Border {
+            color: theme::border(),
+            width: 1.0,
+            radius: 4.0.into(),
+          },
+          ..Default::default()
+        }),
       ]
       .spacing(6),
       rule_sep(),
@@ -278,7 +282,8 @@ pub fn view<'a>(
         .width(Length::Fill),
     )
     .height(Length::Fill)
-    .width(Length::Fill),
+    .width(Length::Fill)
+    .style(common::scroll_style),
   )
   .height(Length::Fill)
   .width(Length::Fill)

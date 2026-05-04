@@ -8,7 +8,7 @@ use app::App;
 
 fn main() -> iced::Result {
   iced::application(App::new, App::update, App::view)
-    .title("pgpilot")
+    .title("PGPilot")
     .font(include_bytes!("../assets/SymbolsNerdFontMono-Regular.ttf").as_slice())
     .subscription(App::subscription)
     // Apply the persisted scale factor at startup.

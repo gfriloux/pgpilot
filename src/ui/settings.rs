@@ -6,8 +6,8 @@ use iced::{
 
 use crate::app::{App, Message};
 use crate::i18n::Language;
-use crate::ui::theme;
 use crate::ui::theme::ThemeVariant;
+use crate::ui::{common, theme};
 
 pub fn view(app: &App) -> Element<'_, Message> {
   let s = app.strings;
@@ -141,7 +141,8 @@ pub fn view(app: &App) -> Element<'_, Message> {
         .width(Length::Fill),
     )
     .height(Length::Fill)
-    .width(Length::Fill),
+    .width(Length::Fill)
+    .style(common::scroll_style),
   )
   .height(Length::Fill)
   .width(Length::Fill)

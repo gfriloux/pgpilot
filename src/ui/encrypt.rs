@@ -7,7 +7,7 @@ use iced::{
 use crate::app::{EncryptForm, Message};
 use crate::gpg::KeyInfo;
 use crate::i18n::Strings;
-use crate::ui::theme;
+use crate::ui::{common, theme};
 
 fn key_row(key: &KeyInfo, selected: bool) -> Element<'static, Message> {
   let fp = key.fingerprint.clone();
@@ -166,7 +166,9 @@ pub fn view<'a>(
         ..Default::default()
       }
     }),
-    scrollable(column(recipient_items).spacing(2).padding([0, 4])).height(280),
+    scrollable(column(recipient_items).spacing(2).padding([0, 4]))
+      .height(280)
+      .style(common::scroll_style),
   ]
   .spacing(8)
   .width(Length::FillPortion(45))
@@ -311,7 +313,9 @@ pub fn view<'a>(
   } else {
     column![
       header_label,
-      scrollable(column(file_items).spacing(2).padding([0, 4])).height(232),
+      scrollable(column(file_items).spacing(2).padding([0, 4]))
+        .height(232)
+        .style(common::scroll_style),
       add_files_btn,
     ]
     .spacing(8)
@@ -606,7 +610,8 @@ pub fn view<'a>(
         .width(Length::Fill),
     )
     .height(Length::Fill)
-    .width(Length::Fill),
+    .width(Length::Fill)
+    .style(common::scroll_style),
   )
   .height(Length::Fill)
   .width(Length::Fill)

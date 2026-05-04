@@ -9,7 +9,7 @@ use iced::{
 use crate::app::{ImportForm, Message};
 use crate::gpg::Keyserver;
 use crate::i18n::Strings;
-use crate::ui::theme;
+use crate::ui::{common, theme};
 
 pub fn view<'a>(form: &'a ImportForm, s: &'static dyn Strings) -> Element<'a, Message> {
   let bold = Font {
@@ -289,7 +289,8 @@ pub fn view<'a>(form: &'a ImportForm, s: &'static dyn Strings) -> Element<'a, Me
         .width(Length::Fill),
     )
     .height(Length::Fill)
-    .width(Length::Fill),
+    .width(Length::Fill)
+    .style(common::scroll_style),
   )
   .height(Length::Fill)
   .width(Length::Fill)

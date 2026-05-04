@@ -410,7 +410,8 @@ pub fn view<'a>(form: &'a SignForm, s: &'static dyn Strings) -> Element<'a, Mess
         .width(Length::Fill),
     )
     .height(Length::Fill)
-    .width(Length::Fill),
+    .width(Length::Fill)
+    .style(common::scroll_style),
   )
   .height(Length::Fill)
   .width(Length::Fill)

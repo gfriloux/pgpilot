@@ -1168,7 +1168,7 @@ fn subkey_ghost_card<'a>(
   .padding(8)
   .width(Length::Fill)
   .style(move |_: &iced::Theme| container::Style {
-    background: Some(Background::Color(theme::sidebar_bg())),
+    background: Some(Background::Color(theme::card_bg())),
     border: Border {
       color: Color {
         a: 0.25,
@@ -1242,7 +1242,7 @@ fn subkey_column<'a>(
             .padding(8)
             .width(Length::Fill)
             .style(|_: &iced::Theme| container::Style {
-              background: Some(Background::Color(theme::sidebar_bg())),
+              background: Some(Background::Color(theme::card_bg())),
               border: Border {
                 color: theme::border(),
                 width: 1.0,
