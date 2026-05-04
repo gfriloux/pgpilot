@@ -32,12 +32,12 @@ fn result_card<'a>(
       .spacing(8)
       .align_y(Alignment::Center),
       container(text(message).size(12)).style(|_: &iced::Theme| container::Style {
-        text_color: Some(theme::TEXT_SECONDARY),
+        text_color: Some(theme::text_secondary()),
         ..Default::default()
       }),
       container(text(detail).size(11).font(Font::MONOSPACE)).style(|_: &iced::Theme| {
         container::Style {
-          text_color: Some(theme::TEXT_MUTED),
+          text_color: Some(theme::text_muted()),
           ..Default::default()
         }
       }),
@@ -53,7 +53,7 @@ fn result_card<'a>(
       width: 1.0,
       radius: 8.0.into(),
     },
-    text_color: Some(theme::TEXT_STRONG),
+    text_color: Some(theme::text_strong()),
     ..Default::default()
   })
   .into()
@@ -73,14 +73,14 @@ pub fn view<'a>(form: &'a SignForm, s: &'static dyn Strings) -> Element<'a, Mess
       .to_string();
     container(text(name).size(13))
       .style(|_: &iced::Theme| container::Style {
-        text_color: Some(theme::TEXT_STRONG),
+        text_color: Some(theme::text_strong()),
         ..Default::default()
       })
       .into()
   } else {
     container(text(s.no_file_selected()).size(13))
       .style(|_: &iced::Theme| container::Style {
-        text_color: Some(theme::TEXT_MUTED),
+        text_color: Some(theme::text_muted()),
         ..Default::default()
       })
       .into()
@@ -102,7 +102,7 @@ pub fn view<'a>(form: &'a SignForm, s: &'static dyn Strings) -> Element<'a, Mess
       .to_string();
     container(text(name).size(13))
       .style(|_: &iced::Theme| container::Style {
-        text_color: Some(theme::TEXT_STRONG),
+        text_color: Some(theme::text_strong()),
         ..Default::default()
       })
       .into()
@@ -121,7 +121,7 @@ pub fn view<'a>(form: &'a SignForm, s: &'static dyn Strings) -> Element<'a, Mess
     };
     container(text(hint).size(12))
       .style(|_: &iced::Theme| container::Style {
-        text_color: Some(theme::TEXT_MUTED),
+        text_color: Some(theme::text_muted()),
         ..Default::default()
       })
       .into()
@@ -138,7 +138,7 @@ pub fn view<'a>(form: &'a SignForm, s: &'static dyn Strings) -> Element<'a, Mess
   let result_el: Element<'_, Message> = match &form.verify_result {
     None if form.verifying => container(text(s.verify_in_progress()).size(13))
       .style(|_: &iced::Theme| container::Style {
-        text_color: Some(theme::TEXT_MUTED),
+        text_color: Some(theme::text_muted()),
         ..Default::default()
       })
       .into(),
@@ -149,7 +149,7 @@ pub fn view<'a>(form: &'a SignForm, s: &'static dyn Strings) -> Element<'a, Mess
           .font(theme::ICONS)
           .size(14)
           .style(|_: &iced::Theme| iced::widget::text::Style {
-            color: Some(theme::ERROR),
+            color: Some(theme::error()),
           }),
         text(format!("{}: {e}", s.verify_error_prefix())).size(13),
       ]
@@ -159,13 +159,13 @@ pub fn view<'a>(form: &'a SignForm, s: &'static dyn Strings) -> Element<'a, Mess
     .padding([10, 14])
     .width(Length::Fill)
     .style(|_: &iced::Theme| container::Style {
-      background: Some(Background::Color(theme::ERROR_BG)),
+      background: Some(Background::Color(theme::error_bg())),
       border: Border {
-        color: theme::ERROR,
+        color: theme::error(),
         width: 1.0,
         radius: 8.0.into(),
       },
-      text_color: Some(theme::ERROR),
+      text_color: Some(theme::error()),
       ..Default::default()
     })
     .into(),
@@ -174,24 +174,24 @@ pub fn view<'a>(form: &'a SignForm, s: &'static dyn Strings) -> Element<'a, Mess
         let (icon, icon_color, title, border_color, bg_color) = match &vr.signer_trust {
           TrustLevel::Full | TrustLevel::Ultimate => (
             "\u{f058}",
-            theme::SUCCESS,
+            theme::success(),
             s.verify_valid_full_trust(),
-            theme::SUCCESS,
-            theme::SUCCESS_BG,
+            theme::success(),
+            theme::success_bg(),
           ),
           TrustLevel::Marginal => (
             "\u{f058}",
-            theme::PEACH,
+            theme::peach(),
             s.verify_valid_marginal_trust(),
-            theme::PEACH,
-            theme::WARNING_BG,
+            theme::peach(),
+            theme::warning_bg(),
           ),
           TrustLevel::Undefined => (
             "\u{f071}",
-            theme::PEACH,
+            theme::peach(),
             s.verify_valid_no_trust(),
-            theme::PEACH,
-            theme::WARNING_BG,
+            theme::peach(),
+            theme::warning_bg(),
           ),
         };
 
@@ -214,7 +214,7 @@ pub fn view<'a>(form: &'a SignForm, s: &'static dyn Strings) -> Element<'a, Mess
               text("L'identité affichée n'est pas vérifiée par votre toile de confiance.").size(12),
             )
             .style(|_: &iced::Theme| container::Style {
-              text_color: Some(theme::PEACH),
+              text_color: Some(theme::peach()),
               ..Default::default()
             })
             .into(),
@@ -228,7 +228,7 @@ pub fn view<'a>(form: &'a SignForm, s: &'static dyn Strings) -> Element<'a, Mess
                 .size(12)
                 .style(|_: &iced::Theme| {
                   iced::widget::text::Style {
-                    color: Some(theme::TEXT_MUTED),
+                    color: Some(theme::text_muted()),
                   }
                 }),
               text(name.as_str()).size(13),
@@ -244,7 +244,7 @@ pub fn view<'a>(form: &'a SignForm, s: &'static dyn Strings) -> Element<'a, Mess
             row![
               text("Fingerprint :").size(12).style(|_: &iced::Theme| {
                 iced::widget::text::Style {
-                  color: Some(theme::TEXT_MUTED),
+                  color: Some(theme::text_muted()),
                 }
               }),
               text(short_fp.to_string()).size(12).font(Font::MONOSPACE),
@@ -261,7 +261,7 @@ pub fn view<'a>(form: &'a SignForm, s: &'static dyn Strings) -> Element<'a, Mess
                 .size(12)
                 .style(|_: &iced::Theme| {
                   iced::widget::text::Style {
-                    color: Some(theme::TEXT_MUTED),
+                    color: Some(theme::text_muted()),
                   }
                 }),
               text(date.as_str()).size(13),
@@ -281,7 +281,7 @@ pub fn view<'a>(form: &'a SignForm, s: &'static dyn Strings) -> Element<'a, Mess
               width: 1.0,
               radius: 8.0.into(),
             },
-            text_color: Some(theme::TEXT_STRONG),
+            text_color: Some(theme::text_strong()),
             ..Default::default()
           })
           .into()
@@ -289,8 +289,8 @@ pub fn view<'a>(form: &'a SignForm, s: &'static dyn Strings) -> Element<'a, Mess
       VerifyOutcome::BadSig => result_card(
         bold,
         "\u{f057}",
-        theme::ERROR,
-        theme::ERROR_BG,
+        theme::error(),
+        theme::error_bg(),
         s.verify_outcome_bad_sig(),
         "La signature ne correspond pas à ce fichier. \
          Vérifiez que vous avez sélectionné le bon fichier et la bonne signature.",
@@ -299,8 +299,8 @@ pub fn view<'a>(form: &'a SignForm, s: &'static dyn Strings) -> Element<'a, Mess
       VerifyOutcome::UnknownKey => result_card(
         bold,
         "\u{f071}",
-        theme::PEACH,
-        theme::WARNING_BG,
+        theme::peach(),
+        theme::warning_bg(),
         s.verify_outcome_unknown_key(),
         "La clef publique du signataire n'est pas dans votre trousseau. \
          Importez-la pour vérifier l'identité du signataire.",
@@ -309,8 +309,8 @@ pub fn view<'a>(form: &'a SignForm, s: &'static dyn Strings) -> Element<'a, Mess
       VerifyOutcome::ExpiredKey => result_card(
         bold,
         "\u{f071}",
-        theme::PEACH,
-        theme::WARNING_BG,
+        theme::peach(),
+        theme::warning_bg(),
         s.verify_outcome_expired_key(),
         "La signature est mathématiquement valide, mais la clef du signataire \
          était expirée au moment de la vérification.",
@@ -319,8 +319,8 @@ pub fn view<'a>(form: &'a SignForm, s: &'static dyn Strings) -> Element<'a, Mess
       VerifyOutcome::RevokedKey => result_card(
         bold,
         "\u{f057}",
-        theme::ERROR,
-        theme::ERROR_BG,
+        theme::error(),
+        theme::error_bg(),
         s.verify_outcome_revoked_key(),
         "La clef ayant signé ce fichier a été révoquée. \
          La signature n'est plus considérée comme fiable.",
@@ -329,8 +329,8 @@ pub fn view<'a>(form: &'a SignForm, s: &'static dyn Strings) -> Element<'a, Mess
       VerifyOutcome::Error(msg) => result_card(
         bold,
         "\u{f057}",
-        theme::ERROR,
-        theme::ERROR_BG,
+        theme::error(),
+        theme::error_bg(),
         s.verify_error_prefix(),
         msg.as_str(),
         &vr.detail,
@@ -342,7 +342,7 @@ pub fn view<'a>(form: &'a SignForm, s: &'static dyn Strings) -> Element<'a, Mess
 
   let rule_sep = || {
     rule::horizontal(1).style(|_: &iced::Theme| rule::Style {
-      color: theme::BORDER,
+      color: theme::border(),
       radius: 0.0.into(),
       fill_mode: rule::FillMode::Full,
       snap: true,
@@ -366,7 +366,7 @@ pub fn view<'a>(form: &'a SignForm, s: &'static dyn Strings) -> Element<'a, Mess
           .size(13)
         )
         .style(|_: &iced::Theme| container::Style {
-          text_color: Some(theme::TEXT_SECONDARY),
+          text_color: Some(theme::text_secondary()),
           ..Default::default()
         }),
       ]
@@ -392,13 +392,13 @@ pub fn view<'a>(form: &'a SignForm, s: &'static dyn Strings) -> Element<'a, Mess
   .padding(32)
   .width(640)
   .style(|_: &iced::Theme| container::Style {
-    background: Some(Background::Color(theme::CARD_BG)),
+    background: Some(Background::Color(theme::card_bg())),
     border: Border {
-      color: theme::BORDER,
+      color: theme::border(),
       width: 1.0,
       radius: 12.0.into(),
     },
-    text_color: Some(theme::TEXT_STRONG),
+    text_color: Some(theme::text_strong()),
     ..Default::default()
   });
 
@@ -415,7 +415,7 @@ pub fn view<'a>(form: &'a SignForm, s: &'static dyn Strings) -> Element<'a, Mess
   .height(Length::Fill)
   .width(Length::Fill)
   .style(|_: &iced::Theme| container::Style {
-    background: Some(Background::Color(theme::SIDEBAR_BG)),
+    background: Some(Background::Color(theme::sidebar_bg())),
     ..Default::default()
   })
   .into()

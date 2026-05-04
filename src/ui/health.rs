@@ -27,7 +27,7 @@ pub fn view<'a>(
     text(s.health_diagnostics_title()).size(22).font(bold),
     container(text(s.health_diagnostics_desc()).size(13),).style(|_: &iced::Theme| {
       container::Style {
-        text_color: Some(theme::TEXT_SECONDARY),
+        text_color: Some(theme::text_secondary()),
         ..Default::default()
       }
     }),
@@ -41,7 +41,7 @@ pub fn view<'a>(
           title_section,
           container(text(s.health_checking()).size(13)).style(|_: &iced::Theme| {
             container::Style {
-              text_color: Some(theme::TEXT_MUTED),
+              text_color: Some(theme::text_muted()),
               ..Default::default()
             }
           }),
@@ -51,9 +51,9 @@ pub fn view<'a>(
       .padding(32)
       .width(560)
       .style(|_: &iced::Theme| container::Style {
-        background: Some(Background::Color(theme::CARD_BG)),
+        background: Some(Background::Color(theme::card_bg())),
         border: Border {
-          color: theme::BORDER,
+          color: theme::border(),
           width: 1.0,
           radius: 12.0.into(),
         },
@@ -82,10 +82,10 @@ pub fn view<'a>(
         .iter()
         .map(|check| {
           let (icon, icon_color) = match check.status {
-            CheckStatus::Ok => ("\u{f058}", theme::SUCCESS),
-            CheckStatus::Info => ("\u{f05a}", theme::ACCENT),
-            CheckStatus::Warning => ("\u{f071}", theme::PEACH),
-            CheckStatus::Error => ("\u{f057}", theme::ERROR),
+            CheckStatus::Ok => ("\u{f058}", theme::success()),
+            CheckStatus::Info => ("\u{f05a}", theme::accent()),
+            CheckStatus::Warning => ("\u{f071}", theme::peach()),
+            CheckStatus::Error => ("\u{f057}", theme::error()),
           };
 
           let mut content: Vec<Element<Message>> = vec![row![
@@ -100,10 +100,10 @@ pub fn view<'a>(
               container(text(val.as_str()).size(11).font(mono))
                 .padding([2, 6])
                 .style(|_: &iced::Theme| container::Style {
-                  background: Some(Background::Color(theme::HEADER_BG)),
-                  text_color: Some(theme::TEXT_SECONDARY),
+                  background: Some(Background::Color(theme::header_bg())),
+                  text_color: Some(theme::text_secondary()),
                   border: Border {
-                    color: theme::BORDER,
+                    color: theme::border(),
                     width: 1.0,
                     radius: 4.0.into(),
                   },
@@ -116,7 +116,7 @@ pub fn view<'a>(
           content.push(
             container(text(check.explanation).size(11))
               .style(|_: &iced::Theme| container::Style {
-                text_color: Some(theme::TEXT_MUTED),
+                text_color: Some(theme::text_muted()),
                 ..Default::default()
               })
               .into(),
@@ -127,10 +127,10 @@ pub fn view<'a>(
               container(text(fix).size(11).font(mono))
                 .padding([6, 10])
                 .style(|_: &iced::Theme| container::Style {
-                  background: Some(Background::Color(theme::HEADER_BG)),
-                  text_color: Some(theme::TEXT_SECONDARY),
+                  background: Some(Background::Color(theme::header_bg())),
+                  text_color: Some(theme::text_secondary()),
                   border: Border {
-                    color: theme::BORDER,
+                    color: theme::border(),
                     width: 1.0,
                     radius: 4.0.into(),
                   },
@@ -145,7 +145,7 @@ pub fn view<'a>(
             .width(Length::Fill)
             .style(|_: &iced::Theme| container::Style {
               border: Border {
-                color: theme::BORDER,
+                color: theme::border(),
                 width: 1.0,
                 radius: 6.0.into(),
               },
@@ -168,13 +168,13 @@ pub fn view<'a>(
       .padding(32)
       .width(560)
       .style(|_: &iced::Theme| container::Style {
-        background: Some(Background::Color(theme::CARD_BG)),
+        background: Some(Background::Color(theme::card_bg())),
         border: Border {
-          color: theme::BORDER,
+          color: theme::border(),
           width: 1.0,
           radius: 12.0.into(),
         },
-        text_color: Some(theme::TEXT_STRONG),
+        text_color: Some(theme::text_strong()),
         ..Default::default()
       });
 
@@ -191,7 +191,7 @@ pub fn view<'a>(
   .height(Length::Fill)
   .width(Length::Fill)
   .style(|_: &iced::Theme| container::Style {
-    background: Some(Background::Color(theme::SIDEBAR_BG)),
+    background: Some(Background::Color(theme::sidebar_bg())),
     ..Default::default()
   })
   .into()

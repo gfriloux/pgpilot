@@ -11,6 +11,10 @@ fn main() -> iced::Result {
     .title("pgpilot")
     .font(include_bytes!("../assets/SymbolsNerdFontMono-Regular.ttf").as_slice())
     .subscription(App::subscription)
+    // Apply the persisted scale factor at startup.
+    // iced 0.14 exposes `.scale_factor()` on the application builder;
+    // the closure receives the window id and the app state.
+    .scale_factor(|app: &App| app.config.scale_factor as f32)
     .window(iced::window::Settings {
       min_size: Some(iced::Size::new(1000.0, 540.0)),
       ..Default::default()

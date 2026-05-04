@@ -1,8 +1,36 @@
 use iced::{Color, Font};
+use std::cell::Cell;
 
+// Re-export ThemeVariant from config so UI code can use theme::ThemeVariant.
+pub use crate::config::ThemeVariant;
+
+/// Icon font — FA4 range only (\u{f000}–\u{f2e0}); codepoints above that range render as blank.
 pub const ICONS: Font = Font::with_name("Symbols Nerd Font Mono");
+/// Alias of ICONS used for monospace hex identifiers (fingerprints, key IDs).
+/// Both resolve to the same typeface; the distinction is semantic only.
+pub const MONO: Font = ICONS;
 
-// Catppuccin Frappé
+// ---------------------------------------------------------------------------
+// Active theme — thread-local so UI rendering always reads current selection.
+// ---------------------------------------------------------------------------
+
+thread_local! {
+  static ACTIVE: Cell<ThemeVariant> = const { Cell::new(ThemeVariant::Catppuccin) };
+}
+
+pub fn set_active(v: ThemeVariant) {
+  ACTIVE.with(|c| c.set(v));
+}
+
+fn active() -> ThemeVariant {
+  ACTIVE.with(|c| c.get())
+}
+
+// ---------------------------------------------------------------------------
+// Catppuccin Frappé — original constants (kept for backwards compatibility
+// in places that still use them, e.g. the status bar in ui/mod.rs which
+// reads them inside closures that don't call our functions).
+// ---------------------------------------------------------------------------
 
 // Sidebar (Crust)
 pub const SIDEBAR_BG: Color = Color {
@@ -175,3 +203,350 @@ pub const WARNING_BG: Color = Color {
   b: 0.463,
   a: 0.12,
 };
+
+// ---------------------------------------------------------------------------
+// USSR / Soviet palette constants
+// ---------------------------------------------------------------------------
+
+const USSR_SIDEBAR_BG: Color = Color {
+  r: 0.102,
+  g: 0.031,
+  b: 0.031,
+  a: 1.0,
+};
+const USSR_SIDEBAR_TEXT: Color = Color {
+  r: 0.949,
+  g: 0.910,
+  b: 0.816,
+  a: 1.0,
+};
+const USSR_SIDEBAR_HOVER_BG: Color = Color {
+  r: 1.0,
+  g: 1.0,
+  b: 1.0,
+  a: 0.08,
+};
+const USSR_TEXT_STRONG: Color = Color {
+  r: 0.949,
+  g: 0.910,
+  b: 0.816,
+  a: 1.0,
+};
+const USSR_TEXT_SECONDARY: Color = Color {
+  r: 0.851,
+  g: 0.788,
+  b: 0.659,
+  a: 1.0,
+};
+const USSR_TEXT_MUTED: Color = Color {
+  r: 0.722,
+  g: 0.659,
+  b: 0.510,
+  a: 1.0,
+};
+const USSR_TEXT_HEADER: Color = Color {
+  r: 0.541,
+  g: 0.478,
+  b: 0.361,
+  a: 1.0,
+};
+const USSR_ACCENT: Color = Color {
+  r: 0.800,
+  g: 0.133,
+  b: 0.000,
+  a: 1.0,
+};
+const USSR_ACCENT_HOVER: Color = Color {
+  r: 0.667,
+  g: 0.102,
+  b: 0.000,
+  a: 1.0,
+};
+const USSR_ACCENT_SUBTLE: Color = Color {
+  r: 0.800,
+  g: 0.133,
+  b: 0.000,
+  a: 0.12,
+};
+const USSR_ACCENT_BORDER: Color = Color {
+  r: 0.800,
+  g: 0.133,
+  b: 0.000,
+  a: 0.35,
+};
+const USSR_TEXT_ON_ACCENT: Color = Color {
+  r: 0.949,
+  g: 0.910,
+  b: 0.816,
+  a: 1.0,
+};
+const USSR_SUCCESS: Color = Color {
+  r: 0.722,
+  g: 0.525,
+  b: 0.043,
+  a: 1.0,
+};
+const USSR_SUCCESS_BG: Color = Color {
+  r: 0.722,
+  g: 0.525,
+  b: 0.043,
+  a: 0.12,
+};
+const USSR_SUCCESS_HOVER: Color = Color {
+  r: 0.541,
+  g: 0.396,
+  b: 0.031,
+  a: 1.0,
+};
+const USSR_ERROR: Color = Color {
+  r: 1.000,
+  g: 0.200,
+  b: 0.000,
+  a: 1.0,
+};
+const USSR_ERROR_BG: Color = Color {
+  r: 1.000,
+  g: 0.200,
+  b: 0.000,
+  a: 0.12,
+};
+const USSR_BORDER: Color = Color {
+  r: 0.361,
+  g: 0.102,
+  b: 0.039,
+  a: 1.0,
+};
+const USSR_HEADER_BG: Color = Color {
+  r: 0.165,
+  g: 0.039,
+  b: 0.039,
+  a: 1.0,
+};
+const USSR_DETAIL_BG: Color = Color {
+  r: 0.133,
+  g: 0.047,
+  b: 0.047,
+  a: 1.0,
+};
+const USSR_CARD_BG: Color = Color {
+  r: 0.180,
+  g: 0.063,
+  b: 0.063,
+  a: 1.0,
+};
+const USSR_DESTRUCTIVE: Color = Color {
+  r: 0.867,
+  g: 0.067,
+  b: 0.000,
+  a: 1.0,
+};
+const USSR_DESTRUCTIVE_HOVER_BG: Color = Color {
+  r: 0.867,
+  g: 0.067,
+  b: 0.000,
+  a: 0.15,
+};
+const USSR_DISABLED_BG: Color = Color {
+  r: 0.290,
+  g: 0.165,
+  b: 0.125,
+  a: 1.0,
+};
+const USSR_PEACH: Color = Color {
+  r: 0.800,
+  g: 0.400,
+  b: 0.200,
+  a: 1.0,
+};
+const USSR_WARNING_BG: Color = Color {
+  r: 0.800,
+  g: 0.400,
+  b: 0.200,
+  a: 0.12,
+};
+
+// ---------------------------------------------------------------------------
+// Dynamic theme functions — use these in UI code for theme-aware colours.
+// ---------------------------------------------------------------------------
+
+pub fn sidebar_bg() -> Color {
+  match active() {
+    ThemeVariant::Catppuccin => SIDEBAR_BG,
+    ThemeVariant::Ussr => USSR_SIDEBAR_BG,
+  }
+}
+
+pub fn sidebar_text() -> Color {
+  match active() {
+    ThemeVariant::Catppuccin => SIDEBAR_TEXT,
+    ThemeVariant::Ussr => USSR_SIDEBAR_TEXT,
+  }
+}
+
+pub fn sidebar_hover_bg() -> Color {
+  match active() {
+    ThemeVariant::Catppuccin => SIDEBAR_HOVER_BG,
+    ThemeVariant::Ussr => USSR_SIDEBAR_HOVER_BG,
+  }
+}
+
+pub fn text_strong() -> Color {
+  match active() {
+    ThemeVariant::Catppuccin => TEXT_STRONG,
+    ThemeVariant::Ussr => USSR_TEXT_STRONG,
+  }
+}
+
+pub fn text_secondary() -> Color {
+  match active() {
+    ThemeVariant::Catppuccin => TEXT_SECONDARY,
+    ThemeVariant::Ussr => USSR_TEXT_SECONDARY,
+  }
+}
+
+pub fn text_muted() -> Color {
+  match active() {
+    ThemeVariant::Catppuccin => TEXT_MUTED,
+    ThemeVariant::Ussr => USSR_TEXT_MUTED,
+  }
+}
+
+pub fn text_header() -> Color {
+  match active() {
+    ThemeVariant::Catppuccin => TEXT_HEADER,
+    ThemeVariant::Ussr => USSR_TEXT_HEADER,
+  }
+}
+
+pub fn accent() -> Color {
+  match active() {
+    ThemeVariant::Catppuccin => ACCENT,
+    ThemeVariant::Ussr => USSR_ACCENT,
+  }
+}
+
+pub fn accent_hover() -> Color {
+  match active() {
+    ThemeVariant::Catppuccin => ACCENT_HOVER,
+    ThemeVariant::Ussr => USSR_ACCENT_HOVER,
+  }
+}
+
+pub fn accent_subtle() -> Color {
+  match active() {
+    ThemeVariant::Catppuccin => ACCENT_SUBTLE,
+    ThemeVariant::Ussr => USSR_ACCENT_SUBTLE,
+  }
+}
+
+pub fn accent_border() -> Color {
+  match active() {
+    ThemeVariant::Catppuccin => ACCENT_BORDER,
+    ThemeVariant::Ussr => USSR_ACCENT_BORDER,
+  }
+}
+
+pub fn text_on_accent() -> Color {
+  match active() {
+    ThemeVariant::Catppuccin => TEXT_ON_ACCENT,
+    ThemeVariant::Ussr => USSR_TEXT_ON_ACCENT,
+  }
+}
+
+pub fn success() -> Color {
+  match active() {
+    ThemeVariant::Catppuccin => SUCCESS,
+    ThemeVariant::Ussr => USSR_SUCCESS,
+  }
+}
+
+pub fn success_bg() -> Color {
+  match active() {
+    ThemeVariant::Catppuccin => SUCCESS_BG,
+    ThemeVariant::Ussr => USSR_SUCCESS_BG,
+  }
+}
+
+pub fn success_hover() -> Color {
+  match active() {
+    ThemeVariant::Catppuccin => SUCCESS_HOVER,
+    ThemeVariant::Ussr => USSR_SUCCESS_HOVER,
+  }
+}
+
+pub fn error() -> Color {
+  match active() {
+    ThemeVariant::Catppuccin => ERROR,
+    ThemeVariant::Ussr => USSR_ERROR,
+  }
+}
+
+pub fn error_bg() -> Color {
+  match active() {
+    ThemeVariant::Catppuccin => ERROR_BG,
+    ThemeVariant::Ussr => USSR_ERROR_BG,
+  }
+}
+
+pub fn border() -> Color {
+  match active() {
+    ThemeVariant::Catppuccin => BORDER,
+    ThemeVariant::Ussr => USSR_BORDER,
+  }
+}
+
+pub fn header_bg() -> Color {
+  match active() {
+    ThemeVariant::Catppuccin => HEADER_BG,
+    ThemeVariant::Ussr => USSR_HEADER_BG,
+  }
+}
+
+pub fn detail_bg() -> Color {
+  match active() {
+    ThemeVariant::Catppuccin => DETAIL_BG,
+    ThemeVariant::Ussr => USSR_DETAIL_BG,
+  }
+}
+
+pub fn card_bg() -> Color {
+  match active() {
+    ThemeVariant::Catppuccin => CARD_BG,
+    ThemeVariant::Ussr => USSR_CARD_BG,
+  }
+}
+
+pub fn destructive() -> Color {
+  match active() {
+    ThemeVariant::Catppuccin => DESTRUCTIVE,
+    ThemeVariant::Ussr => USSR_DESTRUCTIVE,
+  }
+}
+
+pub fn destructive_hover_bg() -> Color {
+  match active() {
+    ThemeVariant::Catppuccin => DESTRUCTIVE_HOVER_BG,
+    ThemeVariant::Ussr => USSR_DESTRUCTIVE_HOVER_BG,
+  }
+}
+
+pub fn disabled_bg() -> Color {
+  match active() {
+    ThemeVariant::Catppuccin => DISABLED_BG,
+    ThemeVariant::Ussr => USSR_DISABLED_BG,
+  }
+}
+
+pub fn peach() -> Color {
+  match active() {
+    ThemeVariant::Catppuccin => PEACH,
+    ThemeVariant::Ussr => USSR_PEACH,
+  }
+}
+
+pub fn warning_bg() -> Color {
+  match active() {
+    ThemeVariant::Catppuccin => WARNING_BG,
+    ThemeVariant::Ussr => USSR_WARNING_BG,
+  }
+}

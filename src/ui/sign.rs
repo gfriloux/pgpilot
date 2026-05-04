@@ -36,7 +36,7 @@ pub fn view<'a>(
           .font(theme::ICONS)
           .size(12)
           .style(|_: &iced::Theme| iced::widget::text::Style {
-            color: Some(theme::SUCCESS),
+            color: Some(theme::success()),
           }),
         text(name).size(13),
       ]
@@ -44,14 +44,14 @@ pub fn view<'a>(
       .align_y(Alignment::Center),
     )
     .style(|_: &iced::Theme| container::Style {
-      text_color: Some(theme::TEXT_STRONG),
+      text_color: Some(theme::text_strong()),
       ..Default::default()
     })
     .into()
   } else {
     container(text(s.no_file_selected()).size(13))
       .style(|_: &iced::Theme| container::Style {
-        text_color: Some(theme::TEXT_MUTED),
+        text_color: Some(theme::text_muted()),
         ..Default::default()
       })
       .into()
@@ -69,7 +69,7 @@ pub fn view<'a>(
     vec![
       container(text("Aucune clef privée avec capacité de signature.").size(12))
         .style(|_: &iced::Theme| container::Style {
-          text_color: Some(theme::TEXT_MUTED),
+          text_color: Some(theme::text_muted()),
           ..Default::default()
         })
         .padding([4, 0])
@@ -92,7 +92,7 @@ pub fn view<'a>(
               text(label).size(13),
               text(short_id).size(11).style(|_: &iced::Theme| {
                 iced::widget::text::Style {
-                  color: Some(theme::TEXT_MUTED),
+                  color: Some(theme::text_muted()),
                 }
               }),
             ]
@@ -106,21 +106,21 @@ pub fn view<'a>(
         .width(Length::Fill)
         .style(move |_: &iced::Theme, status| button::Style {
           background: Some(Background::Color(if selected {
-            theme::ACCENT_SUBTLE
+            theme::accent_subtle()
           } else {
             match status {
-              button::Status::Hovered | button::Status::Pressed => theme::HEADER_BG,
+              button::Status::Hovered | button::Status::Pressed => theme::header_bg(),
               _ => Color::TRANSPARENT,
             }
           })),
           text_color: if selected {
-            theme::ACCENT
+            theme::accent()
           } else {
-            theme::TEXT_STRONG
+            theme::text_strong()
           },
           border: Border {
             color: if selected {
-              theme::ACCENT_BORDER
+              theme::accent_border()
             } else {
               Color::TRANSPARENT
             },
@@ -147,13 +147,13 @@ pub fn view<'a>(
           .font(theme::ICONS)
           .size(16)
           .style(|_: &iced::Theme| iced::widget::text::Style {
-            color: Some(theme::SUCCESS),
+            color: Some(theme::success()),
           }),
         column![
           text(s.status_file_signed()).size(14).font(bold),
           text(sig_name).size(12).style(|_: &iced::Theme| {
             iced::widget::text::Style {
-              color: Some(theme::TEXT_SECONDARY),
+              color: Some(theme::text_secondary()),
             }
           }),
         ]
@@ -165,20 +165,20 @@ pub fn view<'a>(
     .padding([10, 14])
     .width(Length::Fill)
     .style(|_: &iced::Theme| container::Style {
-      background: Some(Background::Color(theme::SUCCESS_BG)),
+      background: Some(Background::Color(theme::success_bg())),
       border: Border {
-        color: theme::SUCCESS,
+        color: theme::success(),
         width: 1.0,
         radius: 8.0.into(),
       },
-      text_color: Some(theme::SUCCESS),
+      text_color: Some(theme::success()),
       ..Default::default()
     })
     .into()
   } else if form.signing {
     container(text(s.verify_in_progress()).size(13))
       .style(|_: &iced::Theme| container::Style {
-        text_color: Some(theme::TEXT_MUTED),
+        text_color: Some(theme::text_muted()),
         ..Default::default()
       })
       .into()
@@ -190,7 +190,7 @@ pub fn view<'a>(
 
   let rule_sep = || {
     rule::horizontal(1).style(|_: &iced::Theme| rule::Style {
-      color: theme::BORDER,
+      color: theme::border(),
       radius: 0.0.into(),
       fill_mode: rule::FillMode::Full,
       snap: true,
@@ -215,7 +215,7 @@ pub fn view<'a>(
           .size(13)
         )
         .style(|_: &iced::Theme| container::Style {
-          text_color: Some(theme::TEXT_SECONDARY),
+          text_color: Some(theme::text_secondary()),
           ..Default::default()
         }),
       ]
@@ -226,16 +226,16 @@ pub fn view<'a>(
       column![
         container(text(s.sign_select_key()).size(12).font(bold)).style(|_: &iced::Theme| {
           container::Style {
-            text_color: Some(theme::TEXT_SECONDARY),
+            text_color: Some(theme::text_secondary()),
             ..Default::default()
           }
         }),
         container(scrollable(column(signer_items).spacing(2).padding([0, 2])).height(140))
           .padding(4)
           .style(|_: &iced::Theme| container::Style {
-            background: Some(Background::Color(theme::HEADER_BG)),
+            background: Some(Background::Color(theme::header_bg())),
             border: Border {
-              color: theme::BORDER,
+              color: theme::border(),
               width: 1.0,
               radius: 4.0.into(),
             },
@@ -260,13 +260,13 @@ pub fn view<'a>(
   .padding(32)
   .width(640)
   .style(|_: &iced::Theme| container::Style {
-    background: Some(Background::Color(theme::CARD_BG)),
+    background: Some(Background::Color(theme::card_bg())),
     border: Border {
-      color: theme::BORDER,
+      color: theme::border(),
       width: 1.0,
       radius: 12.0.into(),
     },
-    text_color: Some(theme::TEXT_STRONG),
+    text_color: Some(theme::text_strong()),
     ..Default::default()
   });
 
@@ -283,7 +283,7 @@ pub fn view<'a>(
   .height(Length::Fill)
   .width(Length::Fill)
   .style(|_: &iced::Theme| container::Style {
-    background: Some(Background::Color(theme::SIDEBAR_BG)),
+    background: Some(Background::Color(theme::sidebar_bg())),
     ..Default::default()
   })
   .into()

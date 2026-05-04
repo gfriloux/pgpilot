@@ -36,8 +36,8 @@ pub fn root(app: &App) -> Element<'_, Message> {
   let main: Element<Message> = match &app.status {
     Some((kind, msg)) => {
       let (bg, fg) = match kind {
-        StatusKind::Error => (theme::ERROR_BG, theme::ERROR),
-        StatusKind::Success => (theme::SUCCESS_BG, theme::SUCCESS),
+        StatusKind::Error => (theme::error_bg(), theme::error()),
+        StatusKind::Success => (theme::success_bg(), theme::success()),
       };
       let gen = app.status_generation;
       column![
@@ -87,8 +87,8 @@ pub fn root(app: &App) -> Element<'_, Message> {
   let sidebar_el = container(sidebar(app))
     .height(Length::Fill)
     .style(|_: &iced::Theme| container::Style {
-      background: Some(Background::Color(theme::SIDEBAR_BG)),
-      text_color: Some(theme::SIDEBAR_TEXT),
+      background: Some(Background::Color(theme::sidebar_bg())),
+      text_color: Some(theme::sidebar_text()),
       ..Default::default()
     });
 
@@ -96,8 +96,8 @@ pub fn root(app: &App) -> Element<'_, Message> {
     .height(Length::Fill)
     .width(Length::Fill)
     .style(|_: &iced::Theme| container::Style {
-      background: Some(Background::Color(theme::DETAIL_BG)),
-      text_color: Some(theme::TEXT_STRONG),
+      background: Some(Background::Color(theme::detail_bg())),
+      text_color: Some(theme::text_strong()),
       ..Default::default()
     });
 
@@ -121,19 +121,19 @@ fn sidebar(app: &App) -> Element<'_, Message> {
     .style(
       move |_: &iced::Theme, status: button::Status| button::Style {
         background: if active {
-          Some(Background::Color(theme::ACCENT))
+          Some(Background::Color(theme::accent()))
         } else {
           match status {
             button::Status::Hovered | button::Status::Pressed => {
-              Some(Background::Color(theme::SIDEBAR_HOVER_BG))
+              Some(Background::Color(theme::sidebar_hover_bg()))
             }
             _ => None,
           }
         },
         text_color: if active {
-          theme::TEXT_ON_ACCENT
+          theme::text_on_accent()
         } else {
-          theme::SIDEBAR_TEXT
+          theme::sidebar_text()
         },
         border: Border {
           color: Color::TRANSPARENT,
@@ -155,13 +155,13 @@ fn sidebar(app: &App) -> Element<'_, Message> {
     text(label)
       .size(10)
       .style(|_: &iced::Theme| iced::widget::text::Style {
-        color: Some(theme::TEXT_MUTED),
+        color: Some(theme::text_muted()),
       })
   };
 
   let sep = || {
     rule::horizontal(1).style(|_: &iced::Theme| rule::Style {
-      color: theme::BORDER,
+      color: theme::border(),
       radius: 0.0.into(),
       fill_mode: rule::FillMode::Full,
       snap: true,

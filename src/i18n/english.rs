@@ -279,6 +279,21 @@ impl Strings for EnglishStrings {
   fn settings_language_french(&self) -> &'static str {
     "Francais"
   }
+  fn settings_scale_factor(&self) -> &'static str {
+    "UI Scale"
+  }
+  fn settings_scale_factor_hint(&self) -> &'static str {
+    "Adjust the interface scale (useful on HiDPI or 1080p screens)"
+  }
+  fn settings_theme(&self) -> &'static str {
+    "Theme"
+  }
+  fn settings_theme_catppuccin(&self) -> &'static str {
+    "Catppuccin Frappe"
+  }
+  fn settings_theme_ussr(&self) -> &'static str {
+    "USSR Soviet"
+  }
 
   fn health_diagnostics_title(&self) -> &'static str {
     "GPG Diagnostics"

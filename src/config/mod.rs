@@ -2,16 +2,34 @@ use crate::i18n::Language;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
+/// Visual theme variant. Defined here (in config) so that config does not
+/// depend on the ui module, avoiding circular imports.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
+pub enum ThemeVariant {
+  #[default]
+  Catppuccin,
+  Ussr,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(default)]
 pub struct Config {
   pub language: Language,
+  #[serde(default = "default_scale_factor")]
+  pub scale_factor: f64,
+  pub theme: ThemeVariant,
+}
+
+fn default_scale_factor() -> f64 {
+  1.0
 }
 
 impl Default for Config {
   fn default() -> Self {
     Self {
       language: detect_system_language(),
+      scale_factor: 1.0,
+      theme: ThemeVariant::default(),
     }
   }
 }
@@ -115,11 +133,21 @@ mod tests {
     let path = dir.path().join("config.yaml");
     let cfg = Config {
       language: Language::French,
+      scale_factor: 1.25,
+      theme: ThemeVariant::Ussr,
     };
     let yaml = serde_yaml::to_string(&cfg).unwrap();
     std::fs::write(&path, &yaml).unwrap();
     let loaded: Config = serde_yaml::from_str(&std::fs::read_to_string(&path).unwrap()).unwrap();
     assert_eq!(loaded.language, Language::French);
+    assert!((loaded.scale_factor - 1.25).abs() < f64::EPSILON);
+    assert_eq!(loaded.theme, ThemeVariant::Ussr);
+  }
+
+  #[test]
+  fn config_defaults_scale_factor() {
+    let cfg = Config::default();
+    assert!((cfg.scale_factor - 1.0).abs() < f64::EPSILON);
   }
 
   #[test]

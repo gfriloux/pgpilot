@@ -15,7 +15,7 @@ pub fn view(app: &App) -> Element<'_, Message> {
     return container(text(s.loading()).size(14))
       .padding(24)
       .style(|_: &iced::Theme| container::Style {
-        text_color: Some(theme::TEXT_MUTED),
+        text_color: Some(theme::text_muted()),
         ..Default::default()
       })
       .into();
@@ -25,7 +25,7 @@ pub fn view(app: &App) -> Element<'_, Message> {
     return container(text(format!("Erreur : {err}")).size(14))
       .padding(24)
       .style(|_: &iced::Theme| container::Style {
-        text_color: Some(theme::ERROR),
+        text_color: Some(theme::error()),
         ..Default::default()
       })
       .into();
@@ -47,7 +47,7 @@ pub fn view(app: &App) -> Element<'_, Message> {
       .center_x(Length::Fill)
       .height(Length::Fill)
       .style(|_: &iced::Theme| container::Style {
-        text_color: Some(theme::TEXT_MUTED),
+        text_color: Some(theme::text_muted()),
         ..Default::default()
       })
       .into();
@@ -70,8 +70,8 @@ pub fn view(app: &App) -> Element<'_, Message> {
   .padding([8, 0])
   .width(Length::Fill)
   .style(|_: &iced::Theme| container::Style {
-    background: Some(Background::Color(theme::HEADER_BG)),
-    text_color: Some(theme::TEXT_HEADER),
+    background: Some(Background::Color(theme::header_bg())),
+    text_color: Some(theme::text_header()),
     ..Default::default()
   });
 
@@ -89,24 +89,24 @@ pub fn view(app: &App) -> Element<'_, Message> {
         .copied()
         .unwrap_or_default()
       {
-        KeyserverStatus::Published => ("\u{f058}", theme::SUCCESS),
-        KeyserverStatus::NotPublished => ("\u{f10c}", theme::TEXT_MUTED),
-        _ => ("", theme::TEXT_MUTED),
+        KeyserverStatus::Published => ("\u{f058}", theme::success()),
+        KeyserverStatus::NotPublished => ("\u{f10c}", theme::text_muted()),
+        _ => ("", theme::text_muted()),
       };
 
       let (trust_icon, trust_color) = if key.has_secret || key.on_card {
-        ("", theme::TEXT_MUTED)
+        ("", theme::text_muted())
       } else if key.trust.is_sufficient() {
-        ("\u{f058}", theme::SUCCESS)
+        ("\u{f058}", theme::success())
       } else {
-        ("\u{f071}", theme::PEACH)
+        ("\u{f071}", theme::peach())
       };
 
       let name_col = column![
         text(key.name.clone()).size(13),
         text(key.email.clone()).size(11).style(|_: &iced::Theme| {
           iced::widget::text::Style {
-            color: Some(theme::TEXT_MUTED),
+            color: Some(theme::text_muted()),
           }
         }),
       ]
@@ -139,9 +139,9 @@ pub fn view(app: &App) -> Element<'_, Message> {
         .style(move |_: &iced::Theme| {
           if selected {
             container::Style {
-              background: Some(Background::Color(theme::ACCENT_SUBTLE)),
+              background: Some(Background::Color(theme::accent_subtle())),
               border: Border {
-                color: theme::ACCENT_BORDER,
+                color: theme::accent_border(),
                 width: 1.0,
                 radius: 6.0.into(),
               },
@@ -200,7 +200,7 @@ pub fn view(app: &App) -> Element<'_, Message> {
     .width(Length::Fill)
     .height(Length::Fill)
     .style(|_: &iced::Theme| container::Style {
-      background: Some(Background::Color(theme::DETAIL_BG)),
+      background: Some(Background::Color(theme::detail_bg())),
       ..Default::default()
     })
     .into()
@@ -209,14 +209,14 @@ pub fn view(app: &App) -> Element<'_, Message> {
       text("Sélectionnez une clef pour voir les détails.")
         .size(13)
         .style(|_: &iced::Theme| iced::widget::text::Style {
-          color: Some(theme::TEXT_MUTED),
+          color: Some(theme::text_muted()),
         }),
     )
     .padding(24)
     .width(Length::Fill)
     .height(Length::Fill)
     .style(|_: &iced::Theme| container::Style {
-      background: Some(Background::Color(theme::DETAIL_BG)),
+      background: Some(Background::Color(theme::detail_bg())),
       ..Default::default()
     })
     .into()
@@ -225,7 +225,7 @@ pub fn view(app: &App) -> Element<'_, Message> {
   row![
     list_panel,
     rule::vertical(1).style(|_: &iced::Theme| rule::Style {
-      color: theme::BORDER,
+      color: theme::border(),
       radius: 0.0.into(),
       fill_mode: rule::FillMode::Full,
       snap: false,

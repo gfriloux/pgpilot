@@ -143,7 +143,7 @@ impl Strings for FrenchStrings {
     "Echec de la publication"
   }
   fn status_backup_done(&self) -> &'static str {
-    "Sauvegarde terminie"
+    "Sauvegarde terminee"
   }
   fn status_preferences_saved(&self) -> &'static str {
     "Preferences enregistrees"
@@ -279,6 +279,21 @@ impl Strings for FrenchStrings {
   fn settings_language_french(&self) -> &'static str {
     "Francais"
   }
+  fn settings_scale_factor(&self) -> &'static str {
+    "Echelle de l'interface"
+  }
+  fn settings_scale_factor_hint(&self) -> &'static str {
+    "Ajuste l'echelle (utile sur ecrans HiDPI ou 1080p)"
+  }
+  fn settings_theme(&self) -> &'static str {
+    "Theme"
+  }
+  fn settings_theme_catppuccin(&self) -> &'static str {
+    "Catppuccin Frappe"
+  }
+  fn settings_theme_ussr(&self) -> &'static str {
+    "USSR Soviet"
+  }
 
   fn health_diagnostics_title(&self) -> &'static str {
     "Diagnostic GPG"
@@ -297,7 +312,7 @@ impl Strings for FrenchStrings {
     "Lien copie dans le presse-papier"
   }
   fn status_card_migrated(&self) -> &'static str {
-    "Migration vers la carte terminie"
+    "Migration vers la carte terminee"
   }
   fn status_subkey_renewed(&self) -> &'static str {
     "Sous-clef renouvelee"
@@ -353,7 +368,7 @@ impl Strings for FrenchStrings {
     "Operation irreversible : la clef privee sera detruite."
   }
   fn modal_delete_secret_body(&self) -> &'static str {
-    "Sans sauvegarde, vos donnees chiffrees seront definitivement irrrecuperables."
+    "Sans sauvegarde, vos donnees chiffrees seront definitivement irrecuperables."
   }
   fn modal_delete_public(&self) -> &'static str {
     "La clef publique sera supprimee de votre trousseau."
@@ -365,7 +380,7 @@ impl Strings for FrenchStrings {
     "Operation irreversible : la clef privee sera deplacee sur la YubiKey."
   }
   fn modal_migration_backup_warning(&self) -> &'static str {
-    "Sans sauvegarde, si la YubiKey est perdue ou detruite, les donnees chiffrees seront irrrecuperables."
+    "Sans sauvegarde, si la YubiKey est perdue ou detruite, les donnees chiffrees seront irrecuperables."
   }
   fn modal_migration_backup_btn(&self) -> &'static str {
     "Sauvegarder d'abord"

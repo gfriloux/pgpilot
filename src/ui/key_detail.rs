@@ -37,10 +37,8 @@ pub fn view<'a>(key: &'a KeyInfo, ctx: ViewCtx, s: &'static dyn Strings) -> Elem
     ..Font::DEFAULT
   };
 
-  let mono = Font {
-    family: font::Family::Monospace,
-    ..Font::DEFAULT
-  };
+  // Use MONO for hex identifiers (fingerprints, key IDs)
+  let mono = theme::MONO;
 
   let can_edit = key.has_secret && (!key.on_card || card_connected);
 
@@ -66,7 +64,7 @@ pub fn view<'a>(key: &'a KeyInfo, ctx: ViewCtx, s: &'static dyn Strings) -> Elem
   row![
     left_col,
     rule::vertical(1).style(|_: &iced::Theme| rule::Style {
-      color: theme::BORDER,
+      color: theme::border(),
       radius: 0.0.into(),
       fill_mode: rule::FillMode::Full,
       snap: false,
@@ -94,10 +92,10 @@ fn action_buttons<'a>(
     .on_press(Message::ExportPublicKeyMenu(key.fingerprint.clone()))
     .style(|_: &iced::Theme, status: button::Status| button::Style {
       background: Some(Background::Color(match status {
-        button::Status::Hovered | button::Status::Pressed => theme::ACCENT_HOVER,
-        _ => theme::ACCENT,
+        button::Status::Hovered | button::Status::Pressed => theme::accent_hover(),
+        _ => theme::accent(),
       })),
-      text_color: theme::TEXT_ON_ACCENT,
+      text_color: theme::text_on_accent(),
       border: Border {
         color: Color::TRANSPARENT,
         width: 0.0,
@@ -114,12 +112,12 @@ fn action_buttons<'a>(
         .on_press(Message::BackupKey(key.fingerprint.clone()))
         .style(|_: &iced::Theme, status: button::Status| button::Style {
           background: Some(Background::Color(match status {
-            button::Status::Hovered | button::Status::Pressed => theme::DESTRUCTIVE_HOVER_BG,
+            button::Status::Hovered | button::Status::Pressed => theme::destructive_hover_bg(),
             _ => Color::TRANSPARENT,
           })),
-          text_color: theme::DESTRUCTIVE,
+          text_color: theme::destructive(),
           border: Border {
-            color: theme::DESTRUCTIVE,
+            color: theme::destructive(),
             width: 1.0,
             radius: 6.0.into(),
           },
@@ -137,13 +135,13 @@ fn action_buttons<'a>(
     let migrate_btn = button(icon_btn("\u{f287}", s.btn_migrate_yubikey())).style(
       |_: &iced::Theme, status: button::Status| button::Style {
         background: Some(Background::Color(match status {
-          button::Status::Hovered | button::Status::Pressed => theme::ACCENT_HOVER,
-          button::Status::Disabled => theme::DISABLED_BG,
-          _ => theme::ACCENT,
+          button::Status::Hovered | button::Status::Pressed => theme::accent_hover(),
+          button::Status::Disabled => theme::disabled_bg(),
+          _ => theme::accent(),
         })),
         text_color: match status {
-          button::Status::Disabled => theme::TEXT_MUTED,
-          _ => theme::TEXT_ON_ACCENT,
+          button::Status::Disabled => theme::text_muted(),
+          _ => theme::text_on_accent(),
         },
         border: Border {
           color: Color::TRANSPARENT,
@@ -170,12 +168,12 @@ fn action_buttons<'a>(
         .on_press(Message::PublishKey)
         .style(|_: &iced::Theme, status: button::Status| button::Style {
           background: Some(Background::Color(match status {
-            button::Status::Hovered | button::Status::Pressed => theme::ACCENT_HOVER,
+            button::Status::Hovered | button::Status::Pressed => theme::accent_hover(),
             _ => Color::TRANSPARENT,
           })),
-          text_color: theme::ACCENT,
+          text_color: theme::accent(),
           border: Border {
-            color: theme::ACCENT_BORDER,
+            color: theme::accent_border(),
             width: 1.0,
             radius: 6.0.into(),
           },
@@ -191,12 +189,12 @@ fn action_buttons<'a>(
       .on_press(Message::DeleteKey(key.fingerprint.clone()))
       .style(|_: &iced::Theme, status: button::Status| button::Style {
         background: Some(Background::Color(match status {
-          button::Status::Hovered | button::Status::Pressed => theme::DESTRUCTIVE_HOVER_BG,
+          button::Status::Hovered | button::Status::Pressed => theme::destructive_hover_bg(),
           _ => Color::TRANSPARENT,
         })),
-        text_color: theme::DESTRUCTIVE,
+        text_color: theme::destructive(),
         border: Border {
-          color: theme::DESTRUCTIVE,
+          color: theme::destructive(),
           width: 1.0,
           radius: 6.0.into(),
         },
@@ -230,10 +228,10 @@ fn keyserver_badge<'a>(
           text("\u{f058}")
             .font(theme::ICONS)
             .size(11)
-            .color(theme::SUCCESS),
+            .color(theme::success()),
           text(s.keyserver_badge_published())
             .size(11)
-            .color(theme::SUCCESS)
+            .color(theme::success())
             .width(Length::Fill),
           button(
             row![
@@ -246,12 +244,12 @@ fn keyserver_badge<'a>(
           .on_press(Message::CopyToClipboard(share_url))
           .style(|_: &iced::Theme, status: button::Status| button::Style {
             background: Some(Background::Color(match status {
-              button::Status::Hovered | button::Status::Pressed => theme::ACCENT_SUBTLE,
+              button::Status::Hovered | button::Status::Pressed => theme::accent_subtle(),
               _ => Color::TRANSPARENT,
             })),
-            text_color: theme::ACCENT,
+            text_color: theme::accent(),
             border: Border {
-              color: theme::ACCENT_BORDER,
+              color: theme::accent_border(),
               width: 1.0,
               radius: 4.0.into(),
             },
@@ -269,10 +267,10 @@ fn keyserver_badge<'a>(
         text("\u{f10c}")
           .font(theme::ICONS)
           .size(11)
-          .color(theme::TEXT_MUTED),
+          .color(theme::text_muted()),
         text(s.keyserver_badge_not_published())
           .size(11)
-          .color(theme::TEXT_MUTED),
+          .color(theme::text_muted()),
       ]
       .spacing(5)
       .align_y(Alignment::Center),
@@ -281,7 +279,7 @@ fn keyserver_badge<'a>(
     KeyserverStatus::Checking => container(
       text(s.keyserver_badge_checking())
         .size(11)
-        .color(theme::TEXT_MUTED),
+        .color(theme::text_muted()),
     )
     .into(),
     KeyserverStatus::Unknown => iced::widget::Space::new().into(),
@@ -309,10 +307,10 @@ fn migration_modal<'a>(
           .width(Length::Fill)
           .style(|_: &iced::Theme, status: button::Status| button::Style {
             background: Some(Background::Color(match status {
-              button::Status::Hovered | button::Status::Pressed => theme::ACCENT_HOVER,
-              _ => theme::ACCENT,
+              button::Status::Hovered | button::Status::Pressed => theme::accent_hover(),
+              _ => theme::accent(),
             })),
-            text_color: theme::TEXT_ON_ACCENT,
+            text_color: theme::text_on_accent(),
             border: Border {
               color: Color::TRANSPARENT,
               width: 0.0,
@@ -326,10 +324,10 @@ fn migration_modal<'a>(
           .width(Length::Fill)
           .style(|_: &iced::Theme, status: button::Status| button::Style {
             background: Some(Background::Color(match status {
-              button::Status::Hovered | button::Status::Pressed => theme::SUCCESS_HOVER,
-              _ => theme::SUCCESS,
+              button::Status::Hovered | button::Status::Pressed => theme::success_hover(),
+              _ => theme::success(),
             })),
-            text_color: theme::TEXT_ON_ACCENT,
+            text_color: theme::text_on_accent(),
             border: Border {
               color: Color::TRANSPARENT,
               width: 0.0,
@@ -345,13 +343,13 @@ fn migration_modal<'a>(
             background: Some(Background::Color(match status {
               button::Status::Hovered | button::Status::Pressed => Color {
                 a: 0.08,
-                ..theme::TEXT_SECONDARY
+                ..theme::text_secondary()
               },
               _ => Color::TRANSPARENT,
             })),
-            text_color: theme::TEXT_SECONDARY,
+            text_color: theme::text_secondary(),
             border: Border {
-              color: theme::TEXT_SECONDARY,
+              color: theme::text_secondary(),
               width: 1.0,
               radius: 6.0.into(),
             },
@@ -365,10 +363,10 @@ fn migration_modal<'a>(
   )
   .padding(12)
   .style(|_: &iced::Theme| container::Style {
-    background: Some(Background::Color(theme::ACCENT_SUBTLE)),
-    text_color: Some(theme::TEXT_STRONG),
+    background: Some(Background::Color(theme::accent_subtle())),
+    text_color: Some(theme::text_strong()),
     border: Border {
-      color: theme::ACCENT_BORDER,
+      color: theme::accent_border(),
       width: 1.0,
       radius: 6.0.into(),
     },
@@ -400,10 +398,10 @@ fn delete_modal<'a>(key: &'a KeyInfo, bold: Font, s: &'static dyn Strings) -> El
         .width(Length::Fill)
         .style(|_: &iced::Theme, status: button::Status| button::Style {
           background: Some(Background::Color(match status {
-            button::Status::Hovered | button::Status::Pressed => theme::ACCENT_HOVER,
-            _ => theme::ACCENT,
+            button::Status::Hovered | button::Status::Pressed => theme::accent_hover(),
+            _ => theme::accent(),
           })),
-          text_color: theme::TEXT_ON_ACCENT,
+          text_color: theme::text_on_accent(),
           border: Border {
             color: Color::TRANSPARENT,
             width: 0.0,
@@ -421,10 +419,10 @@ fn delete_modal<'a>(key: &'a KeyInfo, bold: Font, s: &'static dyn Strings) -> El
       .width(Length::Fill)
       .style(|_: &iced::Theme, status: button::Status| button::Style {
         background: Some(Background::Color(match status {
-          button::Status::Hovered | button::Status::Pressed => theme::DESTRUCTIVE_HOVER_BG,
-          _ => theme::DESTRUCTIVE,
+          button::Status::Hovered | button::Status::Pressed => theme::destructive_hover_bg(),
+          _ => theme::destructive(),
         })),
-        text_color: theme::TEXT_ON_ACCENT,
+        text_color: theme::text_on_accent(),
         border: Border {
           color: Color::TRANSPARENT,
           width: 0.0,
@@ -443,13 +441,13 @@ fn delete_modal<'a>(key: &'a KeyInfo, bold: Font, s: &'static dyn Strings) -> El
         background: Some(Background::Color(match status {
           button::Status::Hovered | button::Status::Pressed => Color {
             a: 0.08,
-            ..theme::TEXT_SECONDARY
+            ..theme::text_secondary()
           },
           _ => Color::TRANSPARENT,
         })),
-        text_color: theme::TEXT_SECONDARY,
+        text_color: theme::text_secondary(),
         border: Border {
-          color: theme::TEXT_SECONDARY,
+          color: theme::text_secondary(),
           width: 1.0,
           radius: 6.0.into(),
         },
@@ -469,10 +467,10 @@ fn delete_modal<'a>(key: &'a KeyInfo, bold: Font, s: &'static dyn Strings) -> El
   )
   .padding(12)
   .style(|_: &iced::Theme| container::Style {
-    background: Some(Background::Color(theme::ERROR_BG)),
-    text_color: Some(theme::TEXT_STRONG),
+    background: Some(Background::Color(theme::error_bg())),
+    text_color: Some(theme::text_strong()),
     border: Border {
-      color: theme::ERROR,
+      color: theme::error(),
       width: 1.0,
       radius: 6.0.into(),
     },
@@ -508,20 +506,20 @@ fn publish_modal<'a>(
       .on_press(Message::PublishKeyserverChanged(value))
       .style(move |_: &iced::Theme, _| button::Style {
         background: Some(Background::Color(if selected {
-          theme::ACCENT
+          theme::accent()
         } else {
           Color::TRANSPARENT
         })),
         text_color: if selected {
-          theme::TEXT_ON_ACCENT
+          theme::text_on_accent()
         } else {
-          theme::TEXT_SECONDARY
+          theme::text_secondary()
         },
         border: Border {
           color: if selected {
             Color::TRANSPARENT
           } else {
-            theme::ACCENT_BORDER
+            theme::accent_border()
           },
           width: 1.0,
           radius: 4.0.into(),
@@ -537,11 +535,11 @@ fn publish_modal<'a>(
         text("\u{f1d8}")
           .font(theme::ICONS)
           .size(12)
-          .color(theme::ACCENT),
+          .color(theme::accent()),
         text(s.modal_publish_select_keyserver())
           .size(12)
           .font(bold)
-          .color(theme::ACCENT),
+          .color(theme::accent()),
       ]
       .spacing(6)
       .align_y(Alignment::Center),
@@ -553,13 +551,13 @@ fn publish_modal<'a>(
       container(text(description).size(11))
         .padding([8, 10])
         .style(|_: &iced::Theme| container::Style {
-          background: Some(Background::Color(theme::ACCENT_SUBTLE)),
+          background: Some(Background::Color(theme::accent_subtle())),
           border: Border {
-            color: theme::ACCENT_BORDER,
+            color: theme::accent_border(),
             width: 1.0,
             radius: 4.0.into(),
           },
-          text_color: Some(theme::TEXT_SECONDARY),
+          text_color: Some(theme::text_secondary()),
           ..Default::default()
         }),
       column![
@@ -568,10 +566,10 @@ fn publish_modal<'a>(
           .width(Length::Fill)
           .style(|_: &iced::Theme, status: button::Status| button::Style {
             background: Some(Background::Color(match status {
-              button::Status::Hovered | button::Status::Pressed => theme::ACCENT_HOVER,
-              _ => theme::ACCENT,
+              button::Status::Hovered | button::Status::Pressed => theme::accent_hover(),
+              _ => theme::accent(),
             })),
-            text_color: theme::TEXT_ON_ACCENT,
+            text_color: theme::text_on_accent(),
             border: Border {
               color: Color::TRANSPARENT,
               width: 0.0,
@@ -587,13 +585,13 @@ fn publish_modal<'a>(
             background: Some(Background::Color(match status {
               button::Status::Hovered | button::Status::Pressed => Color {
                 a: 0.08,
-                ..theme::TEXT_SECONDARY
+                ..theme::text_secondary()
               },
               _ => Color::TRANSPARENT,
             })),
-            text_color: theme::TEXT_SECONDARY,
+            text_color: theme::text_secondary(),
             border: Border {
-              color: theme::BORDER,
+              color: theme::border(),
               width: 1.0,
               radius: 6.0.into(),
             },
@@ -607,9 +605,9 @@ fn publish_modal<'a>(
   )
   .padding(12)
   .style(|_: &iced::Theme| container::Style {
-    background: Some(Background::Color(theme::ACCENT_SUBTLE)),
+    background: Some(Background::Color(theme::accent_subtle())),
     border: Border {
-      color: theme::ACCENT_BORDER,
+      color: theme::accent_border(),
       width: 1.0,
       radius: 6.0.into(),
     },
@@ -633,10 +631,10 @@ fn export_pub_modal<'a>(
     .width(Length::Fill)
     .style(|_: &iced::Theme, status: button::Status| button::Style {
       background: Some(Background::Color(match status {
-        button::Status::Hovered | button::Status::Pressed => theme::ACCENT_SUBTLE,
+        button::Status::Hovered | button::Status::Pressed => theme::accent_subtle(),
         _ => Color::TRANSPARENT,
       })),
-      text_color: theme::TEXT_STRONG,
+      text_color: theme::text_strong(),
       border: Border {
         color: Color::TRANSPARENT,
         width: 0.0,
@@ -655,11 +653,11 @@ fn export_pub_modal<'a>(
         text("\u{f019}")
           .font(theme::ICONS)
           .size(12)
-          .color(theme::ACCENT),
+          .color(theme::accent()),
         text(s.btn_export_public())
           .size(12)
           .font(bold)
-          .color(theme::ACCENT),
+          .color(theme::accent()),
       ]
       .spacing(6)
       .align_y(Alignment::Center),
@@ -684,13 +682,13 @@ fn export_pub_modal<'a>(
           background: Some(Background::Color(match status {
             button::Status::Hovered | button::Status::Pressed => Color {
               a: 0.06,
-              ..theme::TEXT_SECONDARY
+              ..theme::text_secondary()
             },
             _ => Color::TRANSPARENT,
           })),
-          text_color: theme::TEXT_SECONDARY,
+          text_color: theme::text_secondary(),
           border: Border {
-            color: theme::BORDER,
+            color: theme::border(),
             width: 1.0,
             radius: 6.0.into(),
           },
@@ -702,9 +700,9 @@ fn export_pub_modal<'a>(
   )
   .padding(12)
   .style(|_: &iced::Theme| container::Style {
-    background: Some(Background::Color(theme::ACCENT_SUBTLE)),
+    background: Some(Background::Color(theme::accent_subtle())),
     border: Border {
-      color: theme::ACCENT_BORDER,
+      color: theme::accent_border(),
       width: 1.0,
       radius: 6.0.into(),
     },
@@ -741,14 +739,14 @@ fn left_column_items<'a>(
         text(&key.name).size(15).font(bold),
         text(key.email.as_str()).size(12).style(|_: &iced::Theme| {
           iced::widget::text::Style {
-            color: Some(theme::TEXT_SECONDARY),
+            color: Some(theme::text_secondary()),
           }
         }),
       ]
       .spacing(2),
     )
     .style(|_: &iced::Theme| container::Style {
-      text_color: Some(theme::TEXT_STRONG),
+      text_color: Some(theme::text_strong()),
       ..Default::default()
     })
     .into(),
@@ -759,10 +757,10 @@ fn left_column_items<'a>(
     )
     .padding([4, 8])
     .style(|_: &iced::Theme| container::Style {
-      background: Some(Background::Color(theme::HEADER_BG)),
-      text_color: Some(theme::TEXT_SECONDARY),
+      background: Some(Background::Color(theme::header_bg())),
+      text_color: Some(theme::text_secondary()),
       border: Border {
-        color: theme::BORDER,
+        color: theme::border(),
         width: 1.0,
         radius: 4.0.into(),
       },
@@ -788,7 +786,7 @@ fn left_column_items<'a>(
       .spacing(2),
     )
     .style(|_: &iced::Theme| container::Style {
-      text_color: Some(theme::TEXT_SECONDARY),
+      text_color: Some(theme::text_secondary()),
       ..Default::default()
     })
     .into(),
@@ -796,9 +794,9 @@ fn left_column_items<'a>(
 
   if !key.has_secret && !key.on_card {
     let (trust_icon, trust_color, trust_label) = match &key.trust {
-      TrustLevel::Ultimate | TrustLevel::Full => ("\u{f058}", theme::SUCCESS, s.trust_full()),
-      TrustLevel::Marginal => ("\u{f06a}", theme::PEACH, s.trust_marginal()),
-      TrustLevel::Undefined => ("\u{f071}", theme::PEACH, s.trust_undefined()),
+      TrustLevel::Ultimate | TrustLevel::Full => ("\u{f058}", theme::success(), s.trust_full()),
+      TrustLevel::Marginal => ("\u{f06a}", theme::peach(), s.trust_marginal()),
+      TrustLevel::Undefined => ("\u{f071}", theme::peach(), s.trust_undefined()),
     };
 
     let trust_btn = |label: &'static str, level: TrustLevel, active: bool| {
@@ -809,23 +807,23 @@ fn left_column_items<'a>(
         .style(
           move |_: &iced::Theme, status: button::Status| button::Style {
             background: Some(Background::Color(if active {
-              theme::ACCENT
+              theme::accent()
             } else {
               match status {
-                button::Status::Hovered | button::Status::Pressed => theme::HEADER_BG,
+                button::Status::Hovered | button::Status::Pressed => theme::header_bg(),
                 _ => Color::TRANSPARENT,
               }
             })),
             text_color: if active {
-              theme::TEXT_ON_ACCENT
+              theme::text_on_accent()
             } else {
-              theme::TEXT_SECONDARY
+              theme::text_secondary()
             },
             border: Border {
               color: if active {
                 Color::TRANSPARENT
               } else {
-                theme::BORDER
+                theme::border()
               },
               width: 1.0,
               radius: 4.0.into(),
@@ -850,7 +848,7 @@ fn left_column_items<'a>(
           .align_y(Alignment::Center),
         )
         .style(|_: &iced::Theme| container::Style {
-          text_color: Some(theme::TEXT_SECONDARY),
+          text_color: Some(theme::text_secondary()),
           ..Default::default()
         }),
         row![
@@ -888,7 +886,7 @@ fn left_column_items<'a>(
         .align_y(Alignment::Center),
       )
       .style(|_: &iced::Theme| container::Style {
-        text_color: Some(theme::ACCENT),
+        text_color: Some(theme::accent()),
         ..Default::default()
       })
       .into(),
@@ -933,9 +931,9 @@ fn subkey_renewal_form<'a>(
           Color::TRANSPARENT
         })),
         text_color: if selected {
-          theme::TEXT_ON_ACCENT
+          theme::text_on_accent()
         } else {
-          theme::TEXT_SECONDARY
+          theme::text_secondary()
         },
         border: Border {
           color: if selected {
@@ -943,7 +941,7 @@ fn subkey_renewal_form<'a>(
           } else {
             Color {
               a: 0.3,
-              ..theme::TEXT_SECONDARY
+              ..theme::text_secondary()
             }
           },
           width: 1.0,
@@ -960,7 +958,7 @@ fn subkey_renewal_form<'a>(
   column![
     text(format!("{}: {until}", s.key_expires()))
       .size(11)
-      .color(theme::TEXT_STRONG),
+      .color(theme::text_strong()),
     row![
       expiry_btn("1 an", KeyExpiry::OneYear),
       expiry_btn("2 ans", KeyExpiry::TwoYears),
@@ -980,7 +978,7 @@ fn subkey_renewal_form<'a>(
               },
               _ => type_color,
             })),
-            text_color: theme::TEXT_ON_ACCENT,
+            text_color: theme::text_on_accent(),
             border: Border {
               color: Color::TRANSPARENT,
               width: 0.0,
@@ -998,14 +996,14 @@ fn subkey_renewal_form<'a>(
         .width(Length::Fill)
         .style(|_: &iced::Theme, status: button::Status| button::Style {
           background: Some(Background::Color(match status {
-            button::Status::Hovered | button::Status::Pressed => theme::HEADER_BG,
+            button::Status::Hovered | button::Status::Pressed => theme::header_bg(),
             _ => Color::TRANSPARENT,
           })),
-          text_color: theme::TEXT_SECONDARY,
+          text_color: theme::text_secondary(),
           border: Border {
             color: Color {
               a: 0.4,
-              ..theme::TEXT_SECONDARY
+              ..theme::text_secondary()
             },
             width: 1.0,
             radius: 4.0.into(),
@@ -1019,10 +1017,10 @@ fn subkey_renewal_form<'a>(
       .on_press(Message::RenewSubkeyCancel)
       .style(|_: &iced::Theme, status: button::Status| button::Style {
         background: Some(Background::Color(match status {
-          button::Status::Hovered | button::Status::Pressed => theme::HEADER_BG,
+          button::Status::Hovered | button::Status::Pressed => theme::header_bg(),
           _ => Color::TRANSPARENT,
         })),
-        text_color: theme::TEXT_SECONDARY,
+        text_color: theme::text_secondary(),
         border: Border {
           color: Color::TRANSPARENT,
           width: 0.0,
@@ -1056,10 +1054,10 @@ fn subkey_card_body<'a>(
         .on_press(Message::CopyToClipboard(sk.fingerprint.clone()))
         .style(|_: &iced::Theme, status: button::Status| button::Style {
           background: Some(Background::Color(match status {
-            button::Status::Hovered | button::Status::Pressed => theme::HEADER_BG,
+            button::Status::Hovered | button::Status::Pressed => theme::header_bg(),
             _ => Color::TRANSPARENT,
           })),
-          text_color: theme::TEXT_SECONDARY,
+          text_color: theme::text_secondary(),
           border: Border {
             color: Color::TRANSPARENT,
             width: 0.0,
@@ -1075,7 +1073,7 @@ fn subkey_card_body<'a>(
       row![
         text(expires_str)
           .size(10)
-          .color(theme::TEXT_SECONDARY)
+          .color(theme::text_secondary())
           .width(Length::Fill),
         button(text("\u{f021}").font(theme::ICONS).size(10))
           .on_press(Message::RenewSubkey(
@@ -1084,10 +1082,10 @@ fn subkey_card_body<'a>(
           ))
           .style(|_: &iced::Theme, status: button::Status| button::Style {
             background: Some(Background::Color(match status {
-              button::Status::Hovered | button::Status::Pressed => theme::HEADER_BG,
+              button::Status::Hovered | button::Status::Pressed => theme::header_bg(),
               _ => Color::TRANSPARENT,
             })),
-            text_color: theme::TEXT_SECONDARY,
+            text_color: theme::text_secondary(),
             border: Border {
               color: Color::TRANSPARENT,
               width: 0.0,
@@ -1100,7 +1098,7 @@ fn subkey_card_body<'a>(
       .spacing(4)
       .align_y(Alignment::Center)
     } else {
-      row![text(expires_str).size(10).color(theme::TEXT_SECONDARY)].spacing(0)
+      row![text(expires_str).size(10).color(theme::text_secondary())].spacing(0)
     },
   ]
   .spacing(4)
@@ -1170,7 +1168,7 @@ fn subkey_ghost_card<'a>(
   .padding(8)
   .width(Length::Fill)
   .style(move |_: &iced::Theme| container::Style {
-    background: Some(Background::Color(theme::SIDEBAR_BG)),
+    background: Some(Background::Color(theme::sidebar_bg())),
     border: Border {
       color: Color {
         a: 0.25,
@@ -1193,9 +1191,14 @@ fn subkey_column<'a>(
   s: &'static dyn Strings,
 ) -> Column<'a, Message> {
   let standard_types = [
-    (SubkeyType::Sign, "\u{f040}", "Signature", theme::ACCENT),
-    (SubkeyType::Encr, "\u{f023}", "Chiffrement", theme::SUCCESS),
-    (SubkeyType::Auth, "\u{f084}", "Auth SSH", theme::PEACH),
+    (SubkeyType::Sign, "\u{f040}", "Signature", theme::accent()),
+    (
+      SubkeyType::Encr,
+      "\u{f023}",
+      "Chiffrement",
+      theme::success(),
+    ),
+    (SubkeyType::Auth, "\u{f084}", "Auth SSH", theme::peach()),
   ];
 
   let find_subkey = |usage_char: char| -> Option<&SubkeyInfo> {
@@ -1239,13 +1242,13 @@ fn subkey_column<'a>(
             .padding(8)
             .width(Length::Fill)
             .style(|_: &iced::Theme| container::Style {
-              background: Some(Background::Color(theme::SIDEBAR_BG)),
+              background: Some(Background::Color(theme::sidebar_bg())),
               border: Border {
-                color: theme::BORDER,
+                color: theme::border(),
                 width: 1.0,
                 radius: 6.0.into(),
               },
-              text_color: Some(theme::TEXT_STRONG),
+              text_color: Some(theme::text_strong()),
               ..Default::default()
             })
             .into(),

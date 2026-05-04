@@ -121,6 +121,11 @@ pub trait Strings: Send + Sync {
   fn settings_language(&self) -> &'static str;
   fn settings_language_english(&self) -> &'static str;
   fn settings_language_french(&self) -> &'static str;
+  fn settings_scale_factor(&self) -> &'static str;
+  fn settings_scale_factor_hint(&self) -> &'static str;
+  fn settings_theme(&self) -> &'static str;
+  fn settings_theme_catppuccin(&self) -> &'static str;
+  fn settings_theme_ussr(&self) -> &'static str;
 
   // Health / Diagnostics titles
   fn health_diagnostics_title(&self) -> &'static str;

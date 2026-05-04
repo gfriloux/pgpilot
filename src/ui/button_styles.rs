@@ -7,10 +7,10 @@ use crate::ui::theme;
 pub fn primary() -> impl Fn(&iced::Theme, button::Status) -> button::Style {
   |_: &iced::Theme, status| button::Style {
     background: Some(Background::Color(match status {
-      button::Status::Hovered | button::Status::Pressed => theme::ACCENT_HOVER,
-      _ => theme::ACCENT,
+      button::Status::Hovered | button::Status::Pressed => theme::accent_hover(),
+      _ => theme::accent(),
     })),
-    text_color: theme::TEXT_ON_ACCENT,
+    text_color: theme::text_on_accent(),
     border: Border {
       color: Color::TRANSPARENT,
       width: 0.0,
@@ -25,16 +25,16 @@ pub fn primary_toggle(enabled: bool) -> impl Fn(&iced::Theme, button::Status) ->
   move |_: &iced::Theme, status| button::Style {
     background: Some(Background::Color(if enabled {
       match status {
-        button::Status::Hovered | button::Status::Pressed => theme::ACCENT_HOVER,
-        _ => theme::ACCENT,
+        button::Status::Hovered | button::Status::Pressed => theme::accent_hover(),
+        _ => theme::accent(),
       }
     } else {
-      theme::DISABLED_BG
+      theme::disabled_bg()
     })),
     text_color: if enabled {
-      theme::TEXT_ON_ACCENT
+      theme::text_on_accent()
     } else {
-      theme::TEXT_MUTED
+      theme::text_muted()
     },
     border: Border {
       color: Color::TRANSPARENT,
@@ -49,12 +49,12 @@ pub fn primary_toggle(enabled: bool) -> impl Fn(&iced::Theme, button::Status) ->
 pub fn ghost_neutral() -> impl Fn(&iced::Theme, button::Status) -> button::Style {
   |_: &iced::Theme, status| button::Style {
     background: Some(Background::Color(match status {
-      button::Status::Hovered | button::Status::Pressed => theme::ACCENT_SUBTLE,
+      button::Status::Hovered | button::Status::Pressed => theme::accent_subtle(),
       _ => Color::TRANSPARENT,
     })),
-    text_color: theme::TEXT_STRONG,
+    text_color: theme::text_strong(),
     border: Border {
-      color: theme::BORDER,
+      color: theme::border(),
       width: 1.0,
       radius: 6.0.into(),
     },
@@ -66,12 +66,12 @@ pub fn ghost_neutral() -> impl Fn(&iced::Theme, button::Status) -> button::Style
 pub fn ghost_accent() -> impl Fn(&iced::Theme, button::Status) -> button::Style {
   |_: &iced::Theme, status| button::Style {
     background: Some(Background::Color(match status {
-      button::Status::Hovered | button::Status::Pressed => theme::ACCENT_SUBTLE,
+      button::Status::Hovered | button::Status::Pressed => theme::accent_subtle(),
       _ => Color::TRANSPARENT,
     })),
-    text_color: theme::ACCENT,
+    text_color: theme::accent(),
     border: Border {
-      color: theme::ACCENT_BORDER,
+      color: theme::accent_border(),
       width: 1.0,
       radius: 6.0.into(),
     },
@@ -83,12 +83,12 @@ pub fn ghost_accent() -> impl Fn(&iced::Theme, button::Status) -> button::Style 
 pub fn ghost_destructive() -> impl Fn(&iced::Theme, button::Status) -> button::Style {
   |_: &iced::Theme, status| button::Style {
     background: Some(Background::Color(match status {
-      button::Status::Hovered | button::Status::Pressed => theme::DESTRUCTIVE_HOVER_BG,
+      button::Status::Hovered | button::Status::Pressed => theme::destructive_hover_bg(),
       _ => Color::TRANSPARENT,
     })),
-    text_color: theme::DESTRUCTIVE,
+    text_color: theme::destructive(),
     border: Border {
-      color: theme::DESTRUCTIVE,
+      color: theme::destructive(),
       width: 1.0,
       radius: 6.0.into(),
     },

@@ -19,7 +19,7 @@ pub fn view<'a>(form: &'a CreateKeyForm, s: &'static dyn Strings) -> Element<'a,
 
   let separator = || {
     rule::horizontal(1).style(|_: &iced::Theme| rule::Style {
-      color: theme::BORDER,
+      color: theme::border(),
       radius: 0.0.into(),
       fill_mode: rule::FillMode::Full,
       snap: false,
@@ -38,15 +38,15 @@ pub fn view<'a>(form: &'a CreateKeyForm, s: &'static dyn Strings) -> Element<'a,
   .width(Length::Fill)
   .style(|_: &iced::Theme, status| {
     let border = match status {
-      pick_list::Status::Opened { .. } => theme::ACCENT,
-      pick_list::Status::Hovered => theme::ACCENT_BORDER,
-      _ => theme::BORDER,
+      pick_list::Status::Opened { .. } => theme::accent(),
+      pick_list::Status::Hovered => theme::accent_border(),
+      _ => theme::border(),
     };
     pick_list::Style {
-      text_color: theme::TEXT_STRONG,
-      placeholder_color: theme::TEXT_MUTED,
-      handle_color: theme::TEXT_MUTED,
-      background: Background::Color(theme::HEADER_BG),
+      text_color: theme::text_strong(),
+      placeholder_color: theme::text_muted(),
+      handle_color: theme::text_muted(),
+      background: Background::Color(theme::header_bg()),
       border: Border {
         color: border,
         width: 1.0,
@@ -55,15 +55,15 @@ pub fn view<'a>(form: &'a CreateKeyForm, s: &'static dyn Strings) -> Element<'a,
     }
   })
   .menu_style(|_: &iced::Theme| iced::overlay::menu::Style {
-    text_color: theme::TEXT_STRONG,
-    background: Background::Color(theme::CARD_BG),
+    text_color: theme::text_strong(),
+    background: Background::Color(theme::card_bg()),
     border: Border {
-      color: theme::BORDER,
+      color: theme::border(),
       width: 1.0,
       radius: 6.0.into(),
     },
-    selected_text_color: theme::TEXT_ON_ACCENT,
-    selected_background: Background::Color(theme::ACCENT),
+    selected_text_color: theme::text_on_accent(),
+    selected_background: Background::Color(theme::accent()),
     shadow: iced::Shadow::default(),
   });
 
@@ -79,16 +79,16 @@ pub fn view<'a>(form: &'a CreateKeyForm, s: &'static dyn Strings) -> Element<'a,
       button::Style {
         background: Some(Background::Color(if can_submit {
           match status {
-            button::Status::Hovered | button::Status::Pressed => theme::ACCENT_HOVER,
-            _ => theme::ACCENT,
+            button::Status::Hovered | button::Status::Pressed => theme::accent_hover(),
+            _ => theme::accent(),
           }
         } else {
-          theme::DISABLED_BG
+          theme::disabled_bg()
         })),
         text_color: if can_submit {
-          theme::TEXT_ON_ACCENT
+          theme::text_on_accent()
         } else {
-          theme::TEXT_MUTED
+          theme::text_muted()
         },
         border: Border {
           color: Color::TRANSPARENT,
@@ -110,12 +110,12 @@ pub fn view<'a>(form: &'a CreateKeyForm, s: &'static dyn Strings) -> Element<'a,
     .on_press(Message::NavBack)
     .style(|_: &iced::Theme, status: button::Status| button::Style {
       background: Some(Background::Color(match status {
-        button::Status::Hovered | button::Status::Pressed => theme::HEADER_BG,
+        button::Status::Hovered | button::Status::Pressed => theme::header_bg(),
         _ => Color::TRANSPARENT,
       })),
-      text_color: theme::TEXT_SECONDARY,
+      text_color: theme::text_secondary(),
       border: Border {
-        color: theme::BORDER,
+        color: theme::border(),
         width: 1.0,
         radius: 6.0.into(),
       },
@@ -125,7 +125,7 @@ pub fn view<'a>(form: &'a CreateKeyForm, s: &'static dyn Strings) -> Element<'a,
 
   let hint = |s: &'static str| {
     container(text(s).size(11)).style(|_: &iced::Theme| container::Style {
-      text_color: Some(theme::TEXT_MUTED),
+      text_color: Some(theme::text_muted()),
       ..Default::default()
     })
   };
@@ -136,7 +136,7 @@ pub fn view<'a>(form: &'a CreateKeyForm, s: &'static dyn Strings) -> Element<'a,
         text("Nouvelle clef PGP").size(22).font(bold),
         container(text("Génère une clef maître et ses sous-clefs dédiées.").size(13),).style(
           |_: &iced::Theme| container::Style {
-            text_color: Some(theme::TEXT_SECONDARY),
+            text_color: Some(theme::text_secondary()),
             ..Default::default()
           }
         ),
@@ -153,21 +153,21 @@ pub fn view<'a>(form: &'a CreateKeyForm, s: &'static dyn Strings) -> Element<'a,
             .width(Length::Fill)
             .style(|_: &iced::Theme, status| {
               let border = match status {
-                text_input::Status::Focused { .. } => theme::ACCENT,
-                text_input::Status::Hovered => theme::ACCENT_BORDER,
-                _ => theme::BORDER,
+                text_input::Status::Focused { .. } => theme::accent(),
+                text_input::Status::Hovered => theme::accent_border(),
+                _ => theme::border(),
               };
               text_input::Style {
-                background: Background::Color(theme::HEADER_BG),
+                background: Background::Color(theme::header_bg()),
                 border: Border {
                   color: border,
                   width: 1.0,
                   radius: 6.0.into(),
                 },
-                icon: theme::TEXT_MUTED,
-                placeholder: theme::TEXT_MUTED,
-                value: theme::TEXT_STRONG,
-                selection: theme::ACCENT_SUBTLE,
+                icon: theme::text_muted(),
+                placeholder: theme::text_muted(),
+                value: theme::text_strong(),
+                selection: theme::accent_subtle(),
               }
             }),
         ]
@@ -180,21 +180,21 @@ pub fn view<'a>(form: &'a CreateKeyForm, s: &'static dyn Strings) -> Element<'a,
             .width(Length::Fill)
             .style(|_: &iced::Theme, status| {
               let border = match status {
-                text_input::Status::Focused { .. } => theme::ACCENT,
-                text_input::Status::Hovered => theme::ACCENT_BORDER,
-                _ => theme::BORDER,
+                text_input::Status::Focused { .. } => theme::accent(),
+                text_input::Status::Hovered => theme::accent_border(),
+                _ => theme::border(),
               };
               text_input::Style {
-                background: Background::Color(theme::HEADER_BG),
+                background: Background::Color(theme::header_bg()),
                 border: Border {
                   color: border,
                   width: 1.0,
                   radius: 6.0.into(),
                 },
-                icon: theme::TEXT_MUTED,
-                placeholder: theme::TEXT_MUTED,
-                value: theme::TEXT_STRONG,
-                selection: theme::ACCENT_SUBTLE,
+                icon: theme::text_muted(),
+                placeholder: theme::text_muted(),
+                value: theme::text_strong(),
+                selection: theme::accent_subtle(),
               }
             }),
         ]
@@ -228,23 +228,23 @@ pub fn view<'a>(form: &'a CreateKeyForm, s: &'static dyn Strings) -> Element<'a,
               };
               checkbox::Style {
                 background: Background::Color(if is_checked {
-                  theme::ACCENT
+                  theme::accent()
                 } else {
-                  theme::HEADER_BG
+                  theme::header_bg()
                 }),
-                icon_color: theme::TEXT_ON_ACCENT,
+                icon_color: theme::text_on_accent(),
                 border: Border {
                   color: if is_checked {
-                    theme::ACCENT
+                    theme::accent()
                   } else if is_hovered {
-                    theme::ACCENT_BORDER
+                    theme::accent_border()
                   } else {
-                    theme::BORDER
+                    theme::border()
                   },
                   width: 1.0,
                   radius: 3.0.into(),
                 },
-                text_color: Some(theme::TEXT_STRONG),
+                text_color: Some(theme::text_strong()),
               }
             }),
           hint(
@@ -276,13 +276,13 @@ pub fn view<'a>(form: &'a CreateKeyForm, s: &'static dyn Strings) -> Element<'a,
   .padding(32)
   .width(520)
   .style(|_: &iced::Theme| container::Style {
-    background: Some(Background::Color(theme::CARD_BG)),
+    background: Some(Background::Color(theme::card_bg())),
     border: Border {
-      color: theme::BORDER,
+      color: theme::border(),
       width: 1.0,
       radius: 12.0.into(),
     },
-    text_color: Some(theme::TEXT_STRONG),
+    text_color: Some(theme::text_strong()),
     ..Default::default()
   });
 
@@ -299,7 +299,7 @@ pub fn view<'a>(form: &'a CreateKeyForm, s: &'static dyn Strings) -> Element<'a,
   .height(Length::Fill)
   .width(Length::Fill)
   .style(|_: &iced::Theme| container::Style {
-    background: Some(Background::Color(theme::SIDEBAR_BG)),
+    background: Some(Background::Color(theme::sidebar_bg())),
     ..Default::default()
   })
   .into()

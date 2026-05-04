@@ -20,6 +20,7 @@ use crate::config::Config;
 use crate::gpg::{HealthCheck, KeyExpiry, KeyInfo, Keyserver, TrustLevel, VerifyResult};
 use crate::i18n::{self, Language, Strings};
 use crate::ui;
+use crate::ui::theme::ThemeVariant;
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub enum View {
@@ -238,6 +239,8 @@ pub enum Message {
   DismissStatus(u32),
   NavBack,
   ChangeLanguage(Language),
+  ScaleFactorChanged(f64),
+  ThemeChanged(ThemeVariant),
 }
 
 pub(crate) fn truncate_error(msg: String) -> String {
@@ -317,6 +320,8 @@ impl App {
   pub fn new() -> (Self, Task<Message>) {
     let config = Config::load().unwrap_or_default();
     let strings = i18n::strings_for(config.language);
+    // Initialise the theme from persisted config before first frame renders.
+    crate::ui::theme::set_active(config.theme);
     let task = Task::perform(blocking_task(crate::gpg::list_keys), Message::KeysLoaded);
     (
       Self {
@@ -578,6 +583,8 @@ impl App {
         }
       }
       Message::ChangeLanguage(lang) => self.on_language_changed(lang),
+      Message::ScaleFactorChanged(v) => self.on_scale_factor_changed(v),
+      Message::ThemeChanged(v) => self.on_theme_changed(v),
     }
   }
 
