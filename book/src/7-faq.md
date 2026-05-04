@@ -15,7 +15,7 @@ Think: public key = mailbox (anyone can drop letters); private key = key to your
 
 pgpilot creates keys that **never expire by design**. Subkeys expire (after 1, 2, or 5 years), but the master key is permanent.
 
-**Why?** Expiring master keys is more complex and rare. Subkey rotation (Remplacer) is the modern best practice.
+**Why?** Expiring master keys is more complex and rare. Subkey rotation (Replace) is the modern best practice.
 
 If you need expiring keys, use `gpg` directly: `gpg --quick-gen-key "Name" ed25519 cert 1y`.
 
@@ -52,7 +52,7 @@ gpg --import revocation.asc
 gpg --keyserver keys.openpgp.org --send-keys <fingerprint>
 ```
 
-**Subkeys**: Use **Remplacer** (Rotate) in pgpilot to revoke old subkeys and create new ones.
+**Subkeys**: Use **Replace** in pgpilot to revoke old subkeys and create new ones.
 
 ---
 
@@ -77,7 +77,7 @@ They're fully compatible.
 
 ### How do I backup my private key?
 
-1. In pgpilot: Select your key → Click **Sauvegarder** → Choose a folder
+1. In pgpilot: Select your key → Click **Backup** → Choose a folder
 2. pgpilot exports:
    - `<KeyID>_secret.asc` — your private key (encrypted)
    - `<KeyID>_revocation.rev` — revocation certificate
@@ -87,7 +87,7 @@ Store the backup somewhere secure (offline, encrypted external drive, safe).
 ### How do I restore a backup?
 
 1. Copy the `_secret.asc` file to a safe location
-2. In pgpilot: Click **Importer** → **Fichier** → choose the `.asc` file
+2. In pgpilot: Click **Import** → **File** → choose the `.asc` file
 3. pgpilot imports your key back
 
 Your backup passphrase is required to re-import.
@@ -121,7 +121,7 @@ After you:
 
 1. Get the file (e.g., `document.pdf`)
 2. Get the signature (e.g., `document.pdf.sig`)
-3. In pgpilot: Click **Vérifier** → choose file and signature
+3. In pgpilot: Click **Verify** → choose file and signature
 4. pgpilot shows result (Valid / Bad Sig / Unknown Key / Expired / Revoked)
 
 If Valid and signer trust is Full/Ultimate, the document is authentic and from who you think.
@@ -175,20 +175,20 @@ pgpilot defaults to 2 years, but you can choose 1 or 5 years.
 
 ### What's the difference between "Renew" and "Replace"?
 
-- **Renew** (Renouveler): Extend the expiry date of the same subkey
+- **Renew**: Extend the expiry date of the same subkey
   - Use if the subkey is still good, just old
   - Quick operation
 
-- **Replace** (Remplacer): Create a new subkey and revoke the old one
+- **Replace**: Create a new subkey and revoke the old one
   - Use if the subkey is compromised or you want to refresh
   - Creates a new key with fresh parameters
   - Old key is marked revoked
 
 ### Can I have multiple Sign keys?
 
-Yes. Use **Ajouter sous-clef** to add extra Signature subkeys. You can have:
+Yes. Use **Add Subkey** to add extra Sign subkeys. You can have:
 - Multiple Sign keys (e.g., one for work, one for personal)
-- Multiple Encryption keys (for future algorithm migration)
+- Multiple Encrypt keys (for future algorithm migration)
 - Multiple Auth keys (for different SSH identities)
 
 But you need at least one of each for most operations.

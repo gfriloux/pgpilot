@@ -5,13 +5,13 @@ Get your first key up and running in 5 minutes.
 ## Step 1: Create Your First Key
 
 1. Launch pgpilot
-2. Click **Créer** (Create) in the sidebar
+2. Click **Create** in the sidebar
 3. Fill in the form:
    - **Name**: Your full name (e.g., "Alice Wonderland")
    - **Email**: Your email address (e.g., "alice@example.com")
    - **Subkey Expiry**: Keep the default (keys created by pgpilot do not expire)
    - **Include SSH Auth**: Leave unchecked (you can add it later if needed)
-4. Click **Créer clef** (Create Key)
+4. Click **Create Key**
 5. pgpilot will call `gpg --batch --generate-key`. This takes 10–30 seconds. You'll see:
    - A progress message
    - Your new key appears in the **My Keys** list on the left
@@ -47,25 +47,25 @@ Receive a public key from someone and add it to your keyring.
 
 ### Option A: From a file
 
-1. Click **Importer** (Import) in the sidebar
-2. Select **Fichier** (File)
+1. Click **Import** in the sidebar
+2. Select **File**
 3. Choose the `.asc` file containing their key
-4. Click **Importer** — pgpilot will validate and add it
+4. Click **Import** — pgpilot will validate and add it
 
 ### Option B: From keyserver
 
-1. Click **Importer** (Import)
-2. Select **Serveur de clefs** (Keyserver)
+1. Click **Import**
+2. Select **Keyserver**
 3. Enter their email or fingerprint
 4. pgpilot queries `keys.openpgp.org` (or another keyserver) and shows the key
-5. Click **Importer**
+5. Click **Import**
 
 ### Option C: From URL or pasted text
 
-1. Click **Importer** (Import)
-2. Select **URL** (paste an HTTPS link to a `.asc` file) or **Coller** (paste armored key text)
+1. Click **Import**
+2. Select **URL** (paste an HTTPS link to a `.asc` file) or **Paste** (paste armored key text)
 3. pgpilot fetches or parses the key
-4. Click **Importer**
+4. Click **Import**
 
 ---
 
@@ -76,11 +76,11 @@ Once imported, the key appears in **My Keys** with trust level **Undefined**.
 To send them encrypted messages, increase their trust:
 
 1. Select their key in the list
-2. In the detail panel, find the **Confiance** (Trust) badge
+2. In the detail panel, find the **Trust** badge
 3. Click it and choose:
-   - **Marginale** (Marginal) — you've partially verified their identity
-   - **Complète** (Full) — you've fully verified their identity
-4. Click **Enregistrer** (Save)
+   - **Marginal** — you've partially verified their identity
+   - **Full** — you've fully verified their identity
+4. Click **Save**
 
 **Best practice**: Meet them in person, exchange fingerprints, and verify by hand before trusting.
 
@@ -90,11 +90,11 @@ To send them encrypted messages, increase their trust:
 
 Now you can send them encrypted messages.
 
-1. Click **Chiffrer** (Encrypt) in the sidebar
-2. Click **Ajouter fichiers** (Add Files) and select a file
-3. Check their key in the **Destinataires** (Recipients) list
+1. Click **Encrypt** in the sidebar
+2. Click **Add Files** and select a file
+3. Check their key in the **Recipients** list
 4. Optionally toggle between `.gpg` (binary) and `.asc` (armored/text) format
-5. Click **Chiffrer** (Encrypt)
+5. Click **Encrypt**
 6. pgpilot creates `yourfile.pdf.gpg` (or `.asc`) in the same folder as the original
 
 Send the encrypted file to them. Only they can decrypt it (using their private key password).
@@ -103,9 +103,9 @@ Send the encrypted file to them. Only they can decrypt it (using their private k
 
 ## What's Next?
 
-- **Publish your key** — Use **Publier** (Publish) to upload to keyservers so anyone can find your key by email
-- **Rotate subkeys** — Use **Renouveler** or **Remplacer** to keep subkeys fresh
-- **Backup** — Use **Sauvegarder** to export your private key + revocation certificate
-- **YubiKey** — Use **Migrer vers YubiKey** to store your subkeys on a hardware security key
+- **Publish your key** — Use **Publish** to upload to keyservers so anyone can find your key by email
+- **Rotate subkeys** — Use **Renew** or **Replace** to keep subkeys fresh
+- **Backup** — Use **Backup** to export your private key + revocation certificate
+- **YubiKey** — Use **Migrate to YubiKey** to store your subkeys on a hardware security key
 
 See [Key Management](3-key-management.md) for detailed guides.

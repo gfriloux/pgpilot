@@ -54,7 +54,7 @@ Move an individual subkey to the card (e.g., move only the Encryption subkey).
 
 ### Before you start
 
-1. **Back up your key**: Click **Sauvegarder** first (see [Key Management](3-key-management.md))
+1. **Back up your key**: Click **Backup** first (see [Key Management](3-key-management.md))
    - If migration fails, you can restore from backup
 2. **Initialize the card** (first-time only):
    ```bash
@@ -67,10 +67,10 @@ Move an individual subkey to the card (e.g., move only the Encryption subkey).
 ### Migrate in pgpilot
 
 1. Select your key
-2. Click **Migrer vers YubiKey** (Migrate to YubiKey)
-3. A modal asks: "Quelle sous-clef?"
-   - Choose **Signature**, **Encryption**, or **Auth**
-4. Confirm: "Cette action n'est pas annulable"
+2. Click **Migrate to YubiKey**
+3. A modal asks: "Which subkey?"
+   - Choose **Sign**, **Encrypt**, or **Auth**
+4. Confirm: "This action cannot be undone"
 5. pgpilot calls `gpg --edit-key --command-fd 0 --status-fd 2 <fp>`:
    - Sends `key N` (select subkey)
    - Sends `keytocard`
@@ -94,9 +94,9 @@ When you sign/decrypt, gpg sends commands to the card via USB.
 
 Once a subkey is on the card, signing and decryption work the same in pgpilot:
 
-1. **Signing**: Click **Signer**, choose signer key, enter PIN (via `pinentry`)
-2. **Decryption**: Click **Déchiffrer**, decryption happens on card, enter PIN
-3. **Publishing**: **Publier** still works (sends stub + public key to keyserver)
+1. **Signing**: Click **Sign**, choose signer key, enter PIN (via `pinentry`)
+2. **Decryption**: Click **Decrypt**, decryption happens on card, enter PIN
+3. **Publishing**: **Publish** still works (sends stub + public key to keyserver)
 
 From pgpilot's perspective, it's transparent — you don't need to know if a key is on card or on disk.
 
@@ -140,7 +140,7 @@ If you created your key with SSH Auth subkey enabled, you can use it for SSH:
 
 If a card-based subkey is compromised or expired:
 
-1. Rotate as normal: Select key, click subkey **Remplacer**
+1. Rotate as normal: Select key, click subkey **Replace**
 2. pgpilot creates a new subkey on **disk**
 3. Old subkey on card is revoked
 4. You can now:

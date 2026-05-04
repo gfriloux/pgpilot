@@ -35,7 +35,7 @@ pgpilot is designed to protect against these threats:
 **Threat**: One subkey (e.g., Encryption) is compromised, but you don't know.
 
 **Protection**: Subkey rotation and revocation.
-- **How**: Use pgpilot **Remplacer** to create new subkey and revoke old.
+- **How**: Use pgpilot **Replace** to create new subkey and revoke old.
 - **Result**: Old subkey marked revoked; new one is active.
 
 ### Key Loss
@@ -43,7 +43,7 @@ pgpilot is designed to protect against these threats:
 **Threat**: You lose access to your private key (hardware failure, deletion).
 
 **Protection**: Backups.
-- **How**: Use pgpilot **Sauvegarder** to export secret key and revocation cert.
+- **How**: Use pgpilot **Backup** to export secret key and revocation cert.
 - **Result**: If you lose key, you can restore from backup. If you can't restore, you can revoke and create new key.
 
 ---
@@ -88,7 +88,7 @@ pgpilot is designed to protect against these threats:
 
 **Mitigation**:
 - **Always** verify fingerprints by comparing in person or via a secure channel.
-- Use pgpilot's trust levels (Marginal/Full) to mark who you've verified.
+- Use pgpilot's trust levels (Marginal / Full) to mark who you've verified.
 - Encrypt test files to yourself first; only encrypt to strangers after verification.
 
 ### Network Eavesdropping (Keyserver Lookups)
@@ -136,7 +136,7 @@ pgpilot is designed to protect against these threats:
 
 ### Backups
 
-1. **Backup immediately after key creation** (use pgpilot **Sauvegarder**)
+1. **Backup immediately after key creation** (use pgpilot **Backup**)
 2. **Store offline**: USB in a safe, not on your computer
 3. **Encrypt the backup** (use VeraCrypt, LUKS, BitLocker)
 4. **Test annual recovery**: Restore to temp machine, verify it works
@@ -153,8 +153,8 @@ pgpilot is designed to protect against these threats:
 ### Key Rotation
 
 1. **Renew subkeys before expiry** (1-2 months before expiration date)
-2. **Rotate compromised subkeys immediately** (use pgpilot **Remplacer**)
-3. **Publish rotations to keyserver** (use pgpilot **Publier**)
+2. **Rotate compromised subkeys immediately** (use pgpilot **Replace**)
+3. **Publish rotations to keyserver** (use pgpilot **Publish**)
 4. **Announce to contacts** (email with new key details)
 
 ### Hardware Keys (YubiKey)

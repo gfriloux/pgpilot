@@ -32,22 +32,22 @@ pgpilot supports two popular keyservers:
 ### Publish to keys.openpgp.org
 
 1. In pgpilot, select your key in **My Keys**
-2. Click **Publier** (Publish)
-3. A modal asks "Où publier?"
+2. Click **Publish**
+3. A modal asks "Where to publish?"
    - Choose **keys.openpgp.org** (default)
-4. Click **Publier**
+4. Click **Publish**
 5. pgpilot calls `gpg --keyserver keys.openpgp.org --send-keys <fingerprint>`
-6. Status message: "Clef publiée sur keys.openpgp.org"
+6. Status message: "Key published to keys.openpgp.org"
 
 **After publishing**: keys.openpgp.org sends you an email verification link. Click it to activate your key listing.
 
 ### Publish to keyserver.ubuntu.com
 
 1. Select your key
-2. Click **Publier**
+2. Click **Publish**
 3. Choose **keyserver.ubuntu.com**
-4. Click **Publier**
-5. Status: "Clef publiée sur keyserver.ubuntu.com"
+4. Click **Publish**
+5. Status: "Key published to keyserver.ubuntu.com"
 
 No verification email required; your key is immediately searchable (including email).
 
@@ -55,7 +55,7 @@ No verification email required; your key is immediately searchable (including em
 
 ## Checking publication status
 
-pgpilot displays a **Serveur** (Keyserver) badge in the key detail panel:
+pgpilot displays a **Keyserver** badge in the key detail panel:
 
 - **Unknown** (gray badge) → status not yet checked
 - **Checking** (spinner) → checking now...
@@ -69,7 +69,7 @@ When you view a key's details, pgpilot automatically checks `keys.openpgp.org` f
 To re-check status:
 1. Select your key
 2. The badge updates automatically
-3. Or click **Publier** again to trigger a new publication
+3. Or click **Publish** again to trigger a new publication
 
 ---
 
@@ -83,7 +83,7 @@ To re-check status:
 - You'll see a status message in the background
 - This ensures subkey rotations and updates are always visible
 
-You can also **manually republish** anytime by clicking **Publier** again.
+You can also **manually republish** anytime by clicking **Publish** again.
 
 ---
 
@@ -102,7 +102,7 @@ Anyone can access this link and find your key by email.
 ### Via paste.rs (temporary)
 
 1. Select your key
-2. Click **Exporter** → **Coller**
+2. Click **Export** → **Paste**
 3. A shareable link is generated: `https://paste.rs/abc123xyz`
 4. Share the link
 
@@ -111,7 +111,7 @@ This link works for 30 days (paste.rs default retention).
 ### As an .asc file
 
 1. Select your key
-2. Click **Exporter** → **Fichier**
+2. Click **Export** → **File**
 3. Save to `YourName.pub.asc`
 4. Share the file via email, upload to your website, etc.
 
@@ -121,16 +121,16 @@ This link works for 30 days (paste.rs default retention).
 
 Use pgpilot's **Import** view to find someone's public key:
 
-1. Click **Importer** in sidebar
-2. Select **Serveur de clefs**
+1. Click **Import** in sidebar
+2. Select **Keyserver**
 3. Enter their:
    - Email: `alice@example.com`
    - Fingerprint: `ABCD1234567890ABCD1234567890ABCD1234567890`
    - Key ID: `1234567890ABCDEF`
 4. Choose keyserver (keys.openpgp.org or keyserver.ubuntu.com)
-5. Click **Rechercher**
+5. Click **Search**
 6. pgpilot queries the keyserver and shows matching keys
-7. Click **Importer** to add to your keyring
+7. Click **Import** to add to your keyring
 
 ---
 
@@ -146,13 +146,13 @@ Use pgpilot's **Import** view to find someone's public key:
 
 3. **Rotate old keys**
    - Old compromised keys should be revoked, not deleted
-   - Use **Renouveler** or **Remplacer** for subkeys
+   - Use **Renew** or **Replace** for subkeys
    - Use `gpg --gen-revoke` for master keys (not yet in pgpilot)
 
 4. **Verify before importing**
    - Always verify the key fingerprint before trusting
    - Meet someone in person and compare fingerprints by hand
-   - Then set trust level in pgpilot (Marginale or Complète)
+   - Then set trust level in pgpilot (Marginal or Full)
 
 ---
 

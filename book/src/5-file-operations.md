@@ -8,26 +8,26 @@ Encrypt files so only your chosen recipients can read them.
 
 ### Encrypt a file
 
-1. Click **Chiffrer** (Encrypt) in the sidebar
+1. Click **Encrypt** in the sidebar
 2. In the **Encrypt** view:
-   - Click **Ajouter fichiers** (Add Files) to select one or more files
+   - Click **Add Files** to select one or more files
    - Files appear in a list below
-3. Select **Destinataires** (Recipients) — check the boxes for people who should be able to decrypt:
+3. Select **Recipients** — check the boxes for people who should be able to decrypt:
    - Only keys with Encryption subkeys can be selected
    - Trust level shown as a badge next to each key
 4. Choose format:
    - **Binary** (`.gpg`) — compressed, smaller, binary
    - **Armored** (`.asc`) — text-based, readable, larger, ASCII-only
-5. Click **Chiffrer** (Encrypt)
+5. Click **Encrypt**
 
 If any recipient's trust is **Undefined** or **Marginal**, a warning modal appears:
 ```
-⚠️ Clefs non approuvées
-Les clefs sélectionnées n'ont pas un niveau de confiance suffisant.
-Voulez-vous continuer ? (utilise --trust-model always)
+⚠️ Untrusted keys
+Selected keys do not have sufficient trust level.
+Continue? (uses --trust-model always)
 ```
 
-Click **Continuer** to proceed (pgpilot adds `--trust-model always` to bypass trust checks).
+Click **Continue** to proceed (pgpilot adds `--trust-model always` to bypass trust checks).
 
 **Output**: Encrypted files are created next to the original:
 - `document.pdf` → `document.pdf.gpg` (binary) or `document.pdf.asc` (armored)
@@ -48,8 +48,8 @@ On X11 systems, you can drag files directly onto the **Encrypt** view:
 pgpilot's default behavior is conservative: it warns before encrypting to untrusted keys. To bypass:
 
 1. Check untrusted keys in the **Recipients** list
-2. Click **Chiffrer** (Encrypt)
-3. If warning appears, click **Continuer** (Continue)
+2. Click **Encrypt**
+3. If warning appears, click **Continue**
 4. pgpilot uses `--trust-model always` (bypasses trust validation without modifying trust database)
 
 This is safe for one-off scenarios (e.g., encrypting to a key you haven't verified yet, but want to send anyway).
@@ -62,15 +62,15 @@ Decrypt files that were encrypted for you.
 
 ### Decrypt a file
 
-1. Click **Déchiffrer** (Decrypt) in the sidebar
+1. Click **Decrypt** in the sidebar
 2. In the **Decrypt** view:
-   - Click **Ajouter fichiers** (Add Files)
+   - Click **Add Files**
    - Select one or more `.gpg` or `.asc` files
 3. pgpilot scans each file:
    - Shows **Can decrypt** (green) if your private key exists
    - Shows **No key** (red) if you lack the decrypt key
    - Shows **Checking...** while inspecting
-4. Click **Déchiffrer** (Decrypt)
+4. Click **Decrypt**
 5. pgpilot prompts for your private key password (via `gpg-agent` / `pinentry`)
 6. Decrypted files are created next to originals:
    - `document.pdf.gpg` → `document.pdf` (same name, no .gpg extension)
@@ -90,14 +90,14 @@ Sign files to prove you created them.
 
 ### Sign a file
 
-1. Click **Signer** (Sign) in the sidebar
+1. Click **Sign** in the sidebar
 2. In the **Sign** view:
-   - Click **Choisir un fichier** (Choose file)
+   - Click **Choose file**
    - Select the file to sign
-3. Choose **Clef de signature** (Signing key):
-   - pgpilot filters to keys with Signature subkeys
+3. Choose **Signing key**:
+   - pgpilot filters to keys with Sign subkeys
    - Select your key
-4. Click **Signer** (Sign)
+4. Click **Sign**
 5. pgpilot prompts for your private key password
 6. A detached signature is created: `yourfile.sig` next to the original
 
@@ -118,24 +118,24 @@ Verify that a file was signed by who you think signed it.
 
 ### Verify a signature
 
-1. Click **Vérifier** (Verify) in the sidebar
+1. Click **Verify** in the sidebar
 2. In the **Verify** view:
-   - Click **Choisir le fichier** (Choose file) → select the **original** file (e.g., `document.pdf`)
-   - Click **Choisir la signature** (Choose signature) → select the `.sig` file
+   - Click **Choose file** → select the **original** file (e.g., `document.pdf`)
+   - Click **Choose signature** → select the `.sig` file
 
    **Auto-detect**: If you choose `document.pdf`, pgpilot automatically looks for `document.pdf.sig` in the same folder.
 
-3. Click **Vérifier** (Verify)
+3. Click **Verify**
 4. pgpilot calls `gpg --verify` and shows a result:
 
 #### Valid signature
 
 ```
-✓ Signature valide
-Signé par: Alice Wonder <alice@example.com>
-Empreinte: ABCD1234...
+✓ Valid signature
+Signed by: Alice Wonder <alice@example.com>
+Fingerprint: ABCD1234...
 Date: 2024-01-15 at 14:30:00 UTC
-Confiance: Complète ✓
+Trust: Full ✓
 ```
 
 Green checkmark, signer details shown. File is authentic.
@@ -143,9 +143,9 @@ Green checkmark, signer details shown. File is authentic.
 #### Bad signature
 
 ```
-✗ Signature invalide
-La signature ne correspond pas au fichier.
-Le fichier a peut-être été modifié.
+✗ Invalid signature
+The signature does not match the file.
+The file may have been modified.
 ```
 
 Red X. The file has been tampered with since signing.
@@ -153,9 +153,9 @@ Red X. The file has been tampered with since signing.
 #### Unknown key
 
 ```
-? Clef inconnue
-Signé par (Key ID): 1234567890ABCDEF
-Empreinte: Introuvable dans le keyring
+? Unknown key
+Signed by (Key ID): 1234567890ABCDEF
+Fingerprint: Not found in keyring
 ```
 
 Yellow warning. Signature is valid, but the signer's key is not in your keyring. You cannot verify authenticity.
@@ -165,9 +165,9 @@ Yellow warning. Signature is valid, but the signer's key is not in your keyring.
 #### Expired key
 
 ```
-⏱ Clef expirée
-Signé par: Bob Smith <bob@example.com>
-Clef expirée le: 2023-12-31
+⏱ Expired key
+Signed by: Bob Smith <bob@example.com>
+Key expired on: 2023-12-31
 ```
 
 Orange warning. The signer's key has expired, but the signature was valid at signing time.
@@ -175,9 +175,9 @@ Orange warning. The signer's key has expired, but the signature was valid at sig
 #### Revoked key
 
 ```
-🔴 Clef révoquée
-Signé par: Charlie Brown <charlie@example.com>
-La clef a été révoquée (raison: compromis)
+🔴 Revoked key
+Signed by: Charlie Brown <charlie@example.com>
+The key was revoked (reason: compromise)
 ```
 
 Red warning. The signer revoked their key (possibly due to compromise). Don't trust this signature.

@@ -73,7 +73,7 @@ Then restart pgpilot.
    ```bash
    gpg --list-keys
    ```
-2. If empty, create your first key in pgpilot: **Créer** → fill form → **Créer clef**
+2. If empty, create your first key in pgpilot: **Create** → fill form → **Create Key**
 3. If `gpg --list-keys` shows keys but pgpilot doesn't:
    - Check GNUPGHOME env var:
      ```bash
@@ -142,14 +142,14 @@ Then restart pgpilot.
 1. Verify recipient's key:
    - Select their key in pgpilot
    - Check fingerprint (ask them for it in person)
-   - Click **Confiance** badge → **Complète**
+   - Click **Trust** badge → **Full**
 2. Try encrypting again
 
 Or override trust for one-off:
-- Click **Chiffrer** (Encrypt)
+- Click **Encrypt**
 - Check untrusted recipient
-- Click **Chiffrer**
-- When warning appears, click **Continuer** (Continue)
+- Click **Encrypt**
+- When warning appears, click **Continue**
 
 This uses `--trust-model always` (bypasses trust check without modifying trust database).
 
@@ -168,7 +168,7 @@ This uses `--trust-model always` (bypasses trust check without modifying trust d
    ```
 2. Wait a few minutes, retry
 3. Try different keyserver:
-   - Click **Publier** (Publish)
+   - Click **Publish**
    - Choose **keyserver.ubuntu.com** instead of **keys.openpgp.org**
 
 4. If key was published, verify it's there:
@@ -186,7 +186,7 @@ This uses `--trust-model always` (bypasses trust check without modifying trust d
 3. If still not found after 30 min:
    - Check email from keys.openpgp.org (they may require email verification)
    - Click verification link in email
-   - Republish: Click **Publier** again
+   - Republish: Click **Publish** again
 
 ### "Only find wrong key when searching"
 
@@ -194,7 +194,7 @@ This uses `--trust-model always` (bypasses trust check without modifying trust d
 
 **Fix**:
 1. Verify fingerprint when importing:
-   - In **Importer** → **Serveur de clefs**, check the full fingerprint
+   - In **Import** → **Keyserver**, check the full fingerprint
    - Match with what sender provided
 2. If it's the wrong key:
    - Don't import it
@@ -227,8 +227,8 @@ This uses `--trust-model always` (bypasses trust check without modifying trust d
 2. In pgpilot, choose both files (pgpilot will auto-find `.sig` if same folder)
 
 Or manually specify both:
-- Click **Choisir le fichier** → document.pdf
-- Click **Choisir la signature** → document.pdf.sig
+- Click **Choose file** → document.pdf
+- Click **Choose signature** → document.pdf.sig
 
 ### "Can't decrypt — missing key"
 
