@@ -6,9 +6,14 @@ use iced::{
 
 use crate::app::{Message, SignForm};
 use crate::gpg::KeyInfo;
+use crate::i18n::Strings;
 use crate::ui::{common, theme};
 
-pub fn view<'a>(form: &'a SignForm, keys: &'a [KeyInfo]) -> Element<'a, Message> {
+pub fn view<'a>(
+  form: &'a SignForm,
+  keys: &'a [KeyInfo],
+  s: &'static dyn Strings,
+) -> Element<'a, Message> {
   let bold = Font {
     weight: font::Weight::Bold,
     ..Font::DEFAULT
@@ -31,7 +36,7 @@ pub fn view<'a>(form: &'a SignForm, keys: &'a [KeyInfo]) -> Element<'a, Message>
           .font(theme::ICONS)
           .size(12)
           .style(|_: &iced::Theme| iced::widget::text::Style {
-            color: Some(theme::SUCCESS),
+            color: Some(theme::success()),
           }),
         text(name).size(13),
       ]
@@ -39,21 +44,21 @@ pub fn view<'a>(form: &'a SignForm, keys: &'a [KeyInfo]) -> Element<'a, Message>
       .align_y(Alignment::Center),
     )
     .style(|_: &iced::Theme| container::Style {
-      text_color: Some(theme::TEXT_STRONG),
+      text_color: Some(theme::text_strong()),
       ..Default::default()
     })
     .into()
   } else {
-    container(text("Aucun fichier sélectionné").size(13))
+    container(text(s.no_file_selected()).size(13))
       .style(|_: &iced::Theme| container::Style {
-        text_color: Some(theme::TEXT_MUTED),
+        text_color: Some(theme::text_muted()),
         ..Default::default()
       })
       .into()
   };
 
   let file_row: Element<'_, Message> = row![
-    common::pick_btn("\u{f15b}", "Choisir un fichier...", Message::SignPickFile),
+    common::pick_btn("\u{f15b}", s.sign_select_file(), Message::SignPickFile),
     sign_file_label,
   ]
   .spacing(12)
@@ -64,7 +69,7 @@ pub fn view<'a>(form: &'a SignForm, keys: &'a [KeyInfo]) -> Element<'a, Message>
     vec![
       container(text("Aucune clef privée avec capacité de signature.").size(12))
         .style(|_: &iced::Theme| container::Style {
-          text_color: Some(theme::TEXT_MUTED),
+          text_color: Some(theme::text_muted()),
           ..Default::default()
         })
         .padding([4, 0])
@@ -87,7 +92,7 @@ pub fn view<'a>(form: &'a SignForm, keys: &'a [KeyInfo]) -> Element<'a, Message>
               text(label).size(13),
               text(short_id).size(11).style(|_: &iced::Theme| {
                 iced::widget::text::Style {
-                  color: Some(theme::TEXT_MUTED),
+                  color: Some(theme::text_muted()),
                 }
               }),
             ]
@@ -101,21 +106,21 @@ pub fn view<'a>(form: &'a SignForm, keys: &'a [KeyInfo]) -> Element<'a, Message>
         .width(Length::Fill)
         .style(move |_: &iced::Theme, status| button::Style {
           background: Some(Background::Color(if selected {
-            theme::ACCENT_SUBTLE
+            theme::accent_subtle()
           } else {
             match status {
-              button::Status::Hovered | button::Status::Pressed => theme::HEADER_BG,
+              button::Status::Hovered | button::Status::Pressed => theme::header_bg(),
               _ => Color::TRANSPARENT,
             }
           })),
           text_color: if selected {
-            theme::ACCENT
+            theme::accent()
           } else {
-            theme::TEXT_STRONG
+            theme::text_strong()
           },
           border: Border {
             color: if selected {
-              theme::ACCENT_BORDER
+              theme::accent_border()
             } else {
               Color::TRANSPARENT
             },
@@ -142,13 +147,13 @@ pub fn view<'a>(form: &'a SignForm, keys: &'a [KeyInfo]) -> Element<'a, Message>
           .font(theme::ICONS)
           .size(16)
           .style(|_: &iced::Theme| iced::widget::text::Style {
-            color: Some(theme::SUCCESS),
+            color: Some(theme::success()),
           }),
         column![
-          text("Signature créée avec succès").size(14).font(bold),
+          text(s.status_file_signed()).size(14).font(bold),
           text(sig_name).size(12).style(|_: &iced::Theme| {
             iced::widget::text::Style {
-              color: Some(theme::TEXT_SECONDARY),
+              color: Some(theme::text_secondary()),
             }
           }),
         ]
@@ -160,20 +165,20 @@ pub fn view<'a>(form: &'a SignForm, keys: &'a [KeyInfo]) -> Element<'a, Message>
     .padding([10, 14])
     .width(Length::Fill)
     .style(|_: &iced::Theme| container::Style {
-      background: Some(Background::Color(theme::SUCCESS_BG)),
+      background: Some(Background::Color(theme::success_bg())),
       border: Border {
-        color: theme::SUCCESS,
+        color: theme::success(),
         width: 1.0,
         radius: 8.0.into(),
       },
-      text_color: Some(theme::SUCCESS),
+      text_color: Some(theme::success()),
       ..Default::default()
     })
     .into()
   } else if form.signing {
-    container(text("Signature en cours...").size(13))
+    container(text(s.verify_in_progress()).size(13))
       .style(|_: &iced::Theme| container::Style {
-        text_color: Some(theme::TEXT_MUTED),
+        text_color: Some(theme::text_muted()),
         ..Default::default()
       })
       .into()
@@ -185,7 +190,7 @@ pub fn view<'a>(form: &'a SignForm, keys: &'a [KeyInfo]) -> Element<'a, Message>
 
   let rule_sep = || {
     rule::horizontal(1).style(|_: &iced::Theme| rule::Style {
-      color: theme::BORDER,
+      color: theme::border(),
       radius: 0.0.into(),
       fill_mode: rule::FillMode::Full,
       snap: true,
@@ -197,7 +202,12 @@ pub fn view<'a>(form: &'a SignForm, keys: &'a [KeyInfo]) -> Element<'a, Message>
       column![
         row![
           text("\u{f14b}").font(theme::ICONS).size(20),
-          text("Signer un fichier").size(22).font(bold),
+          text(theme::flavor(
+            s.sign_title(),
+            "Apposer le Sceau du Camarade"
+          ))
+          .size(22)
+          .font(theme::flavor_title_font()),
         ]
         .spacing(10)
         .align_y(Alignment::Center),
@@ -210,7 +220,7 @@ pub fn view<'a>(form: &'a SignForm, keys: &'a [KeyInfo]) -> Element<'a, Message>
           .size(13)
         )
         .style(|_: &iced::Theme| container::Style {
-          text_color: Some(theme::TEXT_SECONDARY),
+          text_color: Some(theme::text_secondary()),
           ..Default::default()
         }),
       ]
@@ -219,30 +229,34 @@ pub fn view<'a>(form: &'a SignForm, keys: &'a [KeyInfo]) -> Element<'a, Message>
       file_row,
       rule_sep(),
       column![
-        container(text("Clef signataire").size(12).font(bold)).style(|_: &iced::Theme| {
+        container(text(s.sign_select_key()).size(12).font(bold)).style(|_: &iced::Theme| {
           container::Style {
-            text_color: Some(theme::TEXT_SECONDARY),
+            text_color: Some(theme::text_secondary()),
             ..Default::default()
           }
         }),
-        container(scrollable(column(signer_items).spacing(2).padding([0, 2])).height(140))
-          .padding(4)
-          .style(|_: &iced::Theme| container::Style {
-            background: Some(Background::Color(theme::HEADER_BG)),
-            border: Border {
-              color: theme::BORDER,
-              width: 1.0,
-              radius: 4.0.into(),
-            },
-            ..Default::default()
-          }),
+        container(
+          scrollable(column(signer_items).spacing(2).padding([0, 2]))
+            .height(140)
+            .style(common::scroll_style),
+        )
+        .padding(4)
+        .style(|_: &iced::Theme| container::Style {
+          background: Some(Background::Color(theme::header_bg())),
+          border: Border {
+            color: theme::border(),
+            width: 1.0,
+            radius: 4.0.into(),
+          },
+          ..Default::default()
+        }),
       ]
       .spacing(6),
       rule_sep(),
       {
         let sign_action: Element<'_, Message> = row![
           iced::widget::Space::new().width(Length::Fill),
-          common::action_btn("Signer", can_sign, Message::SignExecute)
+          common::action_btn(s.btn_sign(), can_sign, Message::SignExecute)
         ]
         .into();
         sign_action
@@ -255,13 +269,13 @@ pub fn view<'a>(form: &'a SignForm, keys: &'a [KeyInfo]) -> Element<'a, Message>
   .padding(32)
   .width(640)
   .style(|_: &iced::Theme| container::Style {
-    background: Some(Background::Color(theme::CARD_BG)),
+    background: Some(Background::Color(theme::card_bg())),
     border: Border {
-      color: theme::BORDER,
+      color: theme::border(),
       width: 1.0,
       radius: 12.0.into(),
     },
-    text_color: Some(theme::TEXT_STRONG),
+    text_color: Some(theme::text_strong()),
     ..Default::default()
   });
 
@@ -273,12 +287,13 @@ pub fn view<'a>(form: &'a SignForm, keys: &'a [KeyInfo]) -> Element<'a, Message>
         .width(Length::Fill),
     )
     .height(Length::Fill)
-    .width(Length::Fill),
+    .width(Length::Fill)
+    .style(common::scroll_style),
   )
   .height(Length::Fill)
   .width(Length::Fill)
   .style(|_: &iced::Theme| container::Style {
-    background: Some(Background::Color(theme::SIDEBAR_BG)),
+    background: Some(Background::Color(theme::sidebar_bg())),
     ..Default::default()
   })
   .into()

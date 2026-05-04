@@ -32,10 +32,9 @@ impl App {
     match result {
       Ok(url) => {
         let msg = if url == "keys.openpgp.org" {
-          "Clef publiée. Vérifiez votre email pour valider la publication sur keys.openpgp.org."
-            .to_string()
+          self.strings.status_published_openpgp_email().to_string()
         } else {
-          "Clef publiée avec succès.".to_string()
+          self.strings.status_published().to_string()
         };
         let s = self.set_status(StatusKind::Success, msg);
         if let Some(ref fp) = self.selected.clone() {
@@ -53,7 +52,7 @@ impl App {
       }
       Err(e) => self.set_status(
         StatusKind::Error,
-        truncate_error(format!("Erreur publication : {e}")),
+        truncate_error(format!("{}: {e}", self.strings.status_publish_failed())),
       ),
     }
   }
@@ -75,7 +74,7 @@ impl App {
       }
       Err(e) => self.set_status(
         StatusKind::Error,
-        truncate_error(format!("Erreur republication : {e}")),
+        truncate_error(format!("{}: {e}", self.strings.err_republish_failed())),
       ),
     }
   }

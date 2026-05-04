@@ -13,3 +13,9 @@ sequoia-openpgp = { version = "2", default-features = false, features = ["crypto
 tempfile = "3"
 ureq = "3"
 tokio = { version = "1", features = ["full"] }
+serde_yaml = "0.9"
+serde = { version = "1", features = ["derive"] }
+dirs = "5"
+
+[dev-dependencies]
+tempfile = "3"

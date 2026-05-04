@@ -6,9 +6,10 @@ use iced::{
 
 use crate::app::{DecryptForm, Message};
 use crate::gpg::DecryptStatus;
-use crate::ui::theme;
+use crate::i18n::Strings;
+use crate::ui::{common, theme};
 
-pub fn view<'a>(form: &'a DecryptForm) -> Element<'a, Message> {
+pub fn view<'a>(form: &'a DecryptForm, s: &'static dyn Strings) -> Element<'a, Message> {
   let bold = Font {
     weight: font::Weight::Bold,
     ..Font::DEFAULT
@@ -16,7 +17,7 @@ pub fn view<'a>(form: &'a DecryptForm) -> Element<'a, Message> {
 
   let separator = || {
     rule::horizontal(1).style(|_: &iced::Theme| rule::Style {
-      color: theme::BORDER,
+      color: theme::border(),
       radius: 0.0.into(),
       fill_mode: rule::FillMode::Full,
       snap: false,
@@ -39,13 +40,13 @@ pub fn view<'a>(form: &'a DecryptForm) -> Element<'a, Message> {
   .padding([8, 12])
   .width(Length::Fill)
   .style(|_: &iced::Theme| container::Style {
-    background: Some(Background::Color(theme::ACCENT_SUBTLE)),
+    background: Some(Background::Color(theme::accent_subtle())),
     border: Border {
-      color: theme::ACCENT_BORDER,
+      color: theme::accent_border(),
       width: 1.0,
       radius: 6.0.into(),
     },
-    text_color: Some(theme::TEXT_SECONDARY),
+    text_color: Some(theme::text_secondary()),
     ..Default::default()
   })
   .into();
@@ -62,7 +63,7 @@ pub fn view<'a>(form: &'a DecryptForm) -> Element<'a, Message> {
     .padding([16, 0])
     .width(Length::Fill)
     .style(|_: &iced::Theme| container::Style {
-      text_color: Some(theme::TEXT_MUTED),
+      text_color: Some(theme::text_muted()),
       ..Default::default()
     })
     .into()]
@@ -80,10 +81,10 @@ pub fn view<'a>(form: &'a DecryptForm) -> Element<'a, Message> {
 
         let status = form.file_statuses.get(path);
         let (badge_icon, badge_color, badge_label) = match status {
-          Some(DecryptStatus::CanDecrypt) => ("\u{f058}", theme::SUCCESS, "Clef disponible"),
-          Some(DecryptStatus::NoKey) => ("\u{f057}", theme::ERROR, "Clef manquante"),
-          Some(DecryptStatus::Checking) => ("\u{f110}", theme::TEXT_MUTED, "Vérification..."),
-          _ => ("\u{f059}", theme::TEXT_MUTED, ""),
+          Some(DecryptStatus::CanDecrypt) => ("\u{f058}", theme::success(), "Clef disponible"),
+          Some(DecryptStatus::NoKey) => ("\u{f057}", theme::error(), "Clef manquante"),
+          Some(DecryptStatus::Checking) => ("\u{f110}", theme::text_muted(), "Vérification..."),
+          _ => ("\u{f059}", theme::text_muted(), ""),
         };
 
         row![
@@ -92,16 +93,16 @@ pub fn view<'a>(form: &'a DecryptForm) -> Element<'a, Message> {
             .size(13)
             .color(badge_color),
           text(name).size(13).width(Length::Fill),
-          text(badge_label).size(11).color(theme::TEXT_MUTED),
+          text(badge_label).size(11).color(theme::text_muted()),
           button(text("\u{f1f8}").font(theme::ICONS).size(12))
             .on_press(Message::DecryptRemoveFile(i))
             .padding([3, 6])
             .style(|_: &iced::Theme, status| button::Style {
               background: Some(Background::Color(match status {
-                button::Status::Hovered | button::Status::Pressed => theme::DESTRUCTIVE_HOVER_BG,
+                button::Status::Hovered | button::Status::Pressed => theme::destructive_hover_bg(),
                 _ => Color::TRANSPARENT,
               })),
-              text_color: theme::ERROR,
+              text_color: theme::error(),
               border: Border {
                 color: Color::TRANSPARENT,
                 width: 0.0,
@@ -132,12 +133,12 @@ pub fn view<'a>(form: &'a DecryptForm) -> Element<'a, Message> {
   .padding([8, 12])
   .style(|_: &iced::Theme, status| button::Style {
     background: Some(Background::Color(match status {
-      button::Status::Hovered | button::Status::Pressed => theme::ACCENT_SUBTLE,
+      button::Status::Hovered | button::Status::Pressed => theme::accent_subtle(),
       _ => Color::TRANSPARENT,
     })),
-    text_color: theme::TEXT_STRONG,
+    text_color: theme::text_strong(),
     border: Border {
-      color: theme::BORDER,
+      color: theme::border(),
       width: 1.0,
       radius: 6.0.into(),
     },
@@ -146,14 +147,15 @@ pub fn view<'a>(form: &'a DecryptForm) -> Element<'a, Message> {
   });
 
   let mut files_section_children: Vec<Element<'_, Message>> = vec![
-    container(text("Fichiers à déchiffrer").size(12).font(bold))
+    container(text(s.decrypt_add_files()).size(12).font(bold))
       .style(|_: &iced::Theme| container::Style {
-        text_color: Some(theme::TEXT_SECONDARY),
+        text_color: Some(theme::text_secondary()),
         ..Default::default()
       })
       .into(),
     scrollable(column(file_items).spacing(2).padding([0, 4]))
       .height(220)
+      .style(common::scroll_style)
       .into(),
     add_files_btn.into(),
   ];
@@ -164,7 +166,7 @@ pub fn view<'a>(form: &'a DecryptForm) -> Element<'a, Message> {
         text("\u{f071}")
           .font(theme::ICONS)
           .size(13)
-          .color(theme::ERROR),
+          .color(theme::error()),
         text(
           "Certains fichiers ne peuvent pas être déchiffrés — vous ne possédez pas \
            la clef privée correspondante. Ces fichiers seront ignorés."
@@ -177,13 +179,13 @@ pub fn view<'a>(form: &'a DecryptForm) -> Element<'a, Message> {
     .padding([8, 12])
     .width(Length::Fill)
     .style(|_: &iced::Theme| container::Style {
-      background: Some(Background::Color(theme::ERROR_BG)),
+      background: Some(Background::Color(theme::error_bg())),
       border: Border {
-        color: theme::ERROR,
+        color: theme::error(),
         width: 1.0,
         radius: 6.0.into(),
       },
-      text_color: Some(theme::ERROR),
+      text_color: Some(theme::error()),
       ..Default::default()
     })
     .into();
@@ -201,11 +203,11 @@ pub fn view<'a>(form: &'a DecryptForm) -> Element<'a, Message> {
 
   let n = form.files.len();
   let decrypt_label = if form.decrypting {
-    "Déchiffrement en cours...".to_string()
+    s.decrypt_in_progress().to_string()
   } else if n == 1 {
-    "Déchiffrer 1 fichier".to_string()
+    format!("{} 1 fichier", s.btn_decrypt())
   } else {
-    format!("Déchiffrer {n} fichier(s)")
+    format!("{} {n} fichier(s)", s.btn_decrypt())
   };
 
   let decrypt_btn = {
@@ -214,16 +216,16 @@ pub fn view<'a>(form: &'a DecryptForm) -> Element<'a, Message> {
       move |_: &iced::Theme, status| button::Style {
         background: Some(Background::Color(if style_enabled {
           match status {
-            button::Status::Hovered | button::Status::Pressed => theme::ACCENT_HOVER,
-            _ => theme::ACCENT,
+            button::Status::Hovered | button::Status::Pressed => theme::accent_hover(),
+            _ => theme::accent(),
           }
         } else {
-          theme::DISABLED_BG
+          theme::disabled_bg()
         })),
         text_color: if style_enabled {
-          theme::TEXT_ON_ACCENT
+          theme::text_on_accent()
         } else {
-          theme::TEXT_MUTED
+          theme::text_muted()
         },
         border: Border {
           color: Color::TRANSPARENT,
@@ -251,13 +253,18 @@ pub fn view<'a>(form: &'a DecryptForm) -> Element<'a, Message> {
       column![
         row![
           text("\u{f13e}").font(theme::ICONS).size(20),
-          text("Déchiffrement de fichiers").size(22).font(bold),
+          text(theme::flavor(
+            s.decrypt_title(),
+            "Décrypter par Ordre du Soviet"
+          ))
+          .size(22)
+          .font(theme::flavor_title_font()),
         ]
         .spacing(10)
         .align_y(Alignment::Center),
         container(text("Déchiffrez des fichiers chiffrés avec GPG.").size(13)).style(
           |_: &iced::Theme| container::Style {
-            text_color: Some(theme::TEXT_SECONDARY),
+            text_color: Some(theme::text_secondary()),
             ..Default::default()
           }
         ),
@@ -275,13 +282,13 @@ pub fn view<'a>(form: &'a DecryptForm) -> Element<'a, Message> {
   .padding(32)
   .width(600)
   .style(|_: &iced::Theme| container::Style {
-    background: Some(Background::Color(theme::CARD_BG)),
+    background: Some(Background::Color(theme::card_bg())),
     border: Border {
-      color: theme::BORDER,
+      color: theme::border(),
       width: 1.0,
       radius: 12.0.into(),
     },
-    text_color: Some(theme::TEXT_STRONG),
+    text_color: Some(theme::text_strong()),
     ..Default::default()
   });
 
@@ -293,12 +300,13 @@ pub fn view<'a>(form: &'a DecryptForm) -> Element<'a, Message> {
         .width(Length::Fill),
     )
     .height(Length::Fill)
-    .width(Length::Fill),
+    .width(Length::Fill)
+    .style(common::scroll_style),
   )
   .height(Length::Fill)
   .width(Length::Fill)
   .style(|_: &iced::Theme| container::Style {
-    background: Some(Background::Color(theme::SIDEBAR_BG)),
+    background: Some(Background::Color(theme::sidebar_bg())),
     ..Default::default()
   })
   .into()

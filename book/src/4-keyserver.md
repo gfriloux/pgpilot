@@ -1,0 +1,181 @@
+# Keyserver & Sharing
+
+Publish and discover keys on OpenPGP keyservers.
+
+## What is a keyserver?
+
+A **keyserver** is a database of public keys indexed by fingerprint, email, and key ID. Anyone can:
+- **Publish** their key → others find it by email
+- **Search** for someone's key → download it
+- **Receive** their key without sharing files directly
+
+pgpilot supports two popular keyservers:
+
+### keys.openpgp.org (recommended)
+
+- Privacy-respecting (does not list email addresses by default)
+- Requires email verification (you control your own key listing)
+- Modern, well-maintained
+- Respects `--no-export` flag (your key can be private if you choose)
+
+### keyserver.ubuntu.com
+
+- Traditional OpenPGP keyserver (Syncable pool)
+- Lists all keys publicly (anyone can see your email)
+- Large distributed network
+- Better for finding keys by email
+
+---
+
+## Publishing your key
+
+### Publish to keys.openpgp.org
+
+1. In pgpilot, select your key in **My Keys**
+2. Click **Publish**
+3. A modal asks "Where to publish?"
+   - Choose **keys.openpgp.org** (default)
+4. Click **Publish**
+5. pgpilot calls `gpg --keyserver keys.openpgp.org --send-keys <fingerprint>`
+6. Status message: "Key published to keys.openpgp.org"
+
+**After publishing**: keys.openpgp.org sends you an email verification link. Click it to activate your key listing.
+
+### Publish to keyserver.ubuntu.com
+
+1. Select your key
+2. Click **Publish**
+3. Choose **keyserver.ubuntu.com**
+4. Click **Publish**
+5. Status: "Key published to keyserver.ubuntu.com"
+
+No verification email required; your key is immediately searchable (including email).
+
+---
+
+## Checking publication status
+
+pgpilot displays a **Keyserver** badge in the key detail panel:
+
+- **Unknown** (gray badge) → status not yet checked
+- **Checking** (spinner) → checking now...
+- **Published** (green checkmark) → found on keyserver
+- **Not Published** (red X) → not found
+
+When you view a key's details, pgpilot automatically checks `keys.openpgp.org` for your key's presence.
+
+### Manual check
+
+To re-check status:
+1. Select your key
+2. The badge updates automatically
+3. Or click **Publish** again to trigger a new publication
+
+---
+
+## Auto-republish
+
+**Why?** Keyservers expire old certificates. To keep your key fresh and discoverable:
+
+**pgpilot auto-republishes every 28 days:**
+- pgpilot remembers which keyserver you last used
+- Every 28 days, it automatically re-publishes your key
+- You'll see a status message in the background
+- This ensures subkey rotations and updates are always visible
+
+You can also **manually republish** anytime by clicking **Publish** again.
+
+---
+
+## Sharing your key
+
+Once published, you have multiple ways to share your public key:
+
+### Via keys.openpgp.org search link
+
+```
+https://keys.openpgp.org/search?q=alice@example.com
+```
+
+Anyone can access this link and find your key by email.
+
+### Via paste.rs (temporary)
+
+1. Select your key
+2. Click **Export** → **Paste**
+3. A shareable link is generated: `https://paste.rs/abc123xyz`
+4. Share the link
+
+This link works for 30 days (paste.rs default retention).
+
+### As an .asc file
+
+1. Select your key
+2. Click **Export** → **File**
+3. Save to `YourName.pub.asc`
+4. Share the file via email, upload to your website, etc.
+
+---
+
+## Searching for someone's key
+
+Use pgpilot's **Import** view to find someone's public key:
+
+1. Click **Import** in sidebar
+2. Select **Keyserver**
+3. Enter their:
+   - Email: `alice@example.com`
+   - Fingerprint: `ABCD1234567890ABCD1234567890ABCD1234567890`
+   - Key ID: `1234567890ABCDEF`
+4. Choose keyserver (keys.openpgp.org or keyserver.ubuntu.com)
+5. Click **Search**
+6. pgpilot queries the keyserver and shows matching keys
+7. Click **Import** to add to your keyring
+
+---
+
+## Best practices
+
+1. **Publish once, republish regularly**
+   - Publish once to both major keyservers
+   - Let pgpilot auto-republish to keep current
+
+2. **Use email verification**
+   - After publishing to keys.openpgp.org, check the verification email
+   - This prevents email hijacking/spoofing
+
+3. **Rotate old keys**
+   - Old compromised keys should be revoked, not deleted
+   - Use **Renew** or **Replace** for subkeys
+   - Use `gpg --gen-revoke` for master keys (not yet in pgpilot)
+
+4. **Verify before importing**
+   - Always verify the key fingerprint before trusting
+   - Meet someone in person and compare fingerprints by hand
+   - Then set trust level in pgpilot (Marginal or Full)
+
+---
+
+## Troubleshooting
+
+**"Publication failed"**
+- Network issue — try again later
+- Keyserver temporarily down — retry or use different server
+
+**"Key not published after 30 minutes"**
+- keys.openpgp.org may require email verification
+- Check your email for a confirmation link from keys.openpgp.org
+- Click the link and try re-publishing
+
+**"Found wrong key"**
+- If multiple keys exist for an email, pgpilot shows all
+- Compare fingerprints carefully
+- Only import keys you can verify
+
+---
+
+## Next steps
+
+- Learn about file signing & verification — see [File Operations](5-file-operations.md)
+- Manage trust — see [Key Management](3-key-management.md) (Trust Levels)
+- Use hardware keys — see [YubiKey / Smartcard](6-smartcard.md)

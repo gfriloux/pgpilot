@@ -6,7 +6,8 @@ use iced::{
 
 use crate::app::{EncryptForm, Message};
 use crate::gpg::KeyInfo;
-use crate::ui::theme;
+use crate::i18n::Strings;
+use crate::ui::{common, theme};
 
 fn key_row(key: &KeyInfo, selected: bool) -> Element<'static, Message> {
   let fp = key.fingerprint.clone();
@@ -19,9 +20,9 @@ fn key_row(key: &KeyInfo, selected: bool) -> Element<'static, Message> {
     .size(12)
     .style(move |_: &iced::Theme| iced::widget::text::Style {
       color: Some(if trusted {
-        theme::SUCCESS
+        theme::success()
       } else {
-        theme::PEACH
+        theme::peach()
       }),
     });
 
@@ -33,7 +34,7 @@ fn key_row(key: &KeyInfo, selected: bool) -> Element<'static, Message> {
       column![
         text(label).size(13),
         container(text(short_id).size(11)).style(|_: &iced::Theme| container::Style {
-          text_color: Some(theme::TEXT_MUTED),
+          text_color: Some(theme::text_muted()),
           ..Default::default()
         }),
       ]
@@ -49,21 +50,21 @@ fn key_row(key: &KeyInfo, selected: bool) -> Element<'static, Message> {
   .width(Length::Fill)
   .style(move |_: &iced::Theme, status| button::Style {
     background: Some(Background::Color(if selected {
-      theme::ACCENT_SUBTLE
+      theme::accent_subtle()
     } else {
       match status {
-        button::Status::Hovered | button::Status::Pressed => theme::HEADER_BG,
+        button::Status::Hovered | button::Status::Pressed => theme::header_bg(),
         _ => Color::TRANSPARENT,
       }
     })),
     text_color: if selected {
-      theme::ACCENT
+      theme::accent()
     } else {
-      theme::TEXT_STRONG
+      theme::text_strong()
     },
     border: Border {
       color: if selected {
-        theme::ACCENT_BORDER
+        theme::accent_border()
       } else {
         Color::TRANSPARENT
       },
@@ -76,7 +77,11 @@ fn key_row(key: &KeyInfo, selected: bool) -> Element<'static, Message> {
   .into()
 }
 
-pub fn view<'a>(form: &'a EncryptForm, keys: &'a [KeyInfo]) -> Element<'a, Message> {
+pub fn view<'a>(
+  form: &'a EncryptForm,
+  keys: &'a [KeyInfo],
+  s: &'static dyn Strings,
+) -> Element<'a, Message> {
   let bold = Font {
     weight: font::Weight::Bold,
     ..Font::DEFAULT
@@ -84,7 +89,7 @@ pub fn view<'a>(form: &'a EncryptForm, keys: &'a [KeyInfo]) -> Element<'a, Messa
 
   let separator = || {
     rule::horizontal(1).style(|_: &iced::Theme| rule::Style {
-      color: theme::BORDER,
+      color: theme::border(),
       radius: 0.0.into(),
       fill_mode: rule::FillMode::Full,
       snap: false,
@@ -93,7 +98,7 @@ pub fn view<'a>(form: &'a EncryptForm, keys: &'a [KeyInfo]) -> Element<'a, Messa
 
   let section_header = |label: &'static str| {
     container(text(label).size(11).font(bold)).style(|_: &iced::Theme| container::Style {
-      text_color: Some(theme::TEXT_MUTED),
+      text_color: Some(theme::text_muted()),
       ..Default::default()
     })
   };
@@ -127,7 +132,7 @@ pub fn view<'a>(form: &'a EncryptForm, keys: &'a [KeyInfo]) -> Element<'a, Messa
     if !own_keys.is_empty() {
       recipient_items.push(
         container(rule::horizontal(1).style(|_: &iced::Theme| rule::Style {
-          color: theme::BORDER,
+          color: theme::border(),
           radius: 0.0.into(),
           fill_mode: rule::FillMode::Full,
           snap: false,
@@ -147,7 +152,7 @@ pub fn view<'a>(form: &'a EncryptForm, keys: &'a [KeyInfo]) -> Element<'a, Messa
       container(text("Aucune clef avec capacité de chiffrement.").size(12))
         .padding([8, 8])
         .style(|_: &iced::Theme| container::Style {
-          text_color: Some(theme::TEXT_MUTED),
+          text_color: Some(theme::text_muted()),
           ..Default::default()
         })
         .into(),
@@ -155,13 +160,15 @@ pub fn view<'a>(form: &'a EncryptForm, keys: &'a [KeyInfo]) -> Element<'a, Messa
   }
 
   let recipients_col: Element<'_, Message> = column![
-    container(text("Destinataires").size(12).font(bold)).style(|_: &iced::Theme| {
+    container(text(s.encrypt_recipients()).size(12).font(bold)).style(|_: &iced::Theme| {
       container::Style {
-        text_color: Some(theme::TEXT_SECONDARY),
+        text_color: Some(theme::text_secondary()),
         ..Default::default()
       }
     }),
-    scrollable(column(recipient_items).spacing(2).padding([0, 4])).height(280),
+    scrollable(column(recipient_items).spacing(2).padding([0, 4]))
+      .height(280)
+      .style(common::scroll_style),
   ]
   .spacing(8)
   .width(Length::FillPortion(45))
@@ -187,10 +194,10 @@ pub fn view<'a>(form: &'a EncryptForm, keys: &'a [KeyInfo]) -> Element<'a, Messa
           .padding([3, 6])
           .style(|_: &iced::Theme, status| button::Style {
             background: Some(Background::Color(match status {
-              button::Status::Hovered | button::Status::Pressed => theme::DESTRUCTIVE_HOVER_BG,
+              button::Status::Hovered | button::Status::Pressed => theme::destructive_hover_bg(),
               _ => Color::TRANSPARENT,
             })),
-            text_color: theme::ERROR,
+            text_color: theme::error(),
             border: Border {
               color: Color::TRANSPARENT,
               width: 0.0,
@@ -220,12 +227,12 @@ pub fn view<'a>(form: &'a EncryptForm, keys: &'a [KeyInfo]) -> Element<'a, Messa
   .padding([8, 12])
   .style(|_: &iced::Theme, status| button::Style {
     background: Some(Background::Color(match status {
-      button::Status::Hovered | button::Status::Pressed => theme::ACCENT_SUBTLE,
+      button::Status::Hovered | button::Status::Pressed => theme::accent_subtle(),
       _ => Color::TRANSPARENT,
     })),
-    text_color: theme::TEXT_STRONG,
+    text_color: theme::text_strong(),
     border: Border {
-      color: theme::BORDER,
+      color: theme::border(),
       width: 1.0,
       radius: 6.0.into(),
     },
@@ -234,9 +241,9 @@ pub fn view<'a>(form: &'a EncryptForm, keys: &'a [KeyInfo]) -> Element<'a, Messa
   });
 
   let header_label =
-    container(text("Fichiers à chiffrer").size(12).font(bold)).style(|_: &iced::Theme| {
+    container(text(s.encrypt_add_files()).size(12).font(bold)).style(|_: &iced::Theme| {
       container::Style {
-        text_color: Some(theme::TEXT_SECONDARY),
+        text_color: Some(theme::text_secondary()),
         ..Default::default()
       }
     });
@@ -249,14 +256,14 @@ pub fn view<'a>(form: &'a EncryptForm, keys: &'a [KeyInfo]) -> Element<'a, Messa
           .size(28)
           .style(|_: &iced::Theme| {
             iced::widget::text::Style {
-              color: Some(theme::TEXT_MUTED),
+              color: Some(theme::text_muted()),
             }
           }),
         text("Glissez des fichiers ici")
           .size(13)
           .style(|_: &iced::Theme| {
             iced::widget::text::Style {
-              color: Some(theme::TEXT_MUTED),
+              color: Some(theme::text_muted()),
             }
           }),
         button(
@@ -272,12 +279,12 @@ pub fn view<'a>(form: &'a EncryptForm, keys: &'a [KeyInfo]) -> Element<'a, Messa
         .padding([8, 12])
         .style(|_: &iced::Theme, status| button::Style {
           background: Some(Background::Color(match status {
-            button::Status::Hovered | button::Status::Pressed => theme::ACCENT_SUBTLE,
+            button::Status::Hovered | button::Status::Pressed => theme::accent_subtle(),
             _ => Color::TRANSPARENT,
           })),
-          text_color: theme::TEXT_STRONG,
+          text_color: theme::text_strong(),
           border: Border {
-            color: theme::BORDER,
+            color: theme::border(),
             width: 1.0,
             radius: 6.0.into(),
           },
@@ -292,7 +299,7 @@ pub fn view<'a>(form: &'a EncryptForm, keys: &'a [KeyInfo]) -> Element<'a, Messa
     .padding([32, 24])
     .style(|_: &iced::Theme| container::Style {
       border: Border {
-        color: theme::BORDER,
+        color: theme::border(),
         width: 1.0,
         radius: 6.0.into(),
       },
@@ -306,7 +313,9 @@ pub fn view<'a>(form: &'a EncryptForm, keys: &'a [KeyInfo]) -> Element<'a, Messa
   } else {
     column![
       header_label,
-      scrollable(column(file_items).spacing(2).padding([0, 4])).height(232),
+      scrollable(column(file_items).spacing(2).padding([0, 4]))
+        .height(232)
+        .style(common::scroll_style),
       add_files_btn,
     ]
     .spacing(8)
@@ -319,13 +328,13 @@ pub fn view<'a>(form: &'a EncryptForm, keys: &'a [KeyInfo]) -> Element<'a, Messa
 
   let n = form.files.len();
   let encrypt_label = if form.encrypting {
-    "Chiffrement en cours...".to_string()
+    s.encrypt_in_progress().to_string()
   } else if n == 0 {
-    "Chiffrer".to_string()
+    s.btn_encrypt().to_string()
   } else if n == 1 {
-    "Chiffrer 1 fichier".to_string()
+    format!("{} 1 fichier", s.btn_encrypt())
   } else {
-    format!("Chiffrer {n} fichiers")
+    format!("{} {n} fichiers", s.btn_encrypt())
   };
 
   let armor = form.armor;
@@ -336,23 +345,23 @@ pub fn view<'a>(form: &'a EncryptForm, keys: &'a [KeyInfo]) -> Element<'a, Messa
       .padding([4, 10])
       .style(move |_: &iced::Theme, status| button::Style {
         background: Some(Background::Color(if active {
-          theme::ACCENT
+          theme::accent()
         } else {
           match status {
-            button::Status::Hovered | button::Status::Pressed => theme::HEADER_BG,
+            button::Status::Hovered | button::Status::Pressed => theme::header_bg(),
             _ => Color::TRANSPARENT,
           }
         })),
         text_color: if active {
-          theme::TEXT_ON_ACCENT
+          theme::text_on_accent()
         } else {
-          theme::TEXT_SECONDARY
+          theme::text_secondary()
         },
         border: Border {
           color: if active {
             Color::TRANSPARENT
           } else {
-            theme::BORDER
+            theme::border()
           },
           width: 1.0,
           radius: 4.0.into(),
@@ -368,16 +377,16 @@ pub fn view<'a>(form: &'a EncryptForm, keys: &'a [KeyInfo]) -> Element<'a, Messa
       move |_: &iced::Theme, status| button::Style {
         background: Some(Background::Color(if style_enabled {
           match status {
-            button::Status::Hovered | button::Status::Pressed => theme::ACCENT_HOVER,
-            _ => theme::ACCENT,
+            button::Status::Hovered | button::Status::Pressed => theme::accent_hover(),
+            _ => theme::accent(),
           }
         } else {
-          theme::DISABLED_BG
+          theme::disabled_bg()
         })),
         text_color: if style_enabled {
-          theme::TEXT_ON_ACCENT
+          theme::text_on_accent()
         } else {
-          theme::TEXT_MUTED
+          theme::text_muted()
         },
         border: Border {
           color: Color::TRANSPARENT,
@@ -404,12 +413,20 @@ pub fn view<'a>(form: &'a EncryptForm, keys: &'a [KeyInfo]) -> Element<'a, Messa
   let action_bar: Element<'_, Message> = row![
     column![
       row![
-        fmt_btn(".gpg (binaire)", !armor, Message::EncryptSetArmor(false)),
-        fmt_btn(".asc (ASCII)", armor, Message::EncryptSetArmor(true)),
+        fmt_btn(
+          s.encrypt_format_binary(),
+          !armor,
+          Message::EncryptSetArmor(false)
+        ),
+        fmt_btn(
+          s.encrypt_format_armor(),
+          armor,
+          Message::EncryptSetArmor(true)
+        ),
       ]
       .spacing(4),
       container(text(fmt_hint).size(11)).style(|_: &iced::Theme| container::Style {
-        text_color: Some(theme::TEXT_MUTED),
+        text_color: Some(theme::text_muted()),
         ..Default::default()
       }),
     ]
@@ -430,7 +447,7 @@ pub fn view<'a>(form: &'a EncryptForm, keys: &'a [KeyInfo]) -> Element<'a, Messa
             .font(theme::ICONS)
             .size(12)
             .style(|_: &iced::Theme| iced::widget::text::Style {
-              color: Some(theme::PEACH),
+              color: Some(theme::peach()),
             }),
           text(format!("{} <{}>", k.name, k.email)).size(13),
         ]
@@ -440,17 +457,17 @@ pub fn view<'a>(form: &'a EncryptForm, keys: &'a [KeyInfo]) -> Element<'a, Messa
       })
       .collect();
 
-    let cancel_btn = button(text("Annuler").size(13))
+    let cancel_btn = button(text(s.btn_cancel()).size(13))
       .on_press(Message::EncryptTrustPromptCancel)
       .padding([6, 14])
       .style(|_: &iced::Theme, status| button::Style {
         background: Some(Background::Color(match status {
-          button::Status::Hovered | button::Status::Pressed => theme::HEADER_BG,
+          button::Status::Hovered | button::Status::Pressed => theme::header_bg(),
           _ => Color::TRANSPARENT,
         })),
-        text_color: theme::TEXT_SECONDARY,
+        text_color: theme::text_secondary(),
         border: Border {
-          color: theme::BORDER,
+          color: theme::border(),
           width: 1.0,
           radius: 6.0.into(),
         },
@@ -458,15 +475,15 @@ pub fn view<'a>(form: &'a EncryptForm, keys: &'a [KeyInfo]) -> Element<'a, Messa
         snap: false,
       });
 
-    let confirm_btn = button(text("Chiffrer quand même").size(13))
+    let confirm_btn = button(text(s.btn_confirm()).size(13))
       .on_press(Message::EncryptTrustPromptConfirm)
       .padding([6, 14])
       .style(|_: &iced::Theme, status| button::Style {
         background: Some(Background::Color(match status {
-          button::Status::Hovered | button::Status::Pressed => theme::ACCENT_HOVER,
-          _ => theme::ACCENT,
+          button::Status::Hovered | button::Status::Pressed => theme::accent_hover(),
+          _ => theme::accent(),
         })),
-        text_color: theme::TEXT_ON_ACCENT,
+        text_color: theme::text_on_accent(),
         border: Border {
           color: Color::TRANSPARENT,
           width: 0.0,
@@ -483,23 +500,17 @@ pub fn view<'a>(form: &'a EncryptForm, keys: &'a [KeyInfo]) -> Element<'a, Messa
             .font(theme::ICONS)
             .size(14)
             .style(|_: &iced::Theme| iced::widget::text::Style {
-              color: Some(theme::PEACH),
+              color: Some(theme::peach()),
             }),
-          text("Clefs non vérifiées").size(13).font(bold),
+          text(s.encrypt_trust_warning_title()).size(13).font(bold),
         ]
         .spacing(6)
         .align_y(Alignment::Center),
-        container(
-          text(
-            "GPG ne peut pas confirmer que ces clefs appartiennent aux personnes indiquées. \
-             Vous pouvez chiffrer quand même — le destinataire pourra toujours déchiffrer, \
-             mais vous ne pouvez pas garantir son identité."
-          )
-          .size(12)
-        )
-        .style(|_: &iced::Theme| container::Style {
-          text_color: Some(theme::TEXT_SECONDARY),
-          ..Default::default()
+        container(text(s.encrypt_trust_warning_body()).size(12)).style(|_: &iced::Theme| {
+          container::Style {
+            text_color: Some(theme::text_secondary()),
+            ..Default::default()
+          }
         }),
         column(key_labels).spacing(4),
         row![cancel_btn, confirm_btn].spacing(8),
@@ -509,13 +520,13 @@ pub fn view<'a>(form: &'a EncryptForm, keys: &'a [KeyInfo]) -> Element<'a, Messa
     .padding([12, 16])
     .width(Length::Fill)
     .style(|_: &iced::Theme| container::Style {
-      background: Some(Background::Color(theme::ERROR_BG)),
+      background: Some(Background::Color(theme::error_bg())),
       border: Border {
-        color: theme::PEACH,
+        color: theme::peach(),
         width: 1.0,
         radius: 8.0.into(),
       },
-      text_color: Some(theme::TEXT_STRONG),
+      text_color: Some(theme::text_strong()),
       ..Default::default()
     })
     .into()
@@ -539,19 +550,19 @@ pub fn view<'a>(form: &'a EncryptForm, keys: &'a [KeyInfo]) -> Element<'a, Messa
   .padding([8, 12])
   .width(Length::Fill)
   .style(|_: &iced::Theme| container::Style {
-    background: Some(Background::Color(theme::ACCENT_SUBTLE)),
+    background: Some(Background::Color(theme::accent_subtle())),
     border: Border {
-      color: theme::ACCENT_BORDER,
+      color: theme::accent_border(),
       width: 1.0,
       radius: 6.0.into(),
     },
-    text_color: Some(theme::TEXT_SECONDARY),
+    text_color: Some(theme::text_secondary()),
     ..Default::default()
   })
   .into();
 
   let vsep = rule::vertical(1).style(|_: &iced::Theme| rule::Style {
-    color: theme::BORDER,
+    color: theme::border(),
     radius: 0.0.into(),
     fill_mode: rule::FillMode::Full,
     snap: false,
@@ -560,10 +571,12 @@ pub fn view<'a>(form: &'a EncryptForm, keys: &'a [KeyInfo]) -> Element<'a, Messa
   let card = container(
     column![
       column![
-        text("Chiffrement de fichiers").size(22).font(bold),
+        text(theme::flavor(s.encrypt_title(), "Chiffrer pour le Peuple"))
+          .size(22)
+          .font(theme::flavor_title_font()),
         container(text("Sélectionnez les destinataires et les fichiers.").size(13)).style(
           |_: &iced::Theme| container::Style {
-            text_color: Some(theme::TEXT_SECONDARY),
+            text_color: Some(theme::text_secondary()),
             ..Default::default()
           }
         ),
@@ -581,13 +594,13 @@ pub fn view<'a>(form: &'a EncryptForm, keys: &'a [KeyInfo]) -> Element<'a, Messa
   .padding(32)
   .width(720)
   .style(|_: &iced::Theme| container::Style {
-    background: Some(Background::Color(theme::CARD_BG)),
+    background: Some(Background::Color(theme::card_bg())),
     border: Border {
-      color: theme::BORDER,
+      color: theme::border(),
       width: 1.0,
       radius: 12.0.into(),
     },
-    text_color: Some(theme::TEXT_STRONG),
+    text_color: Some(theme::text_strong()),
     ..Default::default()
   });
 
@@ -599,12 +612,13 @@ pub fn view<'a>(form: &'a EncryptForm, keys: &'a [KeyInfo]) -> Element<'a, Messa
         .width(Length::Fill),
     )
     .height(Length::Fill)
-    .width(Length::Fill),
+    .width(Length::Fill)
+    .style(common::scroll_style),
   )
   .height(Length::Fill)
   .width(Length::Fill)
   .style(|_: &iced::Theme| container::Style {
-    background: Some(Background::Color(theme::SIDEBAR_BG)),
+    background: Some(Background::Color(theme::sidebar_bg())),
     ..Default::default()
   })
   .into()

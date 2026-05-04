@@ -8,9 +8,10 @@ use iced::{
 
 use crate::app::{ImportForm, Message};
 use crate::gpg::Keyserver;
-use crate::ui::theme;
+use crate::i18n::Strings;
+use crate::ui::{common, theme};
 
-pub fn view(form: &ImportForm) -> Element<'_, Message> {
+pub fn view<'a>(form: &'a ImportForm, s: &'static dyn Strings) -> Element<'a, Message> {
   let bold = Font {
     weight: font::Weight::Bold,
     ..Font::DEFAULT
@@ -18,18 +19,18 @@ pub fn view(form: &ImportForm) -> Element<'_, Message> {
 
   let separator = || {
     rule::horizontal(1).style(|_: &iced::Theme| rule::Style {
-      color: theme::BORDER,
+      color: theme::border(),
       radius: 0.0.into(),
       fill_mode: rule::FillMode::Full,
       snap: false,
     })
   };
 
-  let section_label = |s: &'static str| text(s).size(12).font(bold);
+  let section_label = |lbl: &'static str| text(lbl).size(12).font(bold);
 
-  let hint = |s: &'static str| {
-    container(text(s).size(11)).style(|_: &iced::Theme| container::Style {
-      text_color: Some(theme::TEXT_MUTED),
+  let hint = |lbl: &'static str| {
+    container(text(lbl).size(11)).style(|_: &iced::Theme| container::Style {
+      text_color: Some(theme::text_muted()),
       ..Default::default()
     })
   };
@@ -39,16 +40,16 @@ pub fn view(form: &ImportForm) -> Element<'_, Message> {
       button::Style {
         background: Some(Background::Color(if enabled {
           match status {
-            button::Status::Hovered | button::Status::Pressed => theme::ACCENT_HOVER,
-            _ => theme::ACCENT,
+            button::Status::Hovered | button::Status::Pressed => theme::accent_hover(),
+            _ => theme::accent(),
           }
         } else {
-          theme::DISABLED_BG
+          theme::disabled_bg()
         })),
         text_color: if enabled {
-          theme::TEXT_ON_ACCENT
+          theme::text_on_accent()
         } else {
-          theme::TEXT_MUTED
+          theme::text_muted()
         },
         border: Border {
           color: Color::TRANSPARENT,
@@ -66,16 +67,16 @@ pub fn view(form: &ImportForm) -> Element<'_, Message> {
     }
   };
 
-  let cancel_btn = button(text("Annuler").size(13))
+  let cancel_btn = button(text(s.btn_cancel()).size(13))
     .on_press(Message::NavBack)
     .style(|_: &iced::Theme, status: button::Status| button::Style {
       background: Some(Background::Color(match status {
-        button::Status::Hovered | button::Status::Pressed => theme::HEADER_BG,
+        button::Status::Hovered | button::Status::Pressed => theme::header_bg(),
         _ => Color::TRANSPARENT,
       })),
-      text_color: theme::TEXT_SECONDARY,
+      text_color: theme::text_secondary(),
       border: Border {
-        color: theme::BORDER,
+        color: theme::border(),
         width: 1.0,
         radius: 6.0.into(),
       },
@@ -94,12 +95,12 @@ pub fn view(form: &ImportForm) -> Element<'_, Message> {
   .width(Length::Fill)
   .style(|_: &iced::Theme, status: button::Status| button::Style {
     background: Some(Background::Color(match status {
-      button::Status::Hovered | button::Status::Pressed => theme::ACCENT_SUBTLE,
+      button::Status::Hovered | button::Status::Pressed => theme::accent_subtle(),
       _ => Color::TRANSPARENT,
     })),
-    text_color: theme::TEXT_STRONG,
+    text_color: theme::text_strong(),
     border: Border {
-      color: theme::BORDER,
+      color: theme::border(),
       width: 1.0,
       radius: 6.0.into(),
     },
@@ -119,15 +120,15 @@ pub fn view(form: &ImportForm) -> Element<'_, Message> {
   .width(Length::Fill)
   .style(|_: &iced::Theme, status| {
     let border = match status {
-      pick_list::Status::Opened { .. } => theme::ACCENT,
-      pick_list::Status::Hovered => theme::ACCENT_BORDER,
-      _ => theme::BORDER,
+      pick_list::Status::Opened { .. } => theme::accent(),
+      pick_list::Status::Hovered => theme::accent_border(),
+      _ => theme::border(),
     };
     pick_list::Style {
-      text_color: theme::TEXT_STRONG,
-      placeholder_color: theme::TEXT_MUTED,
-      handle_color: theme::TEXT_MUTED,
-      background: Background::Color(theme::HEADER_BG),
+      text_color: theme::text_strong(),
+      placeholder_color: theme::text_muted(),
+      handle_color: theme::text_muted(),
+      background: Background::Color(theme::header_bg()),
       border: Border {
         color: border,
         width: 1.0,
@@ -136,25 +137,30 @@ pub fn view(form: &ImportForm) -> Element<'_, Message> {
     }
   })
   .menu_style(|_: &iced::Theme| iced::overlay::menu::Style {
-    text_color: theme::TEXT_STRONG,
-    background: Background::Color(theme::CARD_BG),
+    text_color: theme::text_strong(),
+    background: Background::Color(theme::card_bg()),
     border: Border {
-      color: theme::BORDER,
+      color: theme::border(),
       width: 1.0,
       radius: 6.0.into(),
     },
-    selected_text_color: theme::TEXT_ON_ACCENT,
-    selected_background: Background::Color(theme::ACCENT),
+    selected_text_color: theme::text_on_accent(),
+    selected_background: Background::Color(theme::accent()),
     shadow: iced::Shadow::default(),
   });
 
   let card = container(
     column![
       column![
-        text("Importer une clef").size(22).font(bold),
+        text(theme::flavor(
+          s.import_title(),
+          "Accueillir un Camarade Étranger"
+        ))
+        .size(22)
+        .font(theme::flavor_title_font()),
         container(text("Choisissez la source de la clef à importer.").size(13),).style(
           |_: &iced::Theme| container::Style {
-            text_color: Some(theme::TEXT_SECONDARY),
+            text_color: Some(theme::text_secondary()),
             ..Default::default()
           }
         ),
@@ -164,7 +170,7 @@ pub fn view(form: &ImportForm) -> Element<'_, Message> {
       file_btn,
       separator(),
       column![
-        section_label("Depuis une URL"),
+        section_label(s.import_tab_url()),
         hint("Collez une URL pointant vers une clef armored (paste.rs, page web, etc.)."),
         text_input("https://paste.rs/abc123", &form.url)
           .on_input(Message::ImportUrlChanged)
@@ -172,21 +178,21 @@ pub fn view(form: &ImportForm) -> Element<'_, Message> {
           .width(Length::Fill)
           .style(|_: &iced::Theme, status| {
             let border = match status {
-              text_input::Status::Focused { .. } => theme::ACCENT,
-              text_input::Status::Hovered => theme::ACCENT_BORDER,
-              _ => theme::BORDER,
+              text_input::Status::Focused { .. } => theme::accent(),
+              text_input::Status::Hovered => theme::accent_border(),
+              _ => theme::border(),
             };
             text_input::Style {
-              background: Background::Color(theme::HEADER_BG),
+              background: Background::Color(theme::header_bg()),
               border: Border {
                 color: border,
                 width: 1.0,
                 radius: 6.0.into(),
               },
-              icon: theme::TEXT_MUTED,
-              placeholder: theme::TEXT_MUTED,
-              value: theme::TEXT_STRONG,
-              selection: theme::ACCENT_SUBTLE,
+              icon: theme::text_muted(),
+              placeholder: theme::text_muted(),
+              value: theme::text_strong(),
+              selection: theme::accent_subtle(),
             }
           }),
         action_btn("Importer depuis l'URL", Message::ImportFromUrl, url_ready),
@@ -194,7 +200,7 @@ pub fn view(form: &ImportForm) -> Element<'_, Message> {
       .spacing(8),
       separator(),
       column![
-        section_label("Depuis un keyserver"),
+        section_label(s.import_tab_keyserver()),
         hint("Fingerprint complet (40 hex), ID long (16 hex) ou adresse email."),
         text_input(
           "Fingerprint (40 hex), ID long (16 hex) ou email",
@@ -205,21 +211,21 @@ pub fn view(form: &ImportForm) -> Element<'_, Message> {
         .width(Length::Fill)
         .style(|_: &iced::Theme, status| {
           let border = match status {
-            text_input::Status::Focused { .. } => theme::ACCENT,
-            text_input::Status::Hovered => theme::ACCENT_BORDER,
-            _ => theme::BORDER,
+            text_input::Status::Focused { .. } => theme::accent(),
+            text_input::Status::Hovered => theme::accent_border(),
+            _ => theme::border(),
           };
           text_input::Style {
-            background: Background::Color(theme::HEADER_BG),
+            background: Background::Color(theme::header_bg()),
             border: Border {
               color: border,
               width: 1.0,
               radius: 6.0.into(),
             },
-            icon: theme::TEXT_MUTED,
-            placeholder: theme::TEXT_MUTED,
-            value: theme::TEXT_STRONG,
-            selection: theme::ACCENT_SUBTLE,
+            icon: theme::text_muted(),
+            placeholder: theme::text_muted(),
+            value: theme::text_strong(),
+            selection: theme::accent_subtle(),
           }
         }),
         ks_list,
@@ -232,27 +238,27 @@ pub fn view(form: &ImportForm) -> Element<'_, Message> {
       .spacing(8),
       separator(),
       column![
-        section_label("Coller la clef"),
+        section_label(s.import_tab_paste()),
         hint("Collez directement le contenu d'une clef PGP armored (-----BEGIN PGP...)."),
         text_editor(&form.pasted_key)
           .on_action(Message::ImportPastedKeyChanged)
           .height(120)
           .style(|_: &iced::Theme, status| {
             let border = match status {
-              text_editor::Status::Focused { .. } => theme::ACCENT,
-              text_editor::Status::Hovered => theme::ACCENT_BORDER,
-              _ => theme::BORDER,
+              text_editor::Status::Focused { .. } => theme::accent(),
+              text_editor::Status::Hovered => theme::accent_border(),
+              _ => theme::border(),
             };
             text_editor::Style {
-              background: Background::Color(theme::HEADER_BG),
+              background: Background::Color(theme::header_bg()),
               border: Border {
                 color: border,
                 width: 1.0,
                 radius: 6.0.into(),
               },
-              placeholder: theme::TEXT_MUTED,
-              value: theme::TEXT_STRONG,
-              selection: theme::ACCENT_SUBTLE,
+              placeholder: theme::text_muted(),
+              value: theme::text_strong(),
+              selection: theme::accent_subtle(),
             }
           }),
         action_btn(
@@ -270,13 +276,13 @@ pub fn view(form: &ImportForm) -> Element<'_, Message> {
   .padding(32)
   .width(520)
   .style(|_: &iced::Theme| container::Style {
-    background: Some(Background::Color(theme::CARD_BG)),
+    background: Some(Background::Color(theme::card_bg())),
     border: Border {
-      color: theme::BORDER,
+      color: theme::border(),
       width: 1.0,
       radius: 12.0.into(),
     },
-    text_color: Some(theme::TEXT_STRONG),
+    text_color: Some(theme::text_strong()),
     ..Default::default()
   });
 
@@ -288,12 +294,13 @@ pub fn view(form: &ImportForm) -> Element<'_, Message> {
         .width(Length::Fill),
     )
     .height(Length::Fill)
-    .width(Length::Fill),
+    .width(Length::Fill)
+    .style(common::scroll_style),
   )
   .height(Length::Fill)
   .width(Length::Fill)
   .style(|_: &iced::Theme| container::Style {
-    background: Some(Background::Color(theme::SIDEBAR_BG)),
+    background: Some(Background::Color(theme::sidebar_bg())),
     ..Default::default()
   })
   .into()

@@ -1,0 +1,10 @@
+[book]
+title = "pgpilot"
+authors = ["Guillaume Friloux"]
+language = "en"
+src = "src"
+
+[output.html]
+site-url = "/pgpilot/"
+git-repository-url = "https://github.com/gfriloux/pgpilot"
+edit-url-template = "https://github.com/gfriloux/pgpilot/edit/main/book/src/{path}"

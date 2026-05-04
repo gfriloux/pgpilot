@@ -1,0 +1,249 @@
+# File Operations
+
+Encrypt, decrypt, sign, and verify files with pgpilot.
+
+## Encryption
+
+Encrypt files so only your chosen recipients can read them.
+
+### Encrypt a file
+
+1. Click **Encrypt** in the sidebar
+2. In the **Encrypt** view:
+   - Click **Add Files** to select one or more files
+   - Files appear in a list below
+3. Select **Recipients** — check the boxes for people who should be able to decrypt:
+   - Only keys with Encryption subkeys can be selected
+   - Trust level shown as a badge next to each key
+4. Choose format:
+   - **Binary** (`.gpg`) — compressed, smaller, binary
+   - **Armored** (`.asc`) — text-based, readable, larger, ASCII-only
+5. Click **Encrypt**
+
+If any recipient's trust is **Undefined** or **Marginal**, a warning modal appears:
+```
+⚠️ Untrusted keys
+Selected keys do not have sufficient trust level.
+Continue? (uses --trust-model always)
+```
+
+Click **Continue** to proceed (pgpilot adds `--trust-model always` to bypass trust checks).
+
+**Output**: Encrypted files are created next to the original:
+- `document.pdf` → `document.pdf.gpg` (binary) or `document.pdf.asc` (armored)
+- If file already exists, a counter suffix is added: `document_1.pdf.gpg`, `document_2.pdf.gpg`, etc.
+
+### Drag & drop (X11)
+
+On X11 systems, you can drag files directly onto the **Encrypt** view:
+1. Open the **Encrypt** view
+2. Open a file manager in another window
+3. Drag files from the file manager to pgpilot
+4. Files are added to the list
+
+**Note**: Wayland support depends on compositor; may not work on all Wayland systems.
+
+### Trust warning override
+
+pgpilot's default behavior is conservative: it warns before encrypting to untrusted keys. To bypass:
+
+1. Check untrusted keys in the **Recipients** list
+2. Click **Encrypt**
+3. If warning appears, click **Continue**
+4. pgpilot uses `--trust-model always` (bypasses trust validation without modifying trust database)
+
+This is safe for one-off scenarios (e.g., encrypting to a key you haven't verified yet, but want to send anyway).
+
+---
+
+## Decryption
+
+Decrypt files that were encrypted for you.
+
+### Decrypt a file
+
+1. Click **Decrypt** in the sidebar
+2. In the **Decrypt** view:
+   - Click **Add Files**
+   - Select one or more `.gpg` or `.asc` files
+3. pgpilot scans each file:
+   - Shows **Can decrypt** (green) if your private key exists
+   - Shows **No key** (red) if you lack the decrypt key
+   - Shows **Checking...** while inspecting
+4. Click **Decrypt**
+5. pgpilot prompts for your private key password (via `gpg-agent` / `pinentry`)
+6. Decrypted files are created next to originals:
+   - `document.pdf.gpg` → `document.pdf` (same name, no .gpg extension)
+   - If file exists, counter suffix added: `document_1.pdf`, `document_2.pdf`, etc.
+
+### Auto-check capability
+
+When you add files to decrypt, pgpilot automatically checks if you have the private key:
+- Green checkmark = you can decrypt
+- Red X = missing private key (file stays encrypted)
+
+---
+
+## Signing
+
+Sign files to prove you created them.
+
+### Sign a file
+
+1. Click **Sign** in the sidebar
+2. In the **Sign** view:
+   - Click **Choose file**
+   - Select the file to sign
+3. Choose **Signing key**:
+   - pgpilot filters to keys with Sign subkeys
+   - Select your key
+4. Click **Sign**
+5. pgpilot prompts for your private key password
+6. A detached signature is created: `yourfile.sig` next to the original
+
+**What is a detached signature?**
+
+A `.sig` file proves that you signed the original file. Unlike signing inside the file, the signature is separate, so:
+- Original file remains unchanged (`yourfile.pdf` is still a valid PDF)
+- Signature is lightweight (`yourfile.sig` is much smaller)
+- Recipient can verify with: `gpg --verify yourfile.sig yourfile.pdf`
+
+If file already has a `.sig`, counter suffix added: `yourfile_1.sig`, `yourfile_2.sig`, etc.
+
+---
+
+## Signature Verification
+
+Verify that a file was signed by who you think signed it.
+
+### Verify a signature
+
+1. Click **Verify** in the sidebar
+2. In the **Verify** view:
+   - Click **Choose file** → select the **original** file (e.g., `document.pdf`)
+   - Click **Choose signature** → select the `.sig` file
+
+   **Auto-detect**: If you choose `document.pdf`, pgpilot automatically looks for `document.pdf.sig` in the same folder.
+
+3. Click **Verify**
+4. pgpilot calls `gpg --verify` and shows a result:
+
+#### Valid signature
+
+```
+✓ Valid signature
+Signed by: Alice Wonder <alice@example.com>
+Fingerprint: ABCD1234...
+Date: 2024-01-15 at 14:30:00 UTC
+Trust: Full ✓
+```
+
+Green checkmark, signer details shown. File is authentic.
+
+#### Bad signature
+
+```
+✗ Invalid signature
+The signature does not match the file.
+The file may have been modified.
+```
+
+Red X. The file has been tampered with since signing.
+
+#### Unknown key
+
+```
+? Unknown key
+Signed by (Key ID): 1234567890ABCDEF
+Fingerprint: Not found in keyring
+```
+
+Yellow warning. Signature is valid, but the signer's key is not in your keyring. You cannot verify authenticity.
+
+**Next step**: Import the signer's key from a keyserver, then re-verify.
+
+#### Expired key
+
+```
+⏱ Expired key
+Signed by: Bob Smith <bob@example.com>
+Key expired on: 2023-12-31
+```
+
+Orange warning. The signer's key has expired, but the signature was valid at signing time.
+
+#### Revoked key
+
+```
+🔴 Revoked key
+Signed by: Charlie Brown <charlie@example.com>
+The key was revoked (reason: compromise)
+```
+
+Red warning. The signer revoked their key (possibly due to compromise). Don't trust this signature.
+
+---
+
+## Format toggle
+
+pgpilot offers two encryption formats:
+
+| Format | Extension | Type | Use Case |
+|--------|-----------|------|----------|
+| **Binary** | `.gpg` | Compressed, binary | Secure transfer, email attachment |
+| **Armored** | `.asc` | Text (ASCII), readable | Paste into email body, GitHub gists, web forms |
+
+Toggle between formats with the **Format** button in the Encrypt view.
+
+---
+
+## Best practices
+
+1. **Always verify signatures**
+   - Don't assume a `.sig` file is legitimate
+   - Verify before trusting content
+
+2. **Check trust before verifying**
+   - Invalid signature ≠ untrusted signer
+   - Check the signer's trust level in **My Keys**
+
+3. **Encrypt to multiple recipients**
+   - Each recipient gets their own encrypted copy (pgpilot handles this)
+   - No single file that "everyone decrypts with different passwords"
+
+4. **Keep signatures with files**
+   - Store `.sig` and original together
+   - If you move the file, move the `.sig` too
+
+5. **Test before sending**
+   - Encrypt a test file to yourself
+   - Decrypt it to verify it works
+   - Then send to real recipients
+
+---
+
+## Troubleshooting
+
+**"Password prompt hangs"**
+- See [Troubleshooting](8-troubleshooting.md) — pinentry issues
+
+**"File already exists"**
+- pgpilot automatically adds counters: `file_1.gpg`, `file_2.gpg`, etc.
+- Delete the old encrypted file if you want to overwrite
+
+**"Signature file not found"**
+- pgpilot looks for `yourfile.sig` next to `yourfile`
+- If in different folders, manually choose both files
+
+**"Decrypt failed: No secret key"**
+- You don't have the private key for this encrypted file
+- The file was encrypted for someone else
+- Ask them to decrypt and share unencrypted (or re-encrypt for you)
+
+---
+
+## Next steps
+
+- Manage who can decrypt — see [Key Management](3-key-management.md) (Trust Levels)
+- Publish your key so others can send you encrypted files — see [Keyserver & Sharing](4-keyserver.md)
+- Use SSH with your Auth key — see [YubiKey / Smartcard](6-smartcard.md)

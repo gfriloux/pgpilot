@@ -6,14 +6,16 @@ use iced::{
 
 use crate::app::{App, KeyserverStatus, Message, View};
 use crate::ui::key_detail::ViewCtx;
-use crate::ui::{key_detail, theme};
+use crate::ui::{common, key_detail, theme};
 
 pub fn view(app: &App) -> Element<'_, Message> {
+  let s = app.strings;
+
   if app.loading {
-    return container(text("Chargement...").size(14))
+    return container(text(s.loading()).size(14))
       .padding(24)
       .style(|_: &iced::Theme| container::Style {
-        text_color: Some(theme::TEXT_MUTED),
+        text_color: Some(theme::text_muted()),
         ..Default::default()
       })
       .into();
@@ -23,7 +25,7 @@ pub fn view(app: &App) -> Element<'_, Message> {
     return container(text(format!("Erreur : {err}")).size(14))
       .padding(24)
       .style(|_: &iced::Theme| container::Style {
-        text_color: Some(theme::ERROR),
+        text_color: Some(theme::error()),
         ..Default::default()
       })
       .into();
@@ -40,12 +42,12 @@ pub fn view(app: &App) -> Element<'_, Message> {
     .collect();
 
   if keys.is_empty() {
-    return container(text("Aucune clef trouvée.").size(14))
+    return container(text(s.no_keys()).size(14))
       .padding(24)
       .center_x(Length::Fill)
       .height(Length::Fill)
       .style(|_: &iced::Theme| container::Style {
-        text_color: Some(theme::TEXT_MUTED),
+        text_color: Some(theme::text_muted()),
         ..Default::default()
       })
       .into();
@@ -53,14 +55,14 @@ pub fn view(app: &App) -> Element<'_, Message> {
 
   let bold = Font {
     weight: font::Weight::Bold,
-    ..Font::DEFAULT
+    ..theme::heading_font()
   };
 
   let header = container(
     row![
       text("Nom / Email").size(11).width(Length::Fill).font(bold),
       text("Expire").size(11).width(80).font(bold),
-      text("État").size(11).width(56),
+      text("État").size(11).width(56).font(theme::heading_font()),
     ]
     .padding([0, 12])
     .spacing(8),
@@ -68,8 +70,8 @@ pub fn view(app: &App) -> Element<'_, Message> {
   .padding([8, 0])
   .width(Length::Fill)
   .style(|_: &iced::Theme| container::Style {
-    background: Some(Background::Color(theme::HEADER_BG)),
-    text_color: Some(theme::TEXT_HEADER),
+    background: Some(Background::Color(theme::header_bg())),
+    text_color: Some(theme::text_header()),
     ..Default::default()
   });
 
@@ -87,24 +89,24 @@ pub fn view(app: &App) -> Element<'_, Message> {
         .copied()
         .unwrap_or_default()
       {
-        KeyserverStatus::Published => ("\u{f058}", theme::SUCCESS),
-        KeyserverStatus::NotPublished => ("\u{f10c}", theme::TEXT_MUTED),
-        _ => ("", theme::TEXT_MUTED),
+        KeyserverStatus::Published => (theme::icon_published(), theme::success()),
+        KeyserverStatus::NotPublished => ("\u{f10c}", theme::text_muted()),
+        _ => ("", theme::text_muted()),
       };
 
       let (trust_icon, trust_color) = if key.has_secret || key.on_card {
-        ("", theme::TEXT_MUTED)
+        ("", theme::text_muted())
       } else if key.trust.is_sufficient() {
-        ("\u{f058}", theme::SUCCESS)
+        ("\u{f058}", theme::success())
       } else {
-        ("\u{f071}", theme::PEACH)
+        ("\u{f071}", theme::peach())
       };
 
       let name_col = column![
-        text(key.name.clone()).size(13),
+        text(key.name.clone()).size(13).font(theme::heading_font()),
         text(key.email.clone()).size(11).style(|_: &iced::Theme| {
           iced::widget::text::Style {
-            color: Some(theme::TEXT_MUTED),
+            color: Some(theme::text_muted()),
           }
         }),
       ]
@@ -137,9 +139,9 @@ pub fn view(app: &App) -> Element<'_, Message> {
         .style(move |_: &iced::Theme| {
           if selected {
             container::Style {
-              background: Some(Background::Color(theme::ACCENT_SUBTLE)),
+              background: Some(Background::Color(theme::accent_subtle())),
               border: Border {
-                color: theme::ACCENT_BORDER,
+                color: theme::accent_border(),
                 width: 1.0,
                 radius: 6.0.into(),
               },
@@ -156,7 +158,8 @@ pub fn view(app: &App) -> Element<'_, Message> {
     })
     .collect();
 
-  let list_scrollable = scrollable(Column::with_children(key_rows).spacing(2).padding([4, 8]));
+  let list_scrollable = scrollable(Column::with_children(key_rows).spacing(2).padding([4, 8]))
+    .style(common::scroll_style);
 
   let list_panel = column![header, list_scrollable.height(Length::Fill)]
     .spacing(0)
@@ -193,11 +196,12 @@ pub fn view(app: &App) -> Element<'_, Message> {
           .copied()
           .unwrap_or_default(),
       },
+      s,
     ))
     .width(Length::Fill)
     .height(Length::Fill)
     .style(|_: &iced::Theme| container::Style {
-      background: Some(Background::Color(theme::DETAIL_BG)),
+      background: Some(Background::Color(theme::detail_bg())),
       ..Default::default()
     })
     .into()
@@ -206,14 +210,14 @@ pub fn view(app: &App) -> Element<'_, Message> {
       text("Sélectionnez une clef pour voir les détails.")
         .size(13)
         .style(|_: &iced::Theme| iced::widget::text::Style {
-          color: Some(theme::TEXT_MUTED),
+          color: Some(theme::text_muted()),
         }),
     )
     .padding(24)
     .width(Length::Fill)
     .height(Length::Fill)
     .style(|_: &iced::Theme| container::Style {
-      background: Some(Background::Color(theme::DETAIL_BG)),
+      background: Some(Background::Color(theme::detail_bg())),
       ..Default::default()
     })
     .into()
@@ -222,7 +226,7 @@ pub fn view(app: &App) -> Element<'_, Message> {
   row![
     list_panel,
     rule::vertical(1).style(|_: &iced::Theme| rule::Style {
-      color: theme::BORDER,
+      color: theme::border(),
       radius: 0.0.into(),
       fill_mode: rule::FillMode::Full,
       snap: false,

@@ -6,9 +6,14 @@ use iced::{
 
 use crate::app::Message;
 use crate::gpg::{CheckStatus, HealthCheck};
-use crate::ui::theme;
+use crate::i18n::Strings;
+use crate::ui::{common, theme};
 
-pub fn view(checks: &[HealthCheck], loading: bool) -> Element<'_, Message> {
+pub fn view<'a>(
+  checks: &'a [HealthCheck],
+  loading: bool,
+  s: &'static dyn Strings,
+) -> Element<'a, Message> {
   let bold = Font {
     weight: font::Weight::Bold,
     ..Font::DEFAULT
@@ -19,13 +24,18 @@ pub fn view(checks: &[HealthCheck], loading: bool) -> Element<'_, Message> {
   };
 
   let title_section = column![
-    text("Diagnostic GPG").size(22).font(bold),
-    container(text("État de votre installation et de votre configuration GnuPG.").size(13),).style(
-      |_: &iced::Theme| container::Style {
-        text_color: Some(theme::TEXT_SECONDARY),
+    text(theme::flavor(
+      s.health_diagnostics_title(),
+      "Rapport au Commissariat",
+    ))
+    .size(22)
+    .font(theme::flavor_title_font()),
+    container(text(s.health_diagnostics_desc()).size(13),).style(|_: &iced::Theme| {
+      container::Style {
+        text_color: Some(theme::text_secondary()),
         ..Default::default()
       }
-    ),
+    }),
   ]
   .spacing(6);
 
@@ -34,9 +44,9 @@ pub fn view(checks: &[HealthCheck], loading: bool) -> Element<'_, Message> {
       container(
         column![
           title_section,
-          container(text("Vérification en cours…").size(13)).style(|_: &iced::Theme| {
+          container(text(s.health_checking()).size(13)).style(|_: &iced::Theme| {
             container::Style {
-              text_color: Some(theme::TEXT_MUTED),
+              text_color: Some(theme::text_muted()),
               ..Default::default()
             }
           }),
@@ -46,9 +56,9 @@ pub fn view(checks: &[HealthCheck], loading: bool) -> Element<'_, Message> {
       .padding(32)
       .width(560)
       .style(|_: &iced::Theme| container::Style {
-        background: Some(Background::Color(theme::CARD_BG)),
+        background: Some(Background::Color(theme::card_bg())),
         border: Border {
-          color: theme::BORDER,
+          color: theme::border(),
           width: 1.0,
           radius: 12.0.into(),
         },
@@ -57,6 +67,7 @@ pub fn view(checks: &[HealthCheck], loading: bool) -> Element<'_, Message> {
     )
     .height(Length::Fill)
     .width(Length::Fill)
+    .style(common::scroll_style)
     .into();
   }
 
@@ -77,10 +88,10 @@ pub fn view(checks: &[HealthCheck], loading: bool) -> Element<'_, Message> {
         .iter()
         .map(|check| {
           let (icon, icon_color) = match check.status {
-            CheckStatus::Ok => ("\u{f058}", theme::SUCCESS),
-            CheckStatus::Info => ("\u{f05a}", theme::ACCENT),
-            CheckStatus::Warning => ("\u{f071}", theme::PEACH),
-            CheckStatus::Error => ("\u{f057}", theme::ERROR),
+            CheckStatus::Ok => ("\u{f058}", theme::success()),
+            CheckStatus::Info => ("\u{f05a}", theme::accent()),
+            CheckStatus::Warning => ("\u{f071}", theme::peach()),
+            CheckStatus::Error => ("\u{f057}", theme::error()),
           };
 
           let mut content: Vec<Element<Message>> = vec![row![
@@ -95,10 +106,10 @@ pub fn view(checks: &[HealthCheck], loading: bool) -> Element<'_, Message> {
               container(text(val.as_str()).size(11).font(mono))
                 .padding([2, 6])
                 .style(|_: &iced::Theme| container::Style {
-                  background: Some(Background::Color(theme::HEADER_BG)),
-                  text_color: Some(theme::TEXT_SECONDARY),
+                  background: Some(Background::Color(theme::header_bg())),
+                  text_color: Some(theme::text_secondary()),
                   border: Border {
-                    color: theme::BORDER,
+                    color: theme::border(),
                     width: 1.0,
                     radius: 4.0.into(),
                   },
@@ -111,7 +122,7 @@ pub fn view(checks: &[HealthCheck], loading: bool) -> Element<'_, Message> {
           content.push(
             container(text(check.explanation).size(11))
               .style(|_: &iced::Theme| container::Style {
-                text_color: Some(theme::TEXT_MUTED),
+                text_color: Some(theme::text_muted()),
                 ..Default::default()
               })
               .into(),
@@ -122,10 +133,10 @@ pub fn view(checks: &[HealthCheck], loading: bool) -> Element<'_, Message> {
               container(text(fix).size(11).font(mono))
                 .padding([6, 10])
                 .style(|_: &iced::Theme| container::Style {
-                  background: Some(Background::Color(theme::HEADER_BG)),
-                  text_color: Some(theme::TEXT_SECONDARY),
+                  background: Some(Background::Color(theme::header_bg())),
+                  text_color: Some(theme::text_secondary()),
                   border: Border {
-                    color: theme::BORDER,
+                    color: theme::border(),
                     width: 1.0,
                     radius: 4.0.into(),
                   },
@@ -140,7 +151,7 @@ pub fn view(checks: &[HealthCheck], loading: bool) -> Element<'_, Message> {
             .width(Length::Fill)
             .style(|_: &iced::Theme| container::Style {
               border: Border {
-                color: theme::BORDER,
+                color: theme::border(),
                 width: 1.0,
                 radius: 6.0.into(),
               },
@@ -163,13 +174,13 @@ pub fn view(checks: &[HealthCheck], loading: bool) -> Element<'_, Message> {
       .padding(32)
       .width(560)
       .style(|_: &iced::Theme| container::Style {
-        background: Some(Background::Color(theme::CARD_BG)),
+        background: Some(Background::Color(theme::card_bg())),
         border: Border {
-          color: theme::BORDER,
+          color: theme::border(),
           width: 1.0,
           radius: 12.0.into(),
         },
-        text_color: Some(theme::TEXT_STRONG),
+        text_color: Some(theme::text_strong()),
         ..Default::default()
       });
 
@@ -181,12 +192,13 @@ pub fn view(checks: &[HealthCheck], loading: bool) -> Element<'_, Message> {
         .width(Length::Fill),
     )
     .height(Length::Fill)
-    .width(Length::Fill),
+    .width(Length::Fill)
+    .style(common::scroll_style),
   )
   .height(Length::Fill)
   .width(Length::Fill)
   .style(|_: &iced::Theme| container::Style {
-    background: Some(Background::Color(theme::SIDEBAR_BG)),
+    background: Some(Background::Color(theme::sidebar_bg())),
     ..Default::default()
   })
   .into()

@@ -37,13 +37,13 @@ impl App {
       Ok(armored) => {
         let s = self.set_status(
           StatusKind::Success,
-          "Clef copiée dans le presse-papier".to_string(),
+          self.strings.status_key_copied().to_string(),
         );
         Task::batch([s, iced::clipboard::write(armored)])
       }
       Err(e) => self.set_status(
         StatusKind::Error,
-        truncate_error(format!("Erreur export : {e}")),
+        truncate_error(format!("{}: {e}", self.strings.err_export_failed())),
       ),
     }
   }
@@ -59,13 +59,13 @@ impl App {
   pub(super) fn on_export_upload_done(&mut self, result: Result<String, String>) -> Task<Message> {
     match result {
       Ok(url) => {
-        let msg = format!("Lien copié : {url}");
+        let msg = format!("{}: {url}", self.strings.status_link_copied());
         let s = self.set_status(StatusKind::Success, msg);
         Task::batch([s, iced::clipboard::write(url)])
       }
       Err(e) => self.set_status(
         StatusKind::Error,
-        truncate_error(format!("Erreur upload : {e}")),
+        truncate_error(format!("{}: {e}", self.strings.err_upload_failed())),
       ),
     }
   }
@@ -81,10 +81,13 @@ impl App {
   pub(super) fn on_backup_done(&mut self, result: Result<Option<String>, String>) -> Task<Message> {
     match result {
       Ok(None) => Task::none(),
-      Ok(Some(summary)) => self.set_status(StatusKind::Success, format!("Sauvegardé : {summary}")),
+      Ok(Some(summary)) => self.set_status(
+        StatusKind::Success,
+        format!("{}: {summary}", self.strings.status_backup_done()),
+      ),
       Err(e) => self.set_status(
         StatusKind::Error,
-        truncate_error(format!("Erreur sauvegarde : {e}")),
+        truncate_error(format!("{}: {e}", self.strings.err_backup_failed())),
       ),
     }
   }
@@ -92,10 +95,13 @@ impl App {
   pub(super) fn on_export_done(&mut self, result: Result<Option<String>, String>) -> Task<Message> {
     match result {
       Ok(None) => Task::none(),
-      Ok(Some(filename)) => self.set_status(StatusKind::Success, format!("Exporté : {filename}")),
+      Ok(Some(filename)) => self.set_status(
+        StatusKind::Success,
+        format!("{}: {filename}", self.strings.status_key_exported()),
+      ),
       Err(e) => self.set_status(
         StatusKind::Error,
-        truncate_error(format!("Erreur export : {e}")),
+        truncate_error(format!("{}: {e}", self.strings.err_export_failed())),
       ),
     }
   }

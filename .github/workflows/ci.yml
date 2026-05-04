@@ -43,6 +43,17 @@ jobs:
       - name: cargo build
         run: nix develop --command cargo build
 
+      - name: cargo test (unit)
+        run: nix develop --command cargo test --lib --bins
+        env:
+          GNUPGHOME: /tmp/pgpilot-test-${{ github.run_id }}
+
+      - name: cargo test (integration)
+        run: nix develop --command cargo test -- --ignored
+        timeout-minutes: 10
+        env:
+          GNUPGHOME: /tmp/pgpilot-test-slow-${{ github.run_id }}
+
       - name: cargo audit
         run: nix develop --command cargo audit
         # Treat advisories as warnings during audits so a newly published CVE

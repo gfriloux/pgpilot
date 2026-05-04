@@ -152,7 +152,7 @@ pub fn format_date(t: std::time::SystemTime) -> String {
   dt.format("%Y-%m-%d").to_string()
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum VerifyOutcome {
   Valid,
   BadSig,
@@ -170,4 +170,60 @@ pub struct VerifyResult {
   pub signed_at: Option<String>,
   pub detail: String,
   pub signer_trust: TrustLevel,
+}
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+
+  #[test]
+  fn trust_level_is_sufficient() {
+    assert!(!TrustLevel::Undefined.is_sufficient());
+    assert!(!TrustLevel::Marginal.is_sufficient());
+    assert!(TrustLevel::Full.is_sufficient());
+    assert!(TrustLevel::Ultimate.is_sufficient());
+  }
+
+  #[test]
+  fn subkey_type_from_usage_flags() {
+    // Production code stores usage as uppercase chars: 'S', 'E', 'A'
+    // (populated by keyring.rs from sequoia key_flags)
+    assert_eq!(SubkeyType::from_usage_flags("S"), SubkeyType::Sign);
+    assert_eq!(SubkeyType::from_usage_flags("E"), SubkeyType::Encr);
+    assert_eq!(SubkeyType::from_usage_flags("A"), SubkeyType::Auth);
+    // Multi-flag strings: E takes priority over A, A over S
+    assert_eq!(SubkeyType::from_usage_flags("SE"), SubkeyType::Encr);
+    assert_eq!(SubkeyType::from_usage_flags("SA"), SubkeyType::Auth);
+    // Default to Sign if none of E or A are present
+    assert_eq!(SubkeyType::from_usage_flags("C"), SubkeyType::Sign);
+    assert_eq!(SubkeyType::from_usage_flags(""), SubkeyType::Sign);
+  }
+
+  #[test]
+  fn verify_outcome_variants_not_equal() {
+    assert_ne!(VerifyOutcome::Valid, VerifyOutcome::BadSig);
+    assert_ne!(VerifyOutcome::UnknownKey, VerifyOutcome::ExpiredKey);
+  }
+
+  #[test]
+  fn subkey_type_algo() {
+    assert_eq!(SubkeyType::Sign.algo(), "ed25519");
+    assert_eq!(SubkeyType::Auth.algo(), "ed25519");
+    assert_eq!(SubkeyType::Encr.algo(), "cv25519");
+  }
+
+  #[test]
+  fn subkey_type_usage() {
+    assert_eq!(SubkeyType::Sign.usage(), "sign");
+    assert_eq!(SubkeyType::Encr.usage(), "encr");
+    assert_eq!(SubkeyType::Auth.usage(), "auth");
+  }
+
+  #[test]
+  fn trust_level_from_char() {
+    assert_eq!(TrustLevel::from_char('u'), TrustLevel::Ultimate);
+    assert_eq!(TrustLevel::from_char('f'), TrustLevel::Full);
+    assert_eq!(TrustLevel::from_char('m'), TrustLevel::Marginal);
+    assert_eq!(TrustLevel::from_char('x'), TrustLevel::Undefined);
+  }
 }

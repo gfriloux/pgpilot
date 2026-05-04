@@ -395,3 +395,34 @@ pub fn run_all_checks(keys: &[KeyInfo]) -> Vec<HealthCheck> {
   ];
   checks
 }
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+
+  #[test]
+  fn all_health_checks_run_without_panic() {
+    let empty_keys: Vec<KeyInfo> = vec![];
+    let results = run_all_checks(&empty_keys);
+
+    // All checks should return a valid HealthCheck
+    for r in &results {
+      assert!(matches!(
+        r.status,
+        CheckStatus::Ok | CheckStatus::Info | CheckStatus::Warning | CheckStatus::Error
+      ));
+      assert!(!r.category.is_empty());
+      assert!(!r.name.is_empty());
+    }
+
+    // Should have 8 checks
+    assert_eq!(results.len(), 8);
+  }
+
+  #[test]
+  fn check_status_enum_values() {
+    assert_eq!(CheckStatus::Ok, CheckStatus::Ok);
+    assert_ne!(CheckStatus::Ok, CheckStatus::Error);
+    assert_ne!(CheckStatus::Info, CheckStatus::Warning);
+  }
+}

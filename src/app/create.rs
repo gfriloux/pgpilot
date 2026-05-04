@@ -25,7 +25,10 @@ impl App {
       }
       Err(e) => {
         self.create_form.submitting = false;
-        self.set_status(StatusKind::Error, format!("Erreur création clef : {e}"))
+        self.set_status(
+          StatusKind::Error,
+          format!("{}: {e}", self.strings.err_create_failed()),
+        )
       }
     }
   }

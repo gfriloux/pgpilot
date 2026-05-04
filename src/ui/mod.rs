@@ -7,6 +7,7 @@ pub mod health;
 pub mod import;
 pub mod key_detail;
 pub mod key_list;
+pub mod settings;
 pub mod sign;
 pub mod theme;
 pub mod verify;
@@ -22,20 +23,21 @@ use crate::app::{App, Message, StatusKind, View};
 pub fn root(app: &App) -> Element<'_, Message> {
   let content = match app.view {
     View::MyKeys | View::PublicKeys => key_list::view(app),
-    View::CreateKey => create_key::view(&app.create_form),
-    View::Import => import::view(&app.import_form),
-    View::Health => health::view(&app.health_report, app.health_loading),
-    View::Encrypt => encrypt::view(&app.encrypt_form, &app.keys),
-    View::Decrypt => decrypt::view(&app.decrypt_form),
-    View::Sign => sign::view(&app.sign_form, &app.keys),
-    View::Verify => verify::view(&app.sign_form),
+    View::CreateKey => create_key::view(&app.create_form, app.strings),
+    View::Import => import::view(&app.import_form, app.strings),
+    View::Health => health::view(&app.health_report, app.health_loading, app.strings),
+    View::Encrypt => encrypt::view(&app.encrypt_form, &app.keys, app.strings),
+    View::Decrypt => decrypt::view(&app.decrypt_form, app.strings),
+    View::Sign => sign::view(&app.sign_form, &app.keys, app.strings),
+    View::Verify => verify::view(&app.sign_form, app.strings),
+    View::Settings => settings::view(app),
   };
 
   let main: Element<Message> = match &app.status {
     Some((kind, msg)) => {
       let (bg, fg) = match kind {
-        StatusKind::Error => (theme::ERROR_BG, theme::ERROR),
-        StatusKind::Success => (theme::SUCCESS_BG, theme::SUCCESS),
+        StatusKind::Error => (theme::error_bg(), theme::error()),
+        StatusKind::Success => (theme::success_bg(), theme::success()),
       };
       let gen = app.status_generation;
       column![
@@ -85,8 +87,8 @@ pub fn root(app: &App) -> Element<'_, Message> {
   let sidebar_el = container(sidebar(app))
     .height(Length::Fill)
     .style(|_: &iced::Theme| container::Style {
-      background: Some(Background::Color(theme::SIDEBAR_BG)),
-      text_color: Some(theme::SIDEBAR_TEXT),
+      background: Some(Background::Color(theme::sidebar_bg())),
+      text_color: Some(theme::sidebar_text()),
       ..Default::default()
     });
 
@@ -94,8 +96,8 @@ pub fn root(app: &App) -> Element<'_, Message> {
     .height(Length::Fill)
     .width(Length::Fill)
     .style(|_: &iced::Theme| container::Style {
-      background: Some(Background::Color(theme::DETAIL_BG)),
-      text_color: Some(theme::TEXT_STRONG),
+      background: Some(Background::Color(theme::detail_bg())),
+      text_color: Some(theme::text_strong()),
       ..Default::default()
     });
 
@@ -106,31 +108,35 @@ pub fn root(app: &App) -> Element<'_, Message> {
 }
 
 fn sidebar(app: &App) -> Element<'_, Message> {
+  let s = app.strings;
   let nav_btn = |icon: &'static str, label: &'static str, view: View| {
     let active = app.view == view;
     button(
-      row![text(icon).font(theme::ICONS).size(14), text(label).size(13),]
-        .spacing(8)
-        .align_y(Alignment::Center),
+      row![
+        text(icon).font(theme::ICONS).size(14),
+        text(label).size(13).font(theme::nav_font()),
+      ]
+      .spacing(8)
+      .align_y(Alignment::Center),
     )
     .on_press(Message::NavChanged(view))
     .width(Length::Fill)
     .style(
       move |_: &iced::Theme, status: button::Status| button::Style {
         background: if active {
-          Some(Background::Color(theme::ACCENT))
+          Some(Background::Color(theme::accent()))
         } else {
           match status {
             button::Status::Hovered | button::Status::Pressed => {
-              Some(Background::Color(theme::SIDEBAR_HOVER_BG))
+              Some(Background::Color(theme::sidebar_hover_bg()))
             }
             _ => None,
           }
         },
         text_color: if active {
-          theme::TEXT_ON_ACCENT
+          theme::text_on_accent()
         } else {
-          theme::SIDEBAR_TEXT
+          theme::sidebar_text()
         },
         border: Border {
           color: Color::TRANSPARENT,
@@ -145,20 +151,42 @@ fn sidebar(app: &App) -> Element<'_, Message> {
 
   let title_font = Font {
     weight: font::Weight::Bold,
-    ..Font::DEFAULT
+    ..theme::nav_font()
   };
 
-  let section_label = |label: &'static str| {
-    text(label)
-      .size(10)
-      .style(|_: &iced::Theme| iced::widget::text::Style {
-        color: Some(theme::TEXT_MUTED),
-      })
+  let section_label = |label: &'static str| -> Element<Message> {
+    if matches!(theme::active(), theme::ThemeVariant::Ussr) {
+      row![
+        text("\u{f005}")
+          .font(theme::ICONS)
+          .size(9)
+          .style(|_: &iced::Theme| iced::widget::text::Style {
+            color: Some(theme::accent()),
+          }),
+        text(label)
+          .size(10)
+          .font(theme::nav_font())
+          .style(|_: &iced::Theme| iced::widget::text::Style {
+            color: Some(theme::text_muted()),
+          }),
+      ]
+      .spacing(4)
+      .align_y(Alignment::Center)
+      .into()
+    } else {
+      text(label)
+        .size(10)
+        .font(theme::nav_font())
+        .style(|_: &iced::Theme| iced::widget::text::Style {
+          color: Some(theme::text_muted()),
+        })
+        .into()
+    }
   };
 
   let sep = || {
     rule::horizontal(1).style(|_: &iced::Theme| rule::Style {
-      color: theme::BORDER,
+      color: theme::border(),
       radius: 0.0.into(),
       fill_mode: rule::FillMode::Full,
       snap: true,
@@ -168,33 +196,34 @@ fn sidebar(app: &App) -> Element<'_, Message> {
   column![
     row![
       text("\u{f21b}").font(theme::ICONS).size(18),
-      text("pgpilot").size(20).font(title_font),
+      text("PGPilot").size(20).font(title_font),
     ]
     .spacing(8)
     .align_y(Alignment::Center),
     sep(),
     column![
-      section_label("CLEFS"),
-      nav_btn("\u{f084}", "Mes clefs", View::MyKeys),
-      nav_btn("\u{f0c0}", "Clefs publiques", View::PublicKeys),
+      section_label(s.sidebar_section_keys()),
+      nav_btn("\u{f084}", s.nav_my_keys(), View::MyKeys),
+      nav_btn("\u{f0c0}", s.nav_public_keys(), View::PublicKeys),
     ]
     .spacing(2),
     sep(),
     column![
-      section_label("OPÉRATIONS"),
-      nav_btn("\u{f023}", "Chiffrer", View::Encrypt),
-      nav_btn("\u{f13e}", "Déchiffrer", View::Decrypt),
-      nav_btn("\u{f14b}", "Signer", View::Sign),
-      nav_btn("\u{f00c}", "Vérifier", View::Verify),
+      section_label(s.sidebar_section_operations()),
+      nav_btn("\u{f023}", s.nav_encrypt(), View::Encrypt),
+      nav_btn("\u{f13e}", s.nav_decrypt(), View::Decrypt),
+      nav_btn("\u{f14b}", s.nav_sign(), View::Sign),
+      nav_btn("\u{f00c}", s.nav_verify(), View::Verify),
     ]
     .spacing(2),
     sep(),
     Space::new().height(Length::Fill),
     column![
-      section_label("OUTILS"),
-      nav_btn("\u{f093}", "Importer", View::Import),
-      nav_btn("\u{f067}", "Créer une clef", View::CreateKey),
-      nav_btn("\u{f132}", "Diagnostic", View::Health),
+      section_label(s.sidebar_section_tools()),
+      nav_btn("\u{f093}", s.nav_import(), View::Import),
+      nav_btn("\u{f067}", s.nav_create_key(), View::CreateKey),
+      nav_btn("\u{f132}", s.nav_health(), View::Health),
+      nav_btn("\u{f013}", s.nav_settings(), View::Settings),
     ]
     .spacing(2),
   ]
