@@ -248,6 +248,10 @@ pub enum Message {
   ChangeLanguage(Language),
   ScaleFactorChanged(f64),
   ThemeChanged(ThemeVariant),
+
+  // --- Chat : infrastructure MQTT (axes 4–8) ---
+  #[allow(dead_code)]
+  MqttEvent(crate::chat::MqttEvent),
 }
 
 pub(crate) fn truncate_error(msg: String) -> String {
@@ -598,6 +602,10 @@ impl App {
       Message::ChangeLanguage(lang) => self.on_language_changed(lang),
       Message::ScaleFactorChanged(v) => self.on_scale_factor_changed(v),
       Message::ThemeChanged(v) => self.on_theme_changed(v),
+
+      // Chat — implémenté dans app/chat.rs (axe suivant).
+      // Stub pour permettre la compilation de la couche transport (axe 3).
+      Message::MqttEvent(_event) => Task::none(),
     }
   }
 
