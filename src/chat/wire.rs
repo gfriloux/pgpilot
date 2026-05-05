@@ -23,7 +23,7 @@ use crate::chat::{ChatError, ChatResult, MAX_WIRE_MESSAGE_BYTES, SIGN_CANONICAL_
 ///
 /// La représentation JSON sérialisée doit être ≤ [`MAX_WIRE_MESSAGE_BYTES`]
 /// (64 Kio). Validation côté émetteur **et** récepteur.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct WireMessage {
   /// Identifiant unique du message (UUID v4).
   pub id: String,

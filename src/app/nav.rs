@@ -50,10 +50,34 @@ impl App {
   }
 
   pub(super) fn on_nav_changed(&mut self, view: View) -> Task<Message> {
-    if matches!(view, View::CreateKey | View::Import) {
+    if matches!(
+      view,
+      View::CreateKey | View::Import | View::ChatRoom(_) | View::ChatNewRoom | View::ChatJoinRoom
+    ) {
       self.previous_view = Some(self.view.clone());
     }
     let is_health = view == View::Health;
+
+    // Logique additionnelle pour les vues chat.
+    match &view {
+      View::ChatRoom(room_id) => {
+        self.active_room = Some(room_id.clone());
+        self.chat_input.clear();
+        let rid = room_id.clone();
+        self.view = view;
+        self.selected = None;
+        self.reset_pending_ops();
+        self.decrypt_form = crate::app::DecryptForm::default();
+        return self.ensure_chat_started(rid);
+      }
+      View::ChatList | View::ChatNewRoom | View::ChatJoinRoom => {
+        self.active_room = None;
+      }
+      _ => {
+        // Pour les vues hors chat, on ne touche pas à active_room.
+      }
+    }
+
     self.view = view;
     self.selected = None;
     self.reset_pending_ops();

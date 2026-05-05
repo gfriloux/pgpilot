@@ -18,6 +18,15 @@ pub struct Config {
   #[serde(default = "default_scale_factor")]
   pub scale_factor: f64,
   pub theme: ThemeVariant,
+  /// URL du broker MQTT par défaut.
+  /// `None` → l'UI propose `mqtts://test.mosquitto.org:8883` comme valeur
+  /// initiale dans le formulaire de création de salon.
+  #[serde(default)]
+  pub mqtt_default_relay: Option<String>,
+  /// Fingerprint 40 hex de la clef locale utilisée pour le chat.
+  /// `None` → première clef privée disponible dans le keyring.
+  #[serde(default)]
+  pub chat_local_fp: Option<String>,
 }
 
 fn default_scale_factor() -> f64 {
@@ -30,6 +39,8 @@ impl Default for Config {
       language: detect_system_language(),
       scale_factor: 1.0,
       theme: ThemeVariant::default(),
+      mqtt_default_relay: None,
+      chat_local_fp: None,
     }
   }
 }
@@ -124,6 +135,8 @@ mod tests {
       language: Language::French,
       scale_factor: 1.25,
       theme: ThemeVariant::Ussr,
+      mqtt_default_relay: None,
+      chat_local_fp: None,
     };
     let yaml = serde_yaml::to_string(&cfg).unwrap();
     std::fs::write(&path, &yaml).unwrap();

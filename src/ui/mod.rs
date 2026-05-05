@@ -21,7 +21,7 @@ use iced::{
 use crate::app::{App, Message, StatusKind, View};
 
 pub fn root(app: &App) -> Element<'_, Message> {
-  let content = match app.view {
+  let content = match &app.view {
     View::MyKeys | View::PublicKeys => key_list::view(app),
     View::CreateKey => create_key::view(&app.create_form, app.strings),
     View::Import => import::view(&app.import_form, app.strings),
@@ -31,6 +31,10 @@ pub fn root(app: &App) -> Element<'_, Message> {
     View::Sign => sign::view(&app.sign_form, &app.keys, app.strings),
     View::Verify => verify::view(&app.sign_form, app.strings),
     View::Settings => settings::view(app),
+    // --- Chat v0.6.0 (UI à implémenter dans les axes suivants) ---
+    View::ChatList | View::ChatRoom(_) | View::ChatNewRoom | View::ChatJoinRoom => {
+      chat_placeholder(app)
+    }
   };
 
   let main: Element<Message> = match &app.status {
@@ -105,6 +109,43 @@ pub fn root(app: &App) -> Element<'_, Message> {
     .width(Length::Fill)
     .height(Length::Fill)
     .into()
+}
+
+/// Placeholder pour les vues chat (UI implémentée dans les axes 5–8).
+fn chat_placeholder(app: &App) -> Element<'_, Message> {
+  use iced::widget::{button, column, container, scrollable, text};
+  let label = match &app.view {
+    View::ChatList => "Liste des salons",
+    View::ChatRoom(_) => "Conversation",
+    View::ChatNewRoom => "Créer un salon",
+    View::ChatJoinRoom => "Rejoindre un salon",
+    _ => "Chat",
+  };
+  container(
+    scrollable(
+      container(
+        column![
+          text(label).size(20),
+          text("Interface chat — disponible dans les axes 5–8").size(14),
+          button(text("Retour")).on_press(Message::NavBack),
+        ]
+        .spacing(16)
+        .padding(24),
+      )
+      .center_x(Length::Fill)
+      .padding([24, 0])
+      .width(Length::Fill),
+    )
+    .height(Length::Fill)
+    .width(Length::Fill),
+  )
+  .height(Length::Fill)
+  .width(Length::Fill)
+  .style(|_: &iced::Theme| container::Style {
+    background: Some(iced::Background::Color(theme::sidebar_bg())),
+    ..Default::default()
+  })
+  .into()
 }
 
 fn sidebar(app: &App) -> Element<'_, Message> {
