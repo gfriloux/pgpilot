@@ -772,6 +772,14 @@ impl Strings for EnglishStrings {
     "Decrypt files encrypted with GPG."
   }
 
+  // Expiry warning banner
+  fn expiry_warning_title(&self) -> &'static str {
+    "Subkey(s) expiring within 90 days"
+  }
+  fn expiry_warning_renew(&self) -> &'static str {
+    "Renew"
+  }
+
   // File dialog titles
   fn dialog_choose_files_encrypt(&self) -> &'static str {
     "Choose files to encrypt"
@@ -793,5 +801,28 @@ impl Strings for EnglishStrings {
   }
   fn dialog_choose_backup_folder(&self) -> &'static str {
     "Choose a backup folder"
+  }
+
+  // Revocation certificate section
+  fn revocation_cert_title(&self) -> &'static str {
+    "Revocation Certificate"
+  }
+  fn revocation_cert_found(&self) -> &'static str {
+    "Certificate found"
+  }
+  fn revocation_cert_missing(&self) -> &'static str {
+    "Certificate not found"
+  }
+  fn revocation_cert_export(&self) -> &'static str {
+    "Export .rev"
+  }
+  fn revocation_cert_generate(&self) -> &'static str {
+    "Generate"
+  }
+  fn revocation_cert_copy_path(&self) -> &'static str {
+    "Copy path"
+  }
+  fn status_revocation_cert_generated(&self) -> &'static str {
+    "Revocation certificate generated"
   }
 }

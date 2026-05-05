@@ -709,6 +709,145 @@ fn export_pub_modal<'a>(
   .into()
 }
 
+fn revocation_cert_section<'a>(key: &'a KeyInfo, s: &'static dyn Strings) -> Element<'a, Message> {
+  let homedir = crate::gpg::gnupg_dir().unwrap_or_default();
+  let cert_path = crate::gpg::revocation_cert_path(&homedir, &key.fingerprint)
+    .ok()
+    .flatten();
+
+  let icon_btn = |icon: &'static str, label: &'static str| {
+    row![text(icon).font(theme::ICONS).size(12), text(label).size(12)]
+      .spacing(6)
+      .align_y(Alignment::Center)
+  };
+
+  let body: Element<Message> = match cert_path {
+    Some(ref path) => {
+      let path_str = crate::gpg::display_path(path);
+      let fp = key.fingerprint.clone();
+      let path_owned = path.to_string_lossy().into_owned();
+      column![
+        row![
+          text("\u{f058}")
+            .font(theme::ICONS)
+            .size(11)
+            .color(theme::success()),
+          text(s.revocation_cert_found())
+            .size(11)
+            .color(theme::success()),
+        ]
+        .spacing(5)
+        .align_y(Alignment::Center),
+        container(text(path_str).size(10).font(theme::MONO))
+          .padding([3, 6])
+          .style(|_: &iced::Theme| container::Style {
+            background: Some(Background::Color(theme::header_bg())),
+            text_color: Some(theme::text_secondary()),
+            border: Border {
+              color: theme::border(),
+              width: 1.0,
+              radius: 4.0.into(),
+            },
+            ..Default::default()
+          }),
+        row![
+          button(icon_btn("\u{f019}", s.revocation_cert_export()))
+            .on_press(Message::ExportRevocationCert(fp))
+            .style(|_: &iced::Theme, status: button::Status| button::Style {
+              background: Some(Background::Color(match status {
+                button::Status::Hovered | button::Status::Pressed => theme::accent_hover(),
+                _ => theme::accent(),
+              })),
+              text_color: theme::text_on_accent(),
+              border: Border {
+                color: Color::TRANSPARENT,
+                width: 0.0,
+                radius: 6.0.into(),
+              },
+              shadow: Default::default(),
+              snap: false,
+            }),
+          button(icon_btn("\u{f0c5}", s.revocation_cert_copy_path()))
+            .on_press(Message::CopyRevocationCertPath(path_owned))
+            .style(|_: &iced::Theme, status: button::Status| button::Style {
+              background: Some(Background::Color(match status {
+                button::Status::Hovered | button::Status::Pressed => theme::header_bg(),
+                _ => Color::TRANSPARENT,
+              })),
+              text_color: theme::text_secondary(),
+              border: Border {
+                color: theme::border(),
+                width: 1.0,
+                radius: 6.0.into(),
+              },
+              shadow: Default::default(),
+              snap: false,
+            }),
+        ]
+        .spacing(6),
+      ]
+      .spacing(6)
+      .into()
+    }
+    None => {
+      let fp = key.fingerprint.clone();
+      column![
+        row![
+          text("\u{f071}")
+            .font(theme::ICONS)
+            .size(11)
+            .color(theme::peach()),
+          text(s.revocation_cert_missing())
+            .size(11)
+            .color(theme::peach()),
+        ]
+        .spacing(5)
+        .align_y(Alignment::Center),
+        button(icon_btn("\u{f067}", s.revocation_cert_generate()))
+          .on_press(Message::GenerateRevocationCert(fp))
+          .style(|_: &iced::Theme, status: button::Status| button::Style {
+            background: Some(Background::Color(match status {
+              button::Status::Hovered | button::Status::Pressed => theme::accent_hover(),
+              _ => theme::accent(),
+            })),
+            text_color: theme::text_on_accent(),
+            border: Border {
+              color: Color::TRANSPARENT,
+              width: 0.0,
+              radius: 6.0.into(),
+            },
+            shadow: Default::default(),
+            snap: false,
+          }),
+      ]
+      .spacing(6)
+      .into()
+    }
+  };
+
+  container(
+    column![
+      text(s.revocation_cert_title())
+        .size(12)
+        .color(theme::text_secondary()),
+      body,
+    ]
+    .spacing(6),
+  )
+  .padding(10)
+  .width(Length::Fill)
+  .style(|_: &iced::Theme| container::Style {
+    background: Some(Background::Color(theme::card_bg())),
+    border: Border {
+      color: theme::border(),
+      width: 1.0,
+      radius: 8.0.into(),
+    },
+    ..Default::default()
+  })
+  .into()
+}
+
 #[allow(clippy::too_many_arguments)]
 fn left_column_items<'a>(
   key: &'a KeyInfo,
@@ -901,6 +1040,10 @@ fn left_column_items<'a>(
     items.push(export_pub_modal(key, bold, s));
   } else {
     items.push(action_buttons(key, keyserver_status, card_connected, s));
+  }
+
+  if key.has_secret && !key.on_card {
+    items.push(revocation_cert_section(key, s));
   }
 
   Column::with_children(items)

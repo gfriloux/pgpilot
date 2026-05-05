@@ -323,6 +323,10 @@ pub trait Strings: Send + Sync {
   fn decrypt_no_key_warning(&self) -> &'static str;
   fn decrypt_about(&self) -> &'static str;
 
+  // Expiry warning banner
+  fn expiry_warning_title(&self) -> &'static str;
+  fn expiry_warning_renew(&self) -> &'static str;
+
   // File dialog titles
   fn dialog_choose_files_encrypt(&self) -> &'static str;
   fn dialog_choose_files_decrypt(&self) -> &'static str;
@@ -331,6 +335,15 @@ pub trait Strings: Send + Sync {
   fn dialog_choose_file_verify(&self) -> &'static str;
   fn dialog_choose_sig_file(&self) -> &'static str;
   fn dialog_choose_backup_folder(&self) -> &'static str;
+
+  // Revocation certificate section
+  fn revocation_cert_title(&self) -> &'static str;
+  fn revocation_cert_found(&self) -> &'static str;
+  fn revocation_cert_missing(&self) -> &'static str;
+  fn revocation_cert_export(&self) -> &'static str;
+  fn revocation_cert_generate(&self) -> &'static str;
+  fn revocation_cert_copy_path(&self) -> &'static str;
+  fn status_revocation_cert_generated(&self) -> &'static str;
 }
 
 pub fn strings_for(lang: Language) -> &'static dyn Strings {

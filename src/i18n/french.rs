@@ -772,6 +772,14 @@ impl Strings for FrenchStrings {
     "Dechiffrez des fichiers chiffres avec GPG."
   }
 
+  // Expiry warning banner
+  fn expiry_warning_title(&self) -> &'static str {
+    "Sous-clef(s) expirant dans 90 jours"
+  }
+  fn expiry_warning_renew(&self) -> &'static str {
+    "Renouveler"
+  }
+
   // File dialog titles
   fn dialog_choose_files_encrypt(&self) -> &'static str {
     "Choisir des fichiers a chiffrer"
@@ -793,5 +801,28 @@ impl Strings for FrenchStrings {
   }
   fn dialog_choose_backup_folder(&self) -> &'static str {
     "Choisir un dossier de sauvegarde"
+  }
+
+  // Revocation certificate section
+  fn revocation_cert_title(&self) -> &'static str {
+    "Certificat de revocation"
+  }
+  fn revocation_cert_found(&self) -> &'static str {
+    "Certificat present"
+  }
+  fn revocation_cert_missing(&self) -> &'static str {
+    "Certificat absent"
+  }
+  fn revocation_cert_export(&self) -> &'static str {
+    "Exporter .rev"
+  }
+  fn revocation_cert_generate(&self) -> &'static str {
+    "Generer"
+  }
+  fn revocation_cert_copy_path(&self) -> &'static str {
+    "Copier le chemin"
+  }
+  fn status_revocation_cert_generated(&self) -> &'static str {
+    "Certificat de revocation genere"
   }
 }

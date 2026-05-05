@@ -17,7 +17,9 @@ use iced::widget::text_editor;
 use iced::Task;
 
 use crate::config::Config;
-use crate::gpg::{HealthCheck, KeyExpiry, KeyInfo, Keyserver, TrustLevel, VerifyResult};
+use crate::gpg::{
+  ExpiryWarning, HealthCheck, KeyExpiry, KeyInfo, Keyserver, TrustLevel, VerifyResult,
+};
 use crate::i18n::{self, Language, Strings};
 use crate::ui;
 use crate::ui::theme::ThemeVariant;
@@ -146,6 +148,7 @@ pub struct App {
   pub previous_view: Option<View>,
   pub config: Config,
   pub strings: &'static dyn Strings,
+  pub expiry_warnings: Vec<ExpiryWarning>,
 }
 
 #[derive(Debug, Clone)]
@@ -236,6 +239,10 @@ pub enum Message {
   VerifySigPicked(Result<Option<PathBuf>, String>),
   VerifyExecute,
   VerifyDone(Result<VerifyResult, String>),
+  ExportRevocationCert(String),
+  CopyRevocationCertPath(String),
+  GenerateRevocationCert(String),
+  RevocationCertGenerated(Result<String, String>),
   DismissStatus(u32),
   NavBack,
   ChangeLanguage(Language),
@@ -346,6 +353,7 @@ impl App {
         previous_view: None,
         config,
         strings,
+        expiry_warnings: Vec::new(),
       },
       task,
     )
@@ -558,6 +566,10 @@ impl App {
       Message::VerifySigPicked(r) => self.on_verify_sig_picked(r),
       Message::VerifyExecute => self.on_verify_execute(),
       Message::VerifyDone(r) => self.on_verify_done(r),
+      Message::ExportRevocationCert(fp) => self.on_export_revocation_cert(fp),
+      Message::CopyRevocationCertPath(path) => self.on_copy_revocation_cert_path(path),
+      Message::GenerateRevocationCert(fp) => self.on_generate_revocation_cert(fp),
+      Message::RevocationCertGenerated(result) => self.on_revocation_cert_generated(result),
       Message::DismissStatus(gen) => {
         if self.status_generation == gen {
           self.status = None;

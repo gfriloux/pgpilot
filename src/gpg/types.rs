@@ -172,6 +172,14 @@ pub struct VerifyResult {
   pub signer_trust: TrustLevel,
 }
 
+#[derive(Debug, Clone)]
+pub struct ExpiryWarning {
+  pub key_fp: String,
+  pub key_name: String,
+  pub subkey_type: Option<SubkeyType>,
+  pub expires_at: chrono::DateTime<chrono::Utc>,
+}
+
 #[cfg(test)]
 mod tests {
   use super::*;

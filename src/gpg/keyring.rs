@@ -1128,6 +1128,44 @@ pub fn inspect_decrypt(file: &std::path::Path) -> Result<super::types::DecryptSt
   }
 }
 
+/// Returns the path to the revocation certificate if it exists.
+pub fn revocation_cert_path(homedir: &str, fp: &str) -> Result<Option<std::path::PathBuf>> {
+  validate_fp(fp)?;
+  let path = std::path::PathBuf::from(homedir)
+    .join("openpgp-revocs.d")
+    .join(format!("{fp}.rev"));
+  Ok(if path.exists() { Some(path) } else { None })
+}
+
+/// Generates a revocation certificate via `gpg --gen-revoke`.
+///
+/// Returns the path of the generated certificate.
+pub fn generate_revocation_cert(homedir: &str, fp: &str) -> Result<std::path::PathBuf> {
+  validate_fp(fp)?;
+  let out_path = std::path::PathBuf::from(homedir)
+    .join("openpgp-revocs.d")
+    .join(format!("{fp}.rev"));
+
+  let output = gpg_command(homedir)
+    .args([
+      "--batch",
+      "--yes",
+      "--gen-revoke",
+      "--output",
+      out_path.to_str().unwrap_or(""),
+      fp,
+    ])
+    .output()
+    .context("gpg spawn error")?;
+
+  if output.status.success() || out_path.exists() {
+    Ok(out_path)
+  } else {
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    Err(anyhow::anyhow!("{}", sanitize_gpg_stderr(&stderr)))
+  }
+}
+
 pub fn decrypt_files(files: &[PathBuf]) -> Result<Vec<String>> {
   let homedir = gnupg_dir()?;
   let mut results = Vec::new();
