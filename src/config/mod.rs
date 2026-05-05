@@ -19,8 +19,9 @@ pub struct Config {
   pub scale_factor: f64,
   pub theme: ThemeVariant,
   /// URL du broker MQTT par défaut.
-  /// `None` → l'UI propose `mqtts://test.mosquitto.org:8883` comme valeur
-  /// initiale dans le formulaire de création de salon.
+  /// `None` → fallback vers `mqtts://broker.hivemq.com:8883` (Let's Encrypt,
+  /// compatible webpki-roots). test.mosquitto.org:8883 utilise une CA v1 rejetée
+  /// par rustls — ne pas l'utiliser comme valeur par défaut.
   #[serde(default)]
   pub mqtt_default_relay: Option<String>,
   /// Fingerprint 40 hex de la clef locale utilisée pour le chat.

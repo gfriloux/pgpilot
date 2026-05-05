@@ -28,6 +28,7 @@ use std::time::Duration;
 
 use async_trait::async_trait;
 use rumqttc::{AsyncClient, EventLoop, LastWill, MqttOptions, QoS, Transport};
+use rustls::ClientConfig;
 use tokio::sync::{mpsc, Mutex};
 
 use crate::chat::{
@@ -194,7 +195,16 @@ impl MqttHandle {
     options.set_keep_alive(Duration::from_secs(u64::from(MQTT_KEEPALIVE_SECS)));
 
     if use_tls {
-      options.set_transport(Transport::tls_with_default_config());
+      // Construire un ClientConfig rustls avec le bundle Mozilla (webpki-roots),
+      // plus fiable que les certs système sur NixOS et autres distros non-standard.
+      let mut root_store = rustls::RootCertStore::empty();
+      root_store.extend(webpki_roots::TLS_SERVER_ROOTS.iter().cloned());
+      let client_config = ClientConfig::builder()
+        .with_root_certificates(root_store)
+        .with_no_client_auth();
+      options.set_transport(Transport::Tls(rumqttc::TlsConfiguration::Rustls(Arc::new(
+        client_config,
+      ))));
     }
 
     // Last Will Testament — publié automatiquement par le broker en cas de

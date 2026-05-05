@@ -401,6 +401,7 @@ pub trait Strings: Send + Sync {
   fn chat_choose_identity_title(&self) -> &'static str;
   fn chat_choose_identity_hint(&self) -> &'static str;
   fn chat_enter_room_btn(&self) -> &'static str;
+  fn chat_confirm_identity_btn(&self) -> &'static str;
 
   // Modal — leave room
   fn chat_leave_confirm_title(&self) -> &'static str;

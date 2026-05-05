@@ -21,7 +21,7 @@ use crate::chat::{
   MAX_MESSAGES_PER_ROOM, PRESENCE_TOPIC_PREFIX,
 };
 
-use super::{blocking_task, App, ChatNewForm, Message, MqttState, StatusKind, View};
+use super::{blocking_task, App, ChatNewForm, Message, MqttState, PendingOp, StatusKind, View};
 
 // ---------------------------------------------------------------------------
 // Constante interne
@@ -51,7 +51,9 @@ impl App {
         .room_by_id(&room_id)
         .map(|r| r.relay.clone())
         .or_else(|| self.config.mqtt_default_relay.clone())
-        .unwrap_or_else(|| "mqtts://test.mosquitto.org:8883".to_string());
+        // HiveMQ public broker — Let's Encrypt cert, compatible with webpki-roots.
+        // test.mosquitto.org:8883 uses a v1 Mosquitto CA cert rejected by rustls.
+        .unwrap_or_else(|| "mqtts://broker.hivemq.com:8883".to_string());
 
       // Déterminer le fingerprint local pour cette room.
       let presence_fp = self
@@ -162,6 +164,31 @@ impl App {
   }
 
   // -------------------------------------------------------------------------
+  // Identité
+
+  /// Confirme l'identité sélectionnée dans le modal, sauvegarde en config,
+  /// puis navigue vers la room si room_id non vide.
+  pub(super) fn on_chat_identity_confirm(&mut self) -> Task<Message> {
+    let Some(PendingOp::IdentitySelection {
+      room_id,
+      selected_fp: Some(fp),
+    }) = self.pending.take()
+    else {
+      return Task::none();
+    };
+
+    self.config.chat_local_fp = Some(fp);
+    let _ = self.config.save();
+
+    if room_id.is_empty() {
+      // Sélection globale — rester sur ChatList.
+      Task::none()
+    } else {
+      self.on_chat_room_selected(room_id)
+    }
+  }
+
+  // -------------------------------------------------------------------------
   // Création / jointure
   // -------------------------------------------------------------------------
 
@@ -169,7 +196,7 @@ impl App {
   pub(super) fn on_chat_room_create(&mut self) -> Task<Message> {
     let name = self.chat_new_form.name.trim().to_string();
     let relay = self.chat_new_form.relay.trim().to_string();
-    let participants_raw = self.chat_new_form.participants_input.clone();
+    let selected = self.chat_new_form.selected_participants.clone();
 
     if name.is_empty() {
       return self.set_status(StatusKind::Error, "Le nom du salon est requis.".to_string());
@@ -181,19 +208,15 @@ impl App {
       );
     }
 
-    // Fingerprint local : room my_fp ou première clef secrète.
-    let my_fp = self
-      .config
-      .chat_local_fp
-      .clone()
-      .or_else(|| {
-        self
-          .keys
-          .iter()
-          .find(|k| k.has_secret)
-          .map(|k| k.fingerprint.clone())
-      })
-      .unwrap_or_default();
+    // Fingerprint local : identité choisie dans le formulaire.
+    let my_fp = self.chat_new_form.my_fp.clone().unwrap_or_default();
+
+    if my_fp.is_empty() {
+      return self.set_status(
+        StatusKind::Error,
+        "Please select your identity for this room.".to_string(),
+      );
+    }
 
     if my_fp.is_empty() {
       return self.set_status(
@@ -217,8 +240,8 @@ impl App {
           joined_at: now,
         }];
 
-        for line in participants_raw.lines() {
-          let fp = line.trim().to_string();
+        for fp in &selected {
+          let fp = fp.trim().to_string();
           if fp.len() == 40 && fp.chars().all(|c| c.is_ascii_hexdigit()) && fp != my_fp {
             participants.push(RoomParticipant { fp, joined_at: now });
           }
@@ -279,18 +302,14 @@ impl App {
       );
     }
 
-    let my_fp = self
-      .config
-      .chat_local_fp
-      .clone()
-      .or_else(|| {
-        self
-          .keys
-          .iter()
-          .find(|k| k.has_secret)
-          .map(|k| k.fingerprint.clone())
-      })
-      .unwrap_or_default();
+    let my_fp = self.chat_new_form.my_fp.clone().unwrap_or_default();
+
+    if my_fp.is_empty() {
+      return self.set_status(
+        StatusKind::Error,
+        "Please select your identity for this room.".to_string(),
+      );
+    }
 
     Task::perform(
       blocking_task(move || {
@@ -592,7 +611,7 @@ impl App {
 
         Task::batch([subscribe_task, online_task])
       }
-      MqttEvent::Disconnected(_reason) => {
+      MqttEvent::Disconnected(reason) => {
         // Marquer tous les participants hors-ligne.
         self.presence.mark_all_offline();
         if matches!(
@@ -601,7 +620,9 @@ impl App {
         ) {
           self.mqtt_state = MqttState::Reconnecting { attempt: 1 };
         }
-        Task::none()
+        // Rendre l'erreur visible pour faciliter le diagnostic.
+        eprintln!("[MQTT] Disconnected: {reason}");
+        self.set_status(StatusKind::Error, format!("MQTT: {reason}"))
       }
       MqttEvent::Reconnecting { attempt } => {
         self.mqtt_state = MqttState::Reconnecting { attempt };

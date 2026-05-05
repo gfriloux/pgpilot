@@ -476,28 +476,29 @@ fn message_bubble<'a>(msg: &'a ChatMessage, is_own: bool, app: &'a App) -> Eleme
     .map(|k| k.name.clone())
     .unwrap_or_else(|| msg.sender_fp.get(..8).unwrap_or(&msg.sender_fp).to_string());
 
-  let initial: String = msg.sender_fp.get(..1).unwrap_or("?").to_uppercase();
-
-  let avatar = container(
-    text(initial)
-      .size(13)
-      .font(theme::heading_font())
-      .color(theme::accent()),
-  )
-  .width(28)
-  .height(28)
-  .center_x(Length::Fill)
-  .center_y(Length::Fill)
-  .style(|_: &iced::Theme| container::Style {
-    background: Some(Background::Color(theme::accent_subtle())),
-    border: Border {
-      radius: 14.0.into(),
-      ..Default::default()
-    },
-    ..Default::default()
-  });
+  // Indicateur de signature : chercher le signataire dans le keyring.
+  let sig_indicator: Element<Message> = {
+    let known =
+      !msg.sender_fp.is_empty() && app.keys.iter().any(|k| k.fingerprint == msg.sender_fp);
+    if known {
+      text("\u{f023}") // FA4 lock
+        .font(theme::ICONS)
+        .size(10)
+        .color(theme::success())
+        .into()
+    } else if msg.sender_fp.is_empty() {
+      text("\u{f071}") // FA4 warning
+        .font(theme::ICONS)
+        .size(10)
+        .color(theme::peach())
+        .into()
+    } else {
+      text("").size(1).into() // pas de signature connue — rien
+    }
+  };
 
   let meta = row![
+    sig_indicator,
     text(sender_name)
       .size(11)
       .style(|_: &iced::Theme| iced::widget::text::Style {
@@ -514,7 +515,7 @@ fn message_bubble<'a>(msg: &'a ChatMessage, is_own: bool, app: &'a App) -> Eleme
         color: Some(theme::text_muted()),
       }),
   ]
-  .spacing(0)
+  .spacing(4)
   .align_y(Alignment::Center);
 
   // Detect decrypt failure marker
@@ -590,12 +591,12 @@ fn message_bubble<'a>(msg: &'a ChatMessage, is_own: bool, app: &'a App) -> Eleme
     .style(bubble_style);
 
   if is_own {
-    row![Space::new().width(Length::Fill), bubble, avatar,]
+    row![Space::new().width(Length::Fill), bubble]
       .spacing(8)
       .align_y(Alignment::Start)
       .into()
   } else {
-    row![avatar, bubble, Space::new().width(Length::Fill),]
+    row![bubble, Space::new().width(Length::Fill)]
       .spacing(8)
       .align_y(Alignment::Start)
       .into()
@@ -808,7 +809,7 @@ fn identity_selection_modal<'a>(
     .collect();
 
   let can_enter = selected_fp.is_some();
-  let room_id_owned = room_id.to_string();
+  let is_global = room_id.is_empty();
 
   let content = column![
     text(s.chat_choose_identity_title())
@@ -828,10 +829,17 @@ fn identity_selection_modal<'a>(
         .padding([8, 16])
         .style(button_styles::ghost_neutral()),
       Space::new().width(Length::Fill),
-      button(text(s.chat_enter_room_btn()).size(13))
-        .on_press_maybe(can_enter.then_some(Message::ChatRoomSelected(room_id_owned)))
-        .padding([8, 16])
-        .style(button_styles::primary_toggle(can_enter)),
+      button(
+        text(if is_global {
+          s.chat_confirm_identity_btn()
+        } else {
+          s.chat_enter_room_btn()
+        })
+        .size(13),
+      )
+      .on_press_maybe(can_enter.then_some(Message::ChatIdentityConfirm))
+      .padding([8, 16])
+      .style(button_styles::primary_toggle(can_enter)),
     ]
     .align_y(Alignment::Center),
   ]

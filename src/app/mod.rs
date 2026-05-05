@@ -83,8 +83,10 @@ pub struct ChatNewForm {
   pub name: String,
   /// URL du broker MQTT (pré-remplie depuis `Config.mqtt_default_relay`).
   pub relay: String,
-  /// Fingerprints des participants, un par ligne (textarea brut).
-  pub participants_input: String,
+  /// Fingerprints des participants sélectionnés depuis le keyring.
+  pub selected_participants: Vec<String>,
+  /// Identité locale choisie pour cette room (fingerprint de la clef privée).
+  pub my_fp: Option<String>,
   /// Code d'invitation en cours de saisie pour rejoindre un salon.
   pub join_code: String,
 }
@@ -340,9 +342,11 @@ pub enum Message {
   ChatRoomNameChanged(String),
   #[allow(dead_code)]
   ChatRoomRelayChanged(String),
-  /// Mise à jour du textarea des participants (fingerprints, un par ligne).
+  /// Sélection de l'identité locale (my_fp) pour le salon en cours de création/jointure.
+  ChatRoomMyFpChanged(String),
+  /// Toggle d'un participant (fingerprint) dans la sélection du nouveau salon.
   #[allow(dead_code)]
-  ChatRoomParticipantsChanged(String),
+  ChatRoomParticipantToggled(String),
   ChatRoomCreated(Result<crate::chat::Room, String>),
   #[allow(dead_code)]
   ChatJoinCodeChanged(String),
@@ -372,6 +376,8 @@ pub enum Message {
   /// Sélection d'une clef privée dans le modal IdentitySelection.
   #[allow(dead_code)]
   ChatIdentitySelected(String),
+  /// Confirmation de l'identité sélectionnée — sauvegarde en config et démarre le chat.
+  ChatIdentityConfirm,
 
   // --- Chat : partage du join code ---
   /// Encode et copie le join code du salon dans le presse-papier.
@@ -776,8 +782,17 @@ impl App {
         self.chat_new_form.relay = v;
         Task::none()
       }
-      Message::ChatRoomParticipantsChanged(v) => {
-        self.chat_new_form.participants_input = v;
+      Message::ChatRoomMyFpChanged(fp) => {
+        self.chat_new_form.my_fp = Some(fp);
+        Task::none()
+      }
+      Message::ChatRoomParticipantToggled(fp) => {
+        let participants = &mut self.chat_new_form.selected_participants;
+        if let Some(pos) = participants.iter().position(|p| p == &fp) {
+          participants.remove(pos);
+        } else {
+          participants.push(fp);
+        }
         Task::none()
       }
       Message::ChatJoinCodeChanged(v) => {
@@ -796,6 +811,7 @@ impl App {
         }
         Task::none()
       }
+      Message::ChatIdentityConfirm => self.on_chat_identity_confirm(),
       Message::ChatRoomCreate => self.on_chat_room_create(),
       Message::ChatRoomCreated(r) => self.on_chat_room_created(r),
       Message::ChatRoomJoin => self.on_chat_room_join(),

@@ -947,6 +947,9 @@ impl Strings for FrenchStrings {
   fn chat_enter_room_btn(&self) -> &'static str {
     "Entrer dans le salon"
   }
+  fn chat_confirm_identity_btn(&self) -> &'static str {
+    "Utiliser cette identité"
+  }
 
   fn chat_leave_confirm_title(&self) -> &'static str {
     "Quitter le salon ?"
