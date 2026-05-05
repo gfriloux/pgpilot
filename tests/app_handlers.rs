@@ -27,6 +27,7 @@ fn make_test_app() -> App {
     health_loading: false,
     sign_form: SignForm::default(),
     previous_view: None,
+    expiry_warnings: Vec::new(),
     config,
     strings,
   }
