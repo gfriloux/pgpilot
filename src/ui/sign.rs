@@ -1,6 +1,6 @@
 use iced::{
   font,
-  widget::{button, column, container, row, rule, scrollable, text},
+  widget::{button, column, container, row, rule, text},
   Alignment, Background, Border, Color, Element, Font, Length, Shadow,
 };
 
@@ -195,93 +195,62 @@ pub fn view<'a>(
     })
   };
 
-  let card = container(
+  let card_content = column![
     column![
-      column![
-        row![
-          text("\u{f14b}").font(theme::ICONS).size(20),
-          text(theme::flavor(s.sign_title(), "Affix the Comrade's Seal"))
-            .size(22)
-            .font(theme::flavor_title_font()),
-        ]
-        .spacing(10)
-        .align_y(Alignment::Center),
-        container(text(s.sign_about()).size(13)).style(|_: &iced::Theme| container::Style {
+      row![
+        text("\u{f14b}").font(theme::ICONS).size(20),
+        text(theme::flavor(s.sign_title(), "Affix the Comrade's Seal"))
+          .size(22)
+          .font(theme::flavor_title_font()),
+      ]
+      .spacing(10)
+      .align_y(Alignment::Center),
+      container(text(s.sign_about()).size(13)).style(|_: &iced::Theme| container::Style {
+        text_color: Some(theme::text_secondary()),
+        ..Default::default()
+      }),
+    ]
+    .spacing(6),
+    rule_sep(),
+    file_row,
+    rule_sep(),
+    column![
+      container(text(s.sign_select_key()).size(12).font(bold)).style(|_: &iced::Theme| {
+        container::Style {
           text_color: Some(theme::text_secondary()),
           ..Default::default()
-        }),
-      ]
-      .spacing(6),
-      rule_sep(),
-      file_row,
-      rule_sep(),
-      column![
-        container(text(s.sign_select_key()).size(12).font(bold)).style(|_: &iced::Theme| {
-          container::Style {
-            text_color: Some(theme::text_secondary()),
-            ..Default::default()
-          }
-        }),
-        container(
-          scrollable(column(signer_items).spacing(2).padding([0, 2]))
-            .height(140)
-            .style(common::scroll_style),
-        )
-        .padding(4)
-        .style(|_: &iced::Theme| container::Style {
-          background: Some(Background::Color(theme::header_bg())),
-          border: Border {
-            color: theme::border(),
-            width: 1.0,
-            radius: 4.0.into(),
-          },
-          ..Default::default()
-        }),
-      ]
-      .spacing(6),
-      rule_sep(),
-      {
-        let sign_action: Element<'_, Message> = row![
-          iced::widget::Space::new().width(Length::Fill),
-          common::action_btn(s.btn_sign(), can_sign, Message::SignExecute)
-        ]
-        .into();
-        sign_action
-      },
-      rule_sep(),
-      result_el,
+        }
+      }),
+      container(
+        iced::widget::scrollable(column(signer_items).spacing(2).padding([0, 2]))
+          .height(140)
+          .style(common::scroll_style),
+      )
+      .padding(4)
+      .style(|_: &iced::Theme| container::Style {
+        background: Some(Background::Color(theme::header_bg())),
+        border: Border {
+          color: theme::border(),
+          width: 1.0,
+          radius: 4.0.into(),
+        },
+        ..Default::default()
+      }),
     ]
-    .spacing(16),
-  )
-  .padding(32)
-  .width(640)
-  .style(|_: &iced::Theme| container::Style {
-    background: Some(Background::Color(theme::card_bg())),
-    border: Border {
-      color: theme::border(),
-      width: 1.0,
-      radius: 12.0.into(),
+    .spacing(6),
+    rule_sep(),
+    {
+      let sign_action: Element<'_, Message> = row![
+        iced::widget::Space::new().width(Length::Fill),
+        common::action_btn(s.btn_sign(), can_sign, Message::SignExecute)
+      ]
+      .into();
+      sign_action
     },
-    text_color: Some(theme::text_strong()),
-    ..Default::default()
-  });
+    rule_sep(),
+    result_el,
+  ]
+  .spacing(16);
 
-  container(
-    scrollable(
-      container(card)
-        .center_x(Length::Fill)
-        .padding([24, 0])
-        .width(Length::Fill),
-    )
-    .height(Length::Fill)
-    .width(Length::Fill)
-    .style(common::scroll_style),
-  )
-  .height(Length::Fill)
-  .width(Length::Fill)
-  .style(|_: &iced::Theme| container::Style {
-    background: Some(Background::Color(theme::sidebar_bg())),
-    ..Default::default()
-  })
-  .into()
+  common::page_layout(common::card_wide(card_content))
 }

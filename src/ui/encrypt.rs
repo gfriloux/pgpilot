@@ -572,58 +572,27 @@ pub fn view<'a>(
     snap: false,
   });
 
-  let card = container(
+  let card_content = column![
     column![
-      column![
-        text(theme::flavor(s.encrypt_title(), "Encrypt for the People"))
-          .size(22)
-          .font(theme::flavor_title_font()),
-        container(text(s.encrypt_select_hint()).size(13)).style(|_: &iced::Theme| {
-          container::Style {
-            text_color: Some(theme::text_secondary()),
-            ..Default::default()
-          }
-        }),
-      ]
-      .spacing(6),
-      separator(),
-      info_banner,
-      separator(),
-      row![recipients_col, container(vsep).padding([0, 8]), files_col,],
-      separator(),
-      bottom_section,
+      text(theme::flavor(s.encrypt_title(), "Encrypt for the People"))
+        .size(22)
+        .font(theme::flavor_title_font()),
+      container(text(s.encrypt_select_hint()).size(13)).style(|_: &iced::Theme| {
+        container::Style {
+          text_color: Some(theme::text_secondary()),
+          ..Default::default()
+        }
+      }),
     ]
-    .spacing(16),
-  )
-  .padding(32)
-  .width(720)
-  .style(|_: &iced::Theme| container::Style {
-    background: Some(Background::Color(theme::card_bg())),
-    border: Border {
-      color: theme::border(),
-      width: 1.0,
-      radius: 12.0.into(),
-    },
-    text_color: Some(theme::text_strong()),
-    ..Default::default()
-  });
+    .spacing(6),
+    separator(),
+    info_banner,
+    separator(),
+    row![recipients_col, container(vsep).padding([0, 8]), files_col,],
+    separator(),
+    bottom_section,
+  ]
+  .spacing(16);
 
-  container(
-    scrollable(
-      container(card)
-        .center_x(Length::Fill)
-        .padding([24, 0])
-        .width(Length::Fill),
-    )
-    .height(Length::Fill)
-    .width(Length::Fill)
-    .style(common::scroll_style),
-  )
-  .height(Length::Fill)
-  .width(Length::Fill)
-  .style(|_: &iced::Theme| container::Style {
-    background: Some(Background::Color(theme::sidebar_bg())),
-    ..Default::default()
-  })
-  .into()
+  common::page_layout(common::card_wide(card_content))
 }

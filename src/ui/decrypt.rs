@@ -241,61 +241,30 @@ pub fn view<'a>(form: &'a DecryptForm, s: &'static dyn Strings) -> Element<'a, M
       .align_y(Alignment::Center)
       .into();
 
-  let card = container(
+  let card = column![
     column![
-      column![
-        row![
-          text("\u{f13e}").font(theme::ICONS).size(20),
-          text(theme::flavor(s.decrypt_title(), "Decrypt by Soviet Decree"))
-            .size(22)
-            .font(theme::flavor_title_font()),
-        ]
-        .spacing(10)
-        .align_y(Alignment::Center),
-        container(text(s.decrypt_about()).size(13)).style(|_: &iced::Theme| container::Style {
-          text_color: Some(theme::text_secondary()),
-          ..Default::default()
-        }),
+      row![
+        text("\u{f13e}").font(theme::ICONS).size(20),
+        text(theme::flavor(s.decrypt_title(), "Decrypt by Soviet Decree"))
+          .size(22)
+          .font(theme::flavor_title_font()),
       ]
-      .spacing(6),
-      separator(),
-      info_banner,
-      separator(),
-      files_section,
-      separator(),
-      action_bar,
+      .spacing(10)
+      .align_y(Alignment::Center),
+      container(text(s.decrypt_about()).size(13)).style(|_: &iced::Theme| container::Style {
+        text_color: Some(theme::text_secondary()),
+        ..Default::default()
+      }),
     ]
-    .spacing(16),
-  )
-  .padding(32)
-  .width(600)
-  .style(|_: &iced::Theme| container::Style {
-    background: Some(Background::Color(theme::card_bg())),
-    border: Border {
-      color: theme::border(),
-      width: 1.0,
-      radius: 12.0.into(),
-    },
-    text_color: Some(theme::text_strong()),
-    ..Default::default()
-  });
+    .spacing(6),
+    separator(),
+    info_banner,
+    separator(),
+    files_section,
+    separator(),
+    action_bar,
+  ]
+  .spacing(16);
 
-  container(
-    scrollable(
-      container(card)
-        .center_x(Length::Fill)
-        .padding([24, 0])
-        .width(Length::Fill),
-    )
-    .height(Length::Fill)
-    .width(Length::Fill)
-    .style(common::scroll_style),
-  )
-  .height(Length::Fill)
-  .width(Length::Fill)
-  .style(|_: &iced::Theme| container::Style {
-    background: Some(Background::Color(theme::sidebar_bg())),
-    ..Default::default()
-  })
-  .into()
+  common::page_layout(common::card_wide(card))
 }

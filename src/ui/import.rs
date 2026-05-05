@@ -1,8 +1,6 @@
 use iced::{
   font,
-  widget::{
-    button, column, container, pick_list, row, rule, scrollable, text, text_editor, text_input,
-  },
+  widget::{button, column, container, pick_list, row, rule, text, text_editor, text_input},
   Background, Border, Color, Element, Font, Length,
 };
 
@@ -149,153 +147,122 @@ pub fn view<'a>(form: &'a ImportForm, s: &'static dyn Strings) -> Element<'a, Me
     shadow: iced::Shadow::default(),
   });
 
-  let card = container(
+  let card_content = column![
     column![
-      column![
-        text(theme::flavor(s.import_title(), "Welcome a Foreign Comrade"))
-          .size(22)
-          .font(theme::flavor_title_font()),
-        container(text(s.import_select_source()).size(13),).style(|_: &iced::Theme| {
-          container::Style {
-            text_color: Some(theme::text_secondary()),
-            ..Default::default()
+      text(theme::flavor(s.import_title(), "Welcome a Foreign Comrade"))
+        .size(22)
+        .font(theme::flavor_title_font()),
+      container(text(s.import_select_source()).size(13),).style(|_: &iced::Theme| {
+        container::Style {
+          text_color: Some(theme::text_secondary()),
+          ..Default::default()
+        }
+      }),
+    ]
+    .spacing(6),
+    separator(),
+    file_btn,
+    separator(),
+    column![
+      section_label(s.import_tab_url()),
+      hint(s.import_url_hint()),
+      text_input("https://paste.rs/abc123", &form.url)
+        .on_input(Message::ImportUrlChanged)
+        .size(13)
+        .width(Length::Fill)
+        .style(|_: &iced::Theme, status| {
+          let border = match status {
+            text_input::Status::Focused { .. } => theme::accent(),
+            text_input::Status::Hovered => theme::accent_border(),
+            _ => theme::border(),
+          };
+          text_input::Style {
+            background: Background::Color(theme::header_bg()),
+            border: Border {
+              color: border,
+              width: 1.0,
+              radius: 6.0.into(),
+            },
+            icon: theme::text_muted(),
+            placeholder: theme::text_muted(),
+            value: theme::text_strong(),
+            selection: theme::accent_subtle(),
           }
         }),
-      ]
-      .spacing(6),
-      separator(),
-      file_btn,
-      separator(),
-      column![
-        section_label(s.import_tab_url()),
-        hint(s.import_url_hint()),
-        text_input("https://paste.rs/abc123", &form.url)
-          .on_input(Message::ImportUrlChanged)
-          .size(13)
-          .width(Length::Fill)
-          .style(|_: &iced::Theme, status| {
-            let border = match status {
-              text_input::Status::Focused { .. } => theme::accent(),
-              text_input::Status::Hovered => theme::accent_border(),
-              _ => theme::border(),
-            };
-            text_input::Style {
-              background: Background::Color(theme::header_bg()),
-              border: Border {
-                color: border,
-                width: 1.0,
-                radius: 6.0.into(),
-              },
-              icon: theme::text_muted(),
-              placeholder: theme::text_muted(),
-              value: theme::text_strong(),
-              selection: theme::accent_subtle(),
-            }
-          }),
-        action_btn(s.import_url_button(), Message::ImportFromUrl, url_ready),
-      ]
-      .spacing(8),
-      separator(),
-      column![
-        section_label(s.import_tab_keyserver()),
-        hint(s.import_keyserver_hint()),
-        text_input(s.import_keyserver_hint(), &form.keyserver_query,)
-          .on_input(Message::ImportKeyserverQueryChanged)
-          .size(13)
-          .width(Length::Fill)
-          .style(|_: &iced::Theme, status| {
-            let border = match status {
-              text_input::Status::Focused { .. } => theme::accent(),
-              text_input::Status::Hovered => theme::accent_border(),
-              _ => theme::border(),
-            };
-            text_input::Style {
-              background: Background::Color(theme::header_bg()),
-              border: Border {
-                color: border,
-                width: 1.0,
-                radius: 6.0.into(),
-              },
-              icon: theme::text_muted(),
-              placeholder: theme::text_muted(),
-              value: theme::text_strong(),
-              selection: theme::accent_subtle(),
-            }
-          }),
-        ks_list,
-        action_btn(
-          s.import_keyserver_button(),
-          Message::ImportFromKeyserver,
-          ks_ready,
-        ),
-      ]
-      .spacing(8),
-      separator(),
-      column![
-        section_label(s.import_tab_paste()),
-        hint(s.import_paste_hint()),
-        text_editor(&form.pasted_key)
-          .on_action(Message::ImportPastedKeyChanged)
-          .height(120)
-          .style(|_: &iced::Theme, status| {
-            let border = match status {
-              text_editor::Status::Focused { .. } => theme::accent(),
-              text_editor::Status::Hovered => theme::accent_border(),
-              _ => theme::border(),
-            };
-            text_editor::Style {
-              background: Background::Color(theme::header_bg()),
-              border: Border {
-                color: border,
-                width: 1.0,
-                radius: 6.0.into(),
-              },
-              placeholder: theme::text_muted(),
-              value: theme::text_strong(),
-              selection: theme::accent_subtle(),
-            }
-          }),
-        action_btn(
-          s.import_paste_button(),
-          Message::ImportFromPaste,
-          paste_ready
-        ),
-      ]
-      .spacing(8),
-      separator(),
-      cancel_btn,
+      action_btn(s.import_url_button(), Message::ImportFromUrl, url_ready),
     ]
-    .spacing(20),
-  )
-  .padding(32)
-  .width(520)
-  .style(|_: &iced::Theme| container::Style {
-    background: Some(Background::Color(theme::card_bg())),
-    border: Border {
-      color: theme::border(),
-      width: 1.0,
-      radius: 12.0.into(),
-    },
-    text_color: Some(theme::text_strong()),
-    ..Default::default()
-  });
+    .spacing(8),
+    separator(),
+    column![
+      section_label(s.import_tab_keyserver()),
+      hint(s.import_keyserver_hint()),
+      text_input(s.import_keyserver_hint(), &form.keyserver_query,)
+        .on_input(Message::ImportKeyserverQueryChanged)
+        .size(13)
+        .width(Length::Fill)
+        .style(|_: &iced::Theme, status| {
+          let border = match status {
+            text_input::Status::Focused { .. } => theme::accent(),
+            text_input::Status::Hovered => theme::accent_border(),
+            _ => theme::border(),
+          };
+          text_input::Style {
+            background: Background::Color(theme::header_bg()),
+            border: Border {
+              color: border,
+              width: 1.0,
+              radius: 6.0.into(),
+            },
+            icon: theme::text_muted(),
+            placeholder: theme::text_muted(),
+            value: theme::text_strong(),
+            selection: theme::accent_subtle(),
+          }
+        }),
+      ks_list,
+      action_btn(
+        s.import_keyserver_button(),
+        Message::ImportFromKeyserver,
+        ks_ready,
+      ),
+    ]
+    .spacing(8),
+    separator(),
+    column![
+      section_label(s.import_tab_paste()),
+      hint(s.import_paste_hint()),
+      text_editor(&form.pasted_key)
+        .on_action(Message::ImportPastedKeyChanged)
+        .height(120)
+        .style(|_: &iced::Theme, status| {
+          let border = match status {
+            text_editor::Status::Focused { .. } => theme::accent(),
+            text_editor::Status::Hovered => theme::accent_border(),
+            _ => theme::border(),
+          };
+          text_editor::Style {
+            background: Background::Color(theme::header_bg()),
+            border: Border {
+              color: border,
+              width: 1.0,
+              radius: 6.0.into(),
+            },
+            placeholder: theme::text_muted(),
+            value: theme::text_strong(),
+            selection: theme::accent_subtle(),
+          }
+        }),
+      action_btn(
+        s.import_paste_button(),
+        Message::ImportFromPaste,
+        paste_ready
+      ),
+    ]
+    .spacing(8),
+    separator(),
+    cancel_btn,
+  ]
+  .spacing(20);
 
-  container(
-    scrollable(
-      container(card)
-        .center_x(Length::Fill)
-        .padding([24, 0])
-        .width(Length::Fill),
-    )
-    .height(Length::Fill)
-    .width(Length::Fill)
-    .style(common::scroll_style),
-  )
-  .height(Length::Fill)
-  .width(Length::Fill)
-  .style(|_: &iced::Theme| container::Style {
-    background: Some(Background::Color(theme::sidebar_bg())),
-    ..Default::default()
-  })
-  .into()
+  common::page_layout(common::card_medium(card_content))
 }

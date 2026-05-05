@@ -1,6 +1,6 @@
 use iced::{
   font,
-  widget::{column, container, row, rule, scrollable, text},
+  widget::{column, container, row, rule, text},
   Alignment, Background, Border, Color, Element, Font, Length,
 };
 
@@ -349,73 +349,42 @@ pub fn view<'a>(form: &'a SignForm, s: &'static dyn Strings) -> Element<'a, Mess
     })
   };
 
-  let card = container(
+  let card_content = column![
     column![
-      column![
-        row![
-          text("\u{f00c}").font(theme::ICONS).size(20),
-          text(theme::flavor(
-            s.verify_title(),
-            "Inspect the Commissariat's Stamp"
-          ))
-          .size(22)
-          .font(theme::flavor_title_font()),
-        ]
-        .spacing(10)
-        .align_y(Alignment::Center),
-        container(text(s.verify_about()).size(13)).style(|_: &iced::Theme| container::Style {
-          text_color: Some(theme::text_secondary()),
-          ..Default::default()
-        }),
+      row![
+        text("\u{f00c}").font(theme::ICONS).size(20),
+        text(theme::flavor(
+          s.verify_title(),
+          "Inspect the Commissariat's Stamp"
+        ))
+        .size(22)
+        .font(theme::flavor_title_font()),
       ]
-      .spacing(6),
-      rule_sep(),
-      file_row,
-      rule_sep(),
-      sig_row,
-      rule_sep(),
-      {
-        let verify_action: Element<'_, Message> = row![
-          iced::widget::Space::new().width(Length::Fill),
-          common::action_btn(s.btn_verify(), can_verify, Message::VerifyExecute)
-        ]
-        .into();
-        verify_action
-      },
-      rule_sep(),
-      result_el,
+      .spacing(10)
+      .align_y(Alignment::Center),
+      container(text(s.verify_about()).size(13)).style(|_: &iced::Theme| container::Style {
+        text_color: Some(theme::text_secondary()),
+        ..Default::default()
+      }),
     ]
-    .spacing(16),
-  )
-  .padding(32)
-  .width(640)
-  .style(|_: &iced::Theme| container::Style {
-    background: Some(Background::Color(theme::card_bg())),
-    border: Border {
-      color: theme::border(),
-      width: 1.0,
-      radius: 12.0.into(),
+    .spacing(6),
+    rule_sep(),
+    file_row,
+    rule_sep(),
+    sig_row,
+    rule_sep(),
+    {
+      let verify_action: Element<'_, Message> = row![
+        iced::widget::Space::new().width(Length::Fill),
+        common::action_btn(s.btn_verify(), can_verify, Message::VerifyExecute)
+      ]
+      .into();
+      verify_action
     },
-    text_color: Some(theme::text_strong()),
-    ..Default::default()
-  });
+    rule_sep(),
+    result_el,
+  ]
+  .spacing(16);
 
-  container(
-    scrollable(
-      container(card)
-        .center_x(Length::Fill)
-        .padding([24, 0])
-        .width(Length::Fill),
-    )
-    .height(Length::Fill)
-    .width(Length::Fill)
-    .style(common::scroll_style),
-  )
-  .height(Length::Fill)
-  .width(Length::Fill)
-  .style(|_: &iced::Theme| container::Style {
-    background: Some(Background::Color(theme::sidebar_bg())),
-    ..Default::default()
-  })
-  .into()
+  common::page_layout(common::card_wide(card_content))
 }

@@ -1,6 +1,6 @@
 use iced::{
   font,
-  widget::{column, container, row, scrollable, text, Column},
+  widget::{column, container, row, text, Column},
   Background, Border, Element, Font, Length,
 };
 
@@ -40,35 +40,17 @@ pub fn view<'a>(
   .spacing(6);
 
   if loading {
-    return scrollable(
-      container(
-        column![
-          title_section,
-          container(text(s.health_checking()).size(13)).style(|_: &iced::Theme| {
-            container::Style {
-              text_color: Some(theme::text_muted()),
-              ..Default::default()
-            }
-          }),
-        ]
-        .spacing(24),
-      )
-      .padding(32)
-      .width(560)
-      .style(|_: &iced::Theme| container::Style {
-        background: Some(Background::Color(theme::card_bg())),
-        border: Border {
-          color: theme::border(),
-          width: 1.0,
-          radius: 12.0.into(),
-        },
-        ..Default::default()
+    let loading_content = column![
+      title_section,
+      container(text(s.health_checking()).size(13)).style(|_: &iced::Theme| {
+        container::Style {
+          text_color: Some(theme::text_muted()),
+          ..Default::default()
+        }
       }),
-    )
-    .height(Length::Fill)
-    .width(Length::Fill)
-    .style(common::scroll_style)
-    .into();
+    ]
+    .spacing(24);
+    return common::page_layout(common::card_medium(loading_content));
   }
 
   // Group checks by category in order.
@@ -175,37 +157,8 @@ pub fn view<'a>(
     })
     .collect();
 
-  let card =
-    container(column![title_section, Column::with_children(sections).spacing(24),].spacing(24))
-      .padding(32)
-      .width(560)
-      .style(|_: &iced::Theme| container::Style {
-        background: Some(Background::Color(theme::card_bg())),
-        border: Border {
-          color: theme::border(),
-          width: 1.0,
-          radius: 12.0.into(),
-        },
-        text_color: Some(theme::text_strong()),
-        ..Default::default()
-      });
+  let card_content =
+    column![title_section, Column::with_children(sections).spacing(24),].spacing(24);
 
-  container(
-    scrollable(
-      container(card)
-        .center_x(Length::Fill)
-        .padding([24, 0])
-        .width(Length::Fill),
-    )
-    .height(Length::Fill)
-    .width(Length::Fill)
-    .style(common::scroll_style),
-  )
-  .height(Length::Fill)
-  .width(Length::Fill)
-  .style(|_: &iced::Theme| container::Style {
-    background: Some(Background::Color(theme::sidebar_bg())),
-    ..Default::default()
-  })
-  .into()
+  common::page_layout(common::card_medium(card_content))
 }
