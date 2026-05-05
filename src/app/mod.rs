@@ -157,6 +157,18 @@ pub enum PendingOp {
   Renewal(PendingRenewal),
   ExportPubMenu(String),
   Publish(Keyserver),
+  // --- v0.6.0 Chat ---
+  /// Sélection d'identité avant d'entrer dans un salon (multi-clefs privées).
+  // UI câblée dans l'axe 5 ; handlers dans les axes suivants.
+  #[allow(dead_code)]
+  IdentitySelection {
+    room_id: String,
+    selected_fp: Option<String>,
+  },
+  /// Confirmation de sortie d'un salon.
+  // UI câblée dans l'axe 5 ; handlers dans les axes suivants.
+  #[allow(dead_code)]
+  LeaveRoom(String),
 }
 
 #[derive(Debug, Clone)]
@@ -355,6 +367,11 @@ pub enum Message {
   ChatSent(Result<crate::chat::ChatMessage, String>),
   /// Message déchiffré reçu : (room_id, message).
   ChatReceived(String, crate::chat::ChatMessage),
+
+  // --- Chat : identité ---
+  /// Sélection d'une clef privée dans le modal IdentitySelection.
+  #[allow(dead_code)]
+  ChatIdentitySelected(String),
 
   // --- Chat : partage du join code ---
   /// Encode et copie le join code du salon dans le presse-papier.
@@ -769,6 +786,16 @@ impl App {
       }
 
       // --- Chat : délégués à app/chat.rs ---
+      Message::ChatIdentitySelected(fp) => {
+        if let Some(PendingOp::IdentitySelection {
+          ref mut selected_fp,
+          ..
+        }) = self.pending
+        {
+          *selected_fp = Some(fp);
+        }
+        Task::none()
+      }
       Message::ChatRoomCreate => self.on_chat_room_create(),
       Message::ChatRoomCreated(r) => self.on_chat_room_created(r),
       Message::ChatRoomJoin => self.on_chat_room_join(),

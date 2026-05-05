@@ -825,4 +825,171 @@ impl Strings for EnglishStrings {
   fn status_revocation_cert_generated(&self) -> &'static str {
     "Revocation certificate generated"
   }
+
+  // --- Chat v0.6.0 ---
+
+  fn nav_section_chat(&self) -> &'static str {
+    "CHAT"
+  }
+  fn nav_chat_rooms(&self) -> &'static str {
+    "Rooms"
+  }
+  fn nav_chat_rooms_ussr(&self) -> &'static str {
+    "TRANSMISSIONS"
+  }
+
+  fn chat_no_rooms(&self) -> &'static str {
+    "No conversations yet."
+  }
+  fn chat_no_rooms_ussr(&self) -> &'static str {
+    "No comrades yet. Establish secure communications."
+  }
+  fn chat_create_room(&self) -> &'static str {
+    "+ New"
+  }
+  fn chat_join_room(&self) -> &'static str {
+    "Join"
+  }
+
+  fn chat_mqtt_connected(&self) -> &'static str {
+    "Connected"
+  }
+  fn chat_mqtt_connecting(&self) -> &'static str {
+    "Connecting..."
+  }
+  fn chat_mqtt_reconnecting(&self) -> &'static str {
+    "Reconnecting..."
+  }
+  fn chat_mqtt_disconnected(&self) -> &'static str {
+    "Disconnected"
+  }
+  fn chat_mqtt_failed(&self) -> &'static str {
+    "Connection failed"
+  }
+  fn chat_mqtt_disconnected_banner(&self) -> &'static str {
+    "Disconnected — reconnecting..."
+  }
+
+  fn chat_copy_invite(&self) -> &'static str {
+    "Copy invite"
+  }
+  fn chat_leave_room(&self) -> &'static str {
+    "Leave"
+  }
+
+  fn chat_decrypt_failed(&self) -> &'static str {
+    "Could not decrypt this message"
+  }
+  fn chat_type_message(&self) -> &'static str {
+    "Type a message..."
+  }
+  fn chat_select_room(&self) -> &'static str {
+    "Select a room to start chatting."
+  }
+
+  fn chat_send(&self) -> &'static str {
+    "Send"
+  }
+
+  fn chat_create_room_title(&self) -> &'static str {
+    "Create a room"
+  }
+  fn chat_create_room_title_ussr(&self) -> &'static str {
+    "ESTABLISH SECURE CHANNEL"
+  }
+  fn chat_room_name_label(&self) -> &'static str {
+    "Room name"
+  }
+  fn chat_room_name_placeholder(&self) -> &'static str {
+    "e.g. Ops Team"
+  }
+  fn chat_relay_label(&self) -> &'static str {
+    "MQTT relay"
+  }
+  fn chat_relay_placeholder(&self) -> &'static str {
+    "mqtts://host:8883"
+  }
+  fn chat_relay_hint(&self) -> &'static str {
+    "TLS required. Use your own broker for maximum privacy."
+  }
+  fn chat_participants_label(&self) -> &'static str {
+    "Participants (one fingerprint per line)"
+  }
+  fn chat_participants_hint(&self) -> &'static str {
+    "Add participants' PGP fingerprints, one per line."
+  }
+  fn chat_create_room_btn(&self) -> &'static str {
+    "Create room"
+  }
+
+  fn chat_join_room_title(&self) -> &'static str {
+    "Join a room"
+  }
+  fn chat_join_code_label(&self) -> &'static str {
+    "Join code"
+  }
+  fn chat_join_code_placeholder(&self) -> &'static str {
+    "pgpilot:join:..."
+  }
+  fn chat_join_code_hint(&self) -> &'static str {
+    "Paste the invite code you received."
+  }
+  fn chat_join_btn(&self) -> &'static str {
+    "Join room"
+  }
+
+  fn chat_choose_identity_title(&self) -> &'static str {
+    "Choose your identity"
+  }
+  fn chat_choose_identity_hint(&self) -> &'static str {
+    "You have multiple private keys. Select the one to use in this room:"
+  }
+  fn chat_enter_room_btn(&self) -> &'static str {
+    "Enter room"
+  }
+
+  fn chat_leave_confirm_title(&self) -> &'static str {
+    "Leave room?"
+  }
+  fn chat_leave_confirm_body_with_name(&self, name: &str) -> String {
+    format!(
+      "You will no longer receive messages from \"{name}\". \
+       This cannot be undone — you would need a new invite to rejoin."
+    )
+  }
+  fn chat_leave_room_btn(&self) -> &'static str {
+    "Leave room"
+  }
+
+  fn status_chat_room_created(&self) -> &'static str {
+    "Room created."
+  }
+  fn status_chat_room_joined(&self) -> &'static str {
+    "Room joined."
+  }
+  fn status_chat_room_left(&self) -> &'static str {
+    "You have left the room."
+  }
+  fn status_chat_invite_copied(&self) -> &'static str {
+    "Invite code copied."
+  }
+  fn status_chat_message_sent(&self) -> &'static str {
+    "Message sent."
+  }
+
+  fn err_chat_room_create_failed(&self) -> &'static str {
+    "Failed to create room."
+  }
+  fn err_chat_room_join_failed(&self) -> &'static str {
+    "Failed to join room."
+  }
+  fn err_chat_room_leave_failed(&self) -> &'static str {
+    "Failed to leave room."
+  }
+  fn err_chat_send_failed(&self) -> &'static str {
+    "Failed to send message."
+  }
+  fn err_chat_invite_copy_failed(&self) -> &'static str {
+    "Failed to copy invite code."
+  }
 }

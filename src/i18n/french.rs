@@ -825,4 +825,171 @@ impl Strings for FrenchStrings {
   fn status_revocation_cert_generated(&self) -> &'static str {
     "Certificat de revocation genere"
   }
+
+  // --- Chat v0.6.0 ---
+
+  fn nav_section_chat(&self) -> &'static str {
+    "CHAT"
+  }
+  fn nav_chat_rooms(&self) -> &'static str {
+    "Salons"
+  }
+  fn nav_chat_rooms_ussr(&self) -> &'static str {
+    "TRANSMISSIONS"
+  }
+
+  fn chat_no_rooms(&self) -> &'static str {
+    "Aucune conversation."
+  }
+  fn chat_no_rooms_ussr(&self) -> &'static str {
+    "Pas encore de camarades. Etablissez des communications securisees."
+  }
+  fn chat_create_room(&self) -> &'static str {
+    "+ Nouveau"
+  }
+  fn chat_join_room(&self) -> &'static str {
+    "Rejoindre"
+  }
+
+  fn chat_mqtt_connected(&self) -> &'static str {
+    "Connecte"
+  }
+  fn chat_mqtt_connecting(&self) -> &'static str {
+    "Connexion..."
+  }
+  fn chat_mqtt_reconnecting(&self) -> &'static str {
+    "Reconnexion..."
+  }
+  fn chat_mqtt_disconnected(&self) -> &'static str {
+    "Deconnecte"
+  }
+  fn chat_mqtt_failed(&self) -> &'static str {
+    "Echec de connexion"
+  }
+  fn chat_mqtt_disconnected_banner(&self) -> &'static str {
+    "Deconnecte — reconnexion en cours..."
+  }
+
+  fn chat_copy_invite(&self) -> &'static str {
+    "Copier l'invitation"
+  }
+  fn chat_leave_room(&self) -> &'static str {
+    "Quitter"
+  }
+
+  fn chat_decrypt_failed(&self) -> &'static str {
+    "Impossible de dechiffrer ce message"
+  }
+  fn chat_type_message(&self) -> &'static str {
+    "Ecrire un message..."
+  }
+  fn chat_select_room(&self) -> &'static str {
+    "Selectionnez un salon pour discuter."
+  }
+
+  fn chat_send(&self) -> &'static str {
+    "Envoyer"
+  }
+
+  fn chat_create_room_title(&self) -> &'static str {
+    "Creer un salon"
+  }
+  fn chat_create_room_title_ussr(&self) -> &'static str {
+    "ETABLIR UN CANAL SECURISE"
+  }
+  fn chat_room_name_label(&self) -> &'static str {
+    "Nom du salon"
+  }
+  fn chat_room_name_placeholder(&self) -> &'static str {
+    "ex. Equipe ops"
+  }
+  fn chat_relay_label(&self) -> &'static str {
+    "Relais MQTT"
+  }
+  fn chat_relay_placeholder(&self) -> &'static str {
+    "mqtts://host:8883"
+  }
+  fn chat_relay_hint(&self) -> &'static str {
+    "TLS requis. Utilisez votre propre broker pour une confidentialite maximale."
+  }
+  fn chat_participants_label(&self) -> &'static str {
+    "Participants (un fingerprint par ligne)"
+  }
+  fn chat_participants_hint(&self) -> &'static str {
+    "Ajoutez les fingerprints PGP des participants, un par ligne."
+  }
+  fn chat_create_room_btn(&self) -> &'static str {
+    "Creer le salon"
+  }
+
+  fn chat_join_room_title(&self) -> &'static str {
+    "Rejoindre un salon"
+  }
+  fn chat_join_code_label(&self) -> &'static str {
+    "Code d'invitation"
+  }
+  fn chat_join_code_placeholder(&self) -> &'static str {
+    "pgpilot:join:..."
+  }
+  fn chat_join_code_hint(&self) -> &'static str {
+    "Collez le code d'invitation que vous avez recu."
+  }
+  fn chat_join_btn(&self) -> &'static str {
+    "Rejoindre le salon"
+  }
+
+  fn chat_choose_identity_title(&self) -> &'static str {
+    "Choisissez votre identite"
+  }
+  fn chat_choose_identity_hint(&self) -> &'static str {
+    "Vous avez plusieurs clefs privees. Selectionnez celle a utiliser dans ce salon :"
+  }
+  fn chat_enter_room_btn(&self) -> &'static str {
+    "Entrer dans le salon"
+  }
+
+  fn chat_leave_confirm_title(&self) -> &'static str {
+    "Quitter le salon ?"
+  }
+  fn chat_leave_confirm_body_with_name(&self, name: &str) -> String {
+    format!(
+      "Vous ne recevrez plus les messages de \"{name}\". \
+       Cette action est irreversible — vous auriez besoin d'une nouvelle invitation pour rejoindre."
+    )
+  }
+  fn chat_leave_room_btn(&self) -> &'static str {
+    "Quitter le salon"
+  }
+
+  fn status_chat_room_created(&self) -> &'static str {
+    "Salon cree."
+  }
+  fn status_chat_room_joined(&self) -> &'static str {
+    "Salon rejoint."
+  }
+  fn status_chat_room_left(&self) -> &'static str {
+    "Vous avez quitte le salon."
+  }
+  fn status_chat_invite_copied(&self) -> &'static str {
+    "Code d'invitation copie."
+  }
+  fn status_chat_message_sent(&self) -> &'static str {
+    "Message envoye."
+  }
+
+  fn err_chat_room_create_failed(&self) -> &'static str {
+    "Echec de creation du salon."
+  }
+  fn err_chat_room_join_failed(&self) -> &'static str {
+    "Echec de rejoindre le salon."
+  }
+  fn err_chat_room_leave_failed(&self) -> &'static str {
+    "Echec de quitter le salon."
+  }
+  fn err_chat_send_failed(&self) -> &'static str {
+    "Echec d'envoi du message."
+  }
+  fn err_chat_invite_copy_failed(&self) -> &'static str {
+    "Echec de copie du code d'invitation."
+  }
 }

@@ -344,6 +344,82 @@ pub trait Strings: Send + Sync {
   fn revocation_cert_generate(&self) -> &'static str;
   fn revocation_cert_copy_path(&self) -> &'static str;
   fn status_revocation_cert_generated(&self) -> &'static str;
+
+  // --- Chat v0.6.0 ---
+
+  // Navigation / sidebar
+  fn nav_section_chat(&self) -> &'static str;
+  fn nav_chat_rooms(&self) -> &'static str;
+  fn nav_chat_rooms_ussr(&self) -> &'static str;
+
+  // Room list
+  fn chat_no_rooms(&self) -> &'static str;
+  fn chat_no_rooms_ussr(&self) -> &'static str;
+  fn chat_create_room(&self) -> &'static str;
+  fn chat_join_room(&self) -> &'static str;
+
+  // MQTT state
+  fn chat_mqtt_connected(&self) -> &'static str;
+  fn chat_mqtt_connecting(&self) -> &'static str;
+  fn chat_mqtt_reconnecting(&self) -> &'static str;
+  fn chat_mqtt_disconnected(&self) -> &'static str;
+  fn chat_mqtt_failed(&self) -> &'static str;
+  fn chat_mqtt_disconnected_banner(&self) -> &'static str;
+
+  // Conversation header
+  fn chat_copy_invite(&self) -> &'static str;
+  fn chat_leave_room(&self) -> &'static str;
+
+  // Message area
+  fn chat_decrypt_failed(&self) -> &'static str;
+  fn chat_type_message(&self) -> &'static str;
+  fn chat_select_room(&self) -> &'static str;
+
+  // Compose bar
+  fn chat_send(&self) -> &'static str;
+
+  // Modal — create room
+  fn chat_create_room_title(&self) -> &'static str;
+  fn chat_create_room_title_ussr(&self) -> &'static str;
+  fn chat_room_name_label(&self) -> &'static str;
+  fn chat_room_name_placeholder(&self) -> &'static str;
+  fn chat_relay_label(&self) -> &'static str;
+  fn chat_relay_placeholder(&self) -> &'static str;
+  fn chat_relay_hint(&self) -> &'static str;
+  fn chat_participants_label(&self) -> &'static str;
+  fn chat_participants_hint(&self) -> &'static str;
+  fn chat_create_room_btn(&self) -> &'static str;
+
+  // Modal — join room
+  fn chat_join_room_title(&self) -> &'static str;
+  fn chat_join_code_label(&self) -> &'static str;
+  fn chat_join_code_placeholder(&self) -> &'static str;
+  fn chat_join_code_hint(&self) -> &'static str;
+  fn chat_join_btn(&self) -> &'static str;
+
+  // Modal — identity selection
+  fn chat_choose_identity_title(&self) -> &'static str;
+  fn chat_choose_identity_hint(&self) -> &'static str;
+  fn chat_enter_room_btn(&self) -> &'static str;
+
+  // Modal — leave room
+  fn chat_leave_confirm_title(&self) -> &'static str;
+  fn chat_leave_confirm_body_with_name(&self, name: &str) -> String;
+  fn chat_leave_room_btn(&self) -> &'static str;
+
+  // Status messages — chat
+  fn status_chat_room_created(&self) -> &'static str;
+  fn status_chat_room_joined(&self) -> &'static str;
+  fn status_chat_room_left(&self) -> &'static str;
+  fn status_chat_invite_copied(&self) -> &'static str;
+  fn status_chat_message_sent(&self) -> &'static str;
+
+  // Error messages — chat
+  fn err_chat_room_create_failed(&self) -> &'static str;
+  fn err_chat_room_join_failed(&self) -> &'static str;
+  fn err_chat_room_leave_failed(&self) -> &'static str;
+  fn err_chat_send_failed(&self) -> &'static str;
+  fn err_chat_invite_copy_failed(&self) -> &'static str;
 }
 
 pub fn strings_for(lang: Language) -> &'static dyn Strings {
