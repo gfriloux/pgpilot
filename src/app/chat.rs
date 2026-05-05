@@ -493,31 +493,20 @@ impl App {
     let msg_id = msg.id.clone();
     self.push_chat_message(&room_id, msg);
 
-    // Envoyer un ACK best-effort.
-    let Some(mqtt) = self.mqtt.clone() else {
+    // Envoyer un ACK best-effort via la fonction standalone publish_ack.
+    let Some(handle) = self.mqtt.clone() else {
       return Task::none();
     };
 
     let my_fp = self
-      .config
-      .chat_local_fp
-      .clone()
-      .or_else(|| self.room_by_id(&room_id).map(|r| r.my_fp.clone()))
+      .room_by_id(&room_id)
+      .map(|r| r.my_fp.clone())
+      .or_else(|| self.config.chat_local_fp.clone())
       .unwrap_or_default();
-
-    let ack_topic = format!("{ACK_TOPIC_PREFIX}/{}", &msg_id[..msg_id.len().min(16)]);
 
     Task::perform(
       async move {
-        use crate::chat::mqtt::ChatTransport as _;
-        let ack = WireAck {
-          msg_id,
-          from: my_fp,
-          ts: chrono::Utc::now().timestamp(),
-        };
-        let bytes = ack.to_json_bytes().map_err(|e| e.to_string())?;
-        mqtt
-          .publish(&ack_topic, bytes, 0, false)
+        crate::chat::publish_ack(&handle, &msg_id, &my_fp)
           .await
           .map_err(|e| e.to_string())
       },
@@ -578,8 +567,30 @@ impl App {
     match event {
       MqttEvent::Connected => {
         self.mqtt_state = MqttState::Connected;
-        // Ré-abonner aux topics de toutes les rooms après reconnexion.
-        self.subscribe_all_known_topics()
+        // Ré-abonner aux topics et publier la présence online pour chaque
+        // fingerprint local connu dans les rooms actives.
+        let subscribe_task = self.subscribe_all_known_topics();
+
+        let online_task = if let Some(handle) = self.mqtt.clone() {
+          // Collecter les fingerprints locaux uniques à annoncer.
+          let mut fps: Vec<String> = self.rooms.iter().map(|r| r.my_fp.clone()).collect();
+          fps.sort_unstable();
+          fps.dedup();
+
+          Task::perform(
+            async move {
+              for fp in &fps {
+                let _ = crate::chat::publish_online(&handle, fp).await;
+              }
+              Ok::<(), String>(())
+            },
+            |_| Message::ChatAckSent(Ok(())),
+          )
+        } else {
+          Task::none()
+        };
+
+        Task::batch([subscribe_task, online_task])
       }
       MqttEvent::Disconnected(_reason) => {
         // Marquer tous les participants hors-ligne.

@@ -41,9 +41,12 @@ mod error;
 pub use crypto::ChatCryptoCtx;
 pub use error::{ChatError, ChatResult};
 pub use mqtt::{MqttConfig, MqttEvent, MqttHandle};
-pub use presence::{PresenceStatus, PresenceTracker, PresenceUpdate};
+pub use presence::{
+  publish_offline, publish_online, subscribe_room_presence, PresenceStatus, PresenceTracker,
+  PresenceUpdate,
+};
 pub use rooms::{Room, RoomParticipant, RoomStore};
-pub use wire::{WireAck, WireMessage};
+pub use wire::{publish_ack, subscribe_ack, WireAck, WireMessage};
 
 // ---------------------------------------------------------------------------
 // Types RAM uniquement (jamais sérialisés sur disque)

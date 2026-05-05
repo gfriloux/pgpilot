@@ -116,6 +116,68 @@ impl PresenceTracker {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Fonctions standalone de publication / subscription de présence
+// ---------------------------------------------------------------------------
+
+/// Publie le statut online sur le topic de présence (retained = true, QoS 0).
+///
+/// Appelé à la connexion MQTT réussie pour chaque fingerprint local actif.
+///
+/// # Errors
+///
+/// Retourne une [`crate::chat::ChatError`] si l'envoi de la commande MQTT échoue.
+pub async fn publish_online(
+  handle: &crate::chat::MqttHandle,
+  fp: &str,
+) -> crate::chat::ChatResult<()> {
+  use crate::chat::mqtt::ChatTransport as _;
+  let topic = PresenceTracker::presence_topic(fp);
+  handle
+    .publish(&topic, PresenceTracker::online_payload().to_vec(), 0, true)
+    .await
+}
+
+/// Publie le statut offline sur le topic de présence (retained = true, QoS 0).
+///
+/// Utilisé pour une déconnexion propre. La déconnexion brutale est gérée
+/// automatiquement par le Last Will Testament configuré dans [`crate::chat::MqttHandle::spawn`].
+///
+/// # Errors
+///
+/// Retourne une [`crate::chat::ChatError`] si l'envoi de la commande MQTT échoue.
+pub async fn publish_offline(
+  handle: &crate::chat::MqttHandle,
+  fp: &str,
+) -> crate::chat::ChatResult<()> {
+  use crate::chat::mqtt::ChatTransport as _;
+  let topic = PresenceTracker::presence_topic(fp);
+  handle
+    .publish(&topic, PresenceTracker::offline_payload().to_vec(), 0, true)
+    .await
+}
+
+/// Souscrit aux topics de présence de tous les participants d'un salon
+/// (en excluant `room.my_fp`).
+///
+/// # Errors
+///
+/// Retourne une [`crate::chat::ChatError`] dès la première souscription qui échoue.
+pub async fn subscribe_room_presence(
+  handle: &crate::chat::MqttHandle,
+  room: &crate::chat::Room,
+) -> crate::chat::ChatResult<()> {
+  use crate::chat::mqtt::ChatTransport as _;
+  for participant in &room.participants {
+    if participant.fp == room.my_fp {
+      continue;
+    }
+    let topic = PresenceTracker::presence_topic(&participant.fp);
+    handle.subscribe(&topic, 0).await?;
+  }
+  Ok(())
+}
+
 #[cfg(test)]
 mod tests {
   use super::*;

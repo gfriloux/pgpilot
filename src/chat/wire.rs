@@ -9,6 +9,7 @@
 //! en les concaténant avec des séparateurs `\x00` après le préfixe
 //! `SIGN_CANONICAL_PREFIX`.
 
+use chrono::Utc;
 use serde::{Deserialize, Serialize};
 
 use crate::chat::{ChatError, ChatResult, MAX_WIRE_MESSAGE_BYTES, SIGN_CANONICAL_PREFIX};
@@ -135,6 +136,59 @@ impl WireAck {
   pub fn from_json_bytes(bytes: &[u8]) -> ChatResult<Self> {
     serde_json::from_slice(bytes).map_err(|e| ChatError::MalformedWireMessage(e.to_string()))
   }
+}
+
+// ---------------------------------------------------------------------------
+// Fonctions standalone de publication / subscription des ACK
+// ---------------------------------------------------------------------------
+
+/// Publie un ACK best-effort (QoS 0, non retained, non signé).
+///
+/// L'UUID v4 à 122 bits d'entropie rend les ACK forgés statistiquement
+/// impossibles — aucune signature n'est donc nécessaire.
+///
+/// # Errors
+///
+/// Retourne une [`ChatError`] si la sérialisation ou l'envoi échoue.
+pub async fn publish_ack(
+  handle: &crate::chat::MqttHandle,
+  msg_id: &str,
+  from_fp: &str,
+) -> crate::chat::ChatResult<()> {
+  use crate::chat::mqtt::ChatTransport as _;
+  let ack = WireAck {
+    msg_id: msg_id.to_string(),
+    from: from_fp.to_string(),
+    ts: chrono::Utc::now().timestamp(),
+  };
+  let bytes = ack.to_json_bytes()?;
+  let topic = format!(
+    "{}/{}",
+    crate::chat::ACK_TOPIC_PREFIX,
+    &msg_id[..msg_id.len().min(16)]
+  );
+  handle.publish(&topic, bytes, 0, false).await
+}
+
+/// Souscrit au topic ACK pour un message envoyé.
+///
+/// Doit être appelé juste après la publication du [`WireMessage`] afin de
+/// recevoir les accusés de réception des destinataires.
+///
+/// # Errors
+///
+/// Retourne une [`ChatError`] si la souscription échoue.
+pub async fn subscribe_ack(
+  handle: &crate::chat::MqttHandle,
+  msg_id: &str,
+) -> crate::chat::ChatResult<()> {
+  use crate::chat::mqtt::ChatTransport as _;
+  let topic = format!(
+    "{}/{}",
+    crate::chat::ACK_TOPIC_PREFIX,
+    &msg_id[..msg_id.len().min(16)]
+  );
+  handle.subscribe(&topic, 0).await
 }
 
 #[cfg(test)]
