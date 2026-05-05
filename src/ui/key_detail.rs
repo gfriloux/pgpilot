@@ -645,8 +645,6 @@ fn export_pub_modal<'a>(
     })
   };
 
-  // These three labels are specific to this menu — not covered by generic btn_* methods.
-  // They describe sub-actions of the export menu. Using inline strings here is intentional.
   container(
     column![
       row![
@@ -663,17 +661,17 @@ fn export_pub_modal<'a>(
       .align_y(Alignment::Center),
       menu_btn(
         "\u{f0c7}",
-        "Enregistrer sur le disque",
+        s.export_menu_save_disk(),
         Message::ExportPublicKey(key.fingerprint.clone())
       ),
       menu_btn(
         "\u{f0c5}",
-        "Copier dans le presse-papier",
+        s.export_menu_copy_clipboard(),
         Message::ExportPublicKeyClipboard(key.fingerprint.clone())
       ),
       menu_btn(
         "\u{f0c1}",
-        "Obtenir un lien public (paste.rs)",
+        s.export_menu_paste_link(),
         Message::ExportPublicKeyUpload(key.fingerprint.clone())
       ),
       button(text(s.btn_cancel()).size(12))
@@ -726,11 +724,11 @@ fn left_column_items<'a>(
 ) -> Column<'a, Message> {
   let expires = key.expires.as_deref().unwrap_or(s.key_never_expires());
   let key_type = if key.on_card {
-    "Sur YubiKey"
+    s.key_type_on_card()
   } else if key.has_secret {
-    "Publique + Privée"
+    s.key_type_public_private()
   } else {
-    "Publique"
+    s.key_type_public_only()
   };
 
   let mut items: Vec<Element<Message>> = vec![
@@ -960,9 +958,9 @@ fn subkey_renewal_form<'a>(
       .size(11)
       .color(theme::text_strong()),
     row![
-      expiry_btn("1 an", KeyExpiry::OneYear),
-      expiry_btn("2 ans", KeyExpiry::TwoYears),
-      expiry_btn("5 ans", KeyExpiry::FiveYears),
+      expiry_btn(s.subkey_expiry_1_year(), KeyExpiry::OneYear),
+      expiry_btn(s.subkey_expiry_2_years(), KeyExpiry::TwoYears),
+      expiry_btn(s.subkey_expiry_5_years(), KeyExpiry::FiveYears),
     ]
     .spacing(4),
     row![
@@ -1191,14 +1189,24 @@ fn subkey_column<'a>(
   s: &'static dyn Strings,
 ) -> Column<'a, Message> {
   let standard_types = [
-    (SubkeyType::Sign, "\u{f040}", "Signature", theme::accent()),
+    (
+      SubkeyType::Sign,
+      "\u{f040}",
+      s.subkey_type_signature(),
+      theme::accent(),
+    ),
     (
       SubkeyType::Encr,
       "\u{f023}",
-      "Chiffrement",
+      s.subkey_type_encryption(),
       theme::success(),
     ),
-    (SubkeyType::Auth, "\u{f084}", "Auth SSH", theme::peach()),
+    (
+      SubkeyType::Auth,
+      "\u{f084}",
+      s.subkey_type_ssh_auth(),
+      theme::peach(),
+    ),
   ];
 
   let find_subkey = |usage_char: char| -> Option<&SubkeyInfo> {

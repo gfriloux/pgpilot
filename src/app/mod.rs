@@ -294,9 +294,10 @@ pub(crate) async fn export_key_to_file(fp: String, name: String) -> Result<Optio
 pub(crate) async fn backup_key_to_dir(
   fp: String,
   key_id: String,
+  title: &'static str,
 ) -> Result<Option<String>, String> {
   let handle = rfd::AsyncFileDialog::new()
-    .set_title("Choisir un dossier de sauvegarde")
+    .set_title(title)
     .pick_folder()
     .await;
   let dir = match handle {

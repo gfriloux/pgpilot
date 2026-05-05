@@ -66,15 +66,13 @@ pub fn view<'a>(
   .into();
 
   let signer_items: Vec<Element<'_, Message>> = if sign_keys.is_empty() {
-    vec![
-      container(text("Aucune clef privée avec capacité de signature.").size(12))
-        .style(|_: &iced::Theme| container::Style {
-          text_color: Some(theme::text_muted()),
-          ..Default::default()
-        })
-        .padding([4, 0])
-        .into(),
-    ]
+    vec![container(text(s.sign_no_keys()).size(12))
+      .style(|_: &iced::Theme| container::Style {
+        text_color: Some(theme::text_muted()),
+        ..Default::default()
+      })
+      .padding([4, 0])
+      .into()]
   } else {
     sign_keys
       .iter()
@@ -202,24 +200,13 @@ pub fn view<'a>(
       column![
         row![
           text("\u{f14b}").font(theme::ICONS).size(20),
-          text(theme::flavor(
-            s.sign_title(),
-            "Apposer le Sceau du Camarade"
-          ))
-          .size(22)
-          .font(theme::flavor_title_font()),
+          text(theme::flavor(s.sign_title(), "Affix the Comrade's Seal"))
+            .size(22)
+            .font(theme::flavor_title_font()),
         ]
         .spacing(10)
         .align_y(Alignment::Center),
-        container(
-          text(
-            "Signer un fichier crée une preuve cryptographique que vous en êtes l'auteur. \
-             Le fichier original n'est pas modifié — la signature est enregistrée dans un \
-             fichier .sig séparé."
-          )
-          .size(13)
-        )
-        .style(|_: &iced::Theme| container::Style {
+        container(text(s.sign_about()).size(13)).style(|_: &iced::Theme| container::Style {
           text_color: Some(theme::text_secondary()),
           ..Default::default()
         }),

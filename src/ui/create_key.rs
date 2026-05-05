@@ -68,7 +68,7 @@ pub fn view<'a>(form: &'a CreateKeyForm, s: &'static dyn Strings) -> Element<'a,
   });
 
   let label = if form.submitting {
-    "Génération..."
+    s.create_key_generating()
   } else {
     s.btn_create()
   };
@@ -134,24 +134,24 @@ pub fn view<'a>(form: &'a CreateKeyForm, s: &'static dyn Strings) -> Element<'a,
     column![
       column![
         text(theme::flavor(
-          "Nouvelle clef PGP",
-          "Forger une Arme du Peuple"
+          s.create_key_title(),
+          "Forge a Weapon for the People"
         ))
         .size(22)
         .font(theme::flavor_title_font()),
-        container(text("Génère une clef maître et ses sous-clefs dédiées.").size(13),).style(
-          |_: &iced::Theme| container::Style {
+        container(text(s.create_key_subtitle()).size(13),).style(|_: &iced::Theme| {
+          container::Style {
             text_color: Some(theme::text_secondary()),
             ..Default::default()
           }
-        ),
+        }),
       ]
       .spacing(6),
       separator(),
       column![
-        text("Identité").size(12).font(bold),
+        text(s.create_key_section_identity()).size(12).font(bold),
         column![
-          text("Nom").size(12),
+          text(s.create_key_field_name()).size(12),
           text_input("Alice Martin", &form.name)
             .on_input(Message::CreateKeyNameChanged)
             .size(14)
@@ -178,7 +178,7 @@ pub fn view<'a>(form: &'a CreateKeyForm, s: &'static dyn Strings) -> Element<'a,
         ]
         .spacing(4),
         column![
-          text("Email").size(12),
+          text(s.create_key_field_email()).size(12),
           text_input("alice@example.com", &form.email)
             .on_input(Message::CreateKeyEmailChanged)
             .size(14)
@@ -208,20 +208,16 @@ pub fn view<'a>(form: &'a CreateKeyForm, s: &'static dyn Strings) -> Element<'a,
       .spacing(10),
       separator(),
       column![
-        text("Sous-clefs").size(12).font(bold),
+        text(s.create_key_section_subkeys()).size(12).font(bold),
         column![
-          text("Expiration").size(12),
+          text(s.create_key_section_expiration()).size(12),
           expiry_list,
-          hint(
-            "Les sous-clefs expirent automatiquement. \
-             Une courte durée limite les dégâts en cas de compromission \
-             — vous pourrez les renouveler avant échéance.",
-          ),
+          hint(s.create_key_hint_expiry()),
         ]
         .spacing(6),
         column![
           checkbox(form.include_auth)
-            .label("Inclure une clef d'authentification SSH")
+            .label(s.create_key_include_ssh())
             .on_toggle(Message::CreateKeyIncludeAuthToggled)
             .text_size(13)
             .size(16)
@@ -252,10 +248,7 @@ pub fn view<'a>(form: &'a CreateKeyForm, s: &'static dyn Strings) -> Element<'a,
                 text_color: Some(theme::text_strong()),
               }
             }),
-          hint(
-            "Permet de vous authentifier sur des serveurs distants sans mot de passe, \
-             en utilisant votre clef PGP comme clef SSH.",
-          ),
+          hint(s.create_key_hint_ssh()),
         ]
         .spacing(6),
       ]
@@ -263,12 +256,8 @@ pub fn view<'a>(form: &'a CreateKeyForm, s: &'static dyn Strings) -> Element<'a,
       separator(),
       container(
         column![
-          text("À propos de la clef maître").size(12).font(bold),
-          hint(
-            "La clef maître définit votre identité PGP à long terme — elle ne sert qu'à \
-             certifier vos sous-clefs. Elle n'expire jamais. \
-             Conservez-la hors ligne avec son certificat de révocation.",
-          ),
+          text(s.create_key_about_master()).size(12).font(bold),
+          hint(s.create_key_hint_master()),
         ]
         .spacing(6),
       )

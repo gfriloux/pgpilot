@@ -22,7 +22,7 @@ pub fn view(app: &App) -> Element<'_, Message> {
   }
 
   if let Some(ref err) = app.error {
-    return container(text(format!("Erreur : {err}")).size(14))
+    return container(text(s.key_list_error(err)).size(14))
       .padding(24)
       .style(|_: &iced::Theme| container::Style {
         text_color: Some(theme::error()),
@@ -60,9 +60,18 @@ pub fn view(app: &App) -> Element<'_, Message> {
 
   let header = container(
     row![
-      text("Nom / Email").size(11).width(Length::Fill).font(bold),
-      text("Expire").size(11).width(80).font(bold),
-      text("État").size(11).width(56).font(theme::heading_font()),
+      text(s.key_list_header_name())
+        .size(11)
+        .width(Length::Fill)
+        .font(bold),
+      text(s.key_list_header_expires())
+        .size(11)
+        .width(80)
+        .font(bold),
+      text(s.key_list_header_status())
+        .size(11)
+        .width(56)
+        .font(theme::heading_font()),
     ]
     .padding([0, 12])
     .spacing(8),
@@ -207,7 +216,7 @@ pub fn view(app: &App) -> Element<'_, Message> {
     .into()
   } else {
     container(
-      text("Sélectionnez une clef pour voir les détails.")
+      text(s.key_list_select_hint())
         .size(13)
         .style(|_: &iced::Theme| iced::widget::text::Style {
           color: Some(theme::text_muted()),

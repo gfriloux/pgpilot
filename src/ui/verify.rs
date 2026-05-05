@@ -115,7 +115,7 @@ pub fn view<'a>(form: &'a SignForm, s: &'static dyn Strings) -> Element<'a, Mess
           .and_then(|n| n.to_str())
           .unwrap_or("fichier")
       );
-      format!("Optionnel — cherchera automatiquement {auto_name}")
+      s.verify_sig_auto_hint_with_name(&auto_name)
     } else {
       s.verify_sig_auto_hint().to_string()
     };
@@ -128,7 +128,11 @@ pub fn view<'a>(form: &'a SignForm, s: &'static dyn Strings) -> Element<'a, Mess
   };
 
   let sig_row: Element<'_, Message> = row![
-    common::pick_btn("\u{f0c1}", "Fichier .sig...", Message::VerifyPickSig),
+    common::pick_btn(
+      "\u{f0c1}",
+      s.verify_sig_file_placeholder(),
+      Message::VerifyPickSig
+    ),
     verify_sig_label,
   ]
   .spacing(12)
@@ -210,14 +214,12 @@ pub fn view<'a>(form: &'a SignForm, s: &'static dyn Strings) -> Element<'a, Mess
 
         if matches!(vr.signer_trust, TrustLevel::Undefined) {
           details.push(
-            container(
-              text("L'identité affichée n'est pas vérifiée par votre toile de confiance.").size(12),
-            )
-            .style(|_: &iced::Theme| container::Style {
-              text_color: Some(theme::peach()),
-              ..Default::default()
-            })
-            .into(),
+            container(text(s.verify_trust_warning()).size(12))
+              .style(|_: &iced::Theme| container::Style {
+                text_color: Some(theme::peach()),
+                ..Default::default()
+              })
+              .into(),
           );
         }
 
@@ -242,11 +244,13 @@ pub fn view<'a>(form: &'a SignForm, s: &'static dyn Strings) -> Element<'a, Mess
           let short_fp = &fp[fp.len().saturating_sub(16)..];
           details.push(
             row![
-              text("Fingerprint :").size(12).style(|_: &iced::Theme| {
-                iced::widget::text::Style {
-                  color: Some(theme::text_muted()),
-                }
-              }),
+              text(s.verify_fingerprint_label())
+                .size(12)
+                .style(|_: &iced::Theme| {
+                  iced::widget::text::Style {
+                    color: Some(theme::text_muted()),
+                  }
+                }),
               text(short_fp.to_string()).size(12).font(Font::MONOSPACE),
             ]
             .spacing(8)
@@ -292,8 +296,7 @@ pub fn view<'a>(form: &'a SignForm, s: &'static dyn Strings) -> Element<'a, Mess
         theme::error(),
         theme::error_bg(),
         s.verify_outcome_bad_sig(),
-        "La signature ne correspond pas à ce fichier. \
-         Vérifiez que vous avez sélectionné le bon fichier et la bonne signature.",
+        s.verify_bad_sig_desc(),
         &vr.detail,
       ),
       VerifyOutcome::UnknownKey => result_card(
@@ -302,8 +305,7 @@ pub fn view<'a>(form: &'a SignForm, s: &'static dyn Strings) -> Element<'a, Mess
         theme::peach(),
         theme::warning_bg(),
         s.verify_outcome_unknown_key(),
-        "La clef publique du signataire n'est pas dans votre trousseau. \
-         Importez-la pour vérifier l'identité du signataire.",
+        s.verify_unknown_key_desc(),
         &vr.detail,
       ),
       VerifyOutcome::ExpiredKey => result_card(
@@ -312,8 +314,7 @@ pub fn view<'a>(form: &'a SignForm, s: &'static dyn Strings) -> Element<'a, Mess
         theme::peach(),
         theme::warning_bg(),
         s.verify_outcome_expired_key(),
-        "La signature est mathématiquement valide, mais la clef du signataire \
-         était expirée au moment de la vérification.",
+        s.verify_expired_key_desc(),
         &vr.detail,
       ),
       VerifyOutcome::RevokedKey => result_card(
@@ -322,8 +323,7 @@ pub fn view<'a>(form: &'a SignForm, s: &'static dyn Strings) -> Element<'a, Mess
         theme::error(),
         theme::error_bg(),
         s.verify_outcome_revoked_key(),
-        "La clef ayant signé ce fichier a été révoquée. \
-         La signature n'est plus considérée comme fiable.",
+        s.verify_revoked_key_desc(),
         &vr.detail,
       ),
       VerifyOutcome::Error(msg) => result_card(
@@ -356,21 +356,14 @@ pub fn view<'a>(form: &'a SignForm, s: &'static dyn Strings) -> Element<'a, Mess
           text("\u{f00c}").font(theme::ICONS).size(20),
           text(theme::flavor(
             s.verify_title(),
-            "Inspecter le Tampon du Commissariat"
+            "Inspect the Commissariat's Stamp"
           ))
           .size(22)
           .font(theme::flavor_title_font()),
         ]
         .spacing(10)
         .align_y(Alignment::Center),
-        container(
-          text(
-            "Vérifier une signature confirme que le fichier n'a pas été modifié \
-             et identifie son auteur."
-          )
-          .size(13)
-        )
-        .style(|_: &iced::Theme| container::Style {
+        container(text(s.verify_about()).size(13)).style(|_: &iced::Theme| container::Style {
           text_color: Some(theme::text_secondary()),
           ..Default::default()
         }),

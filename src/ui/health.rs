@@ -26,7 +26,7 @@ pub fn view<'a>(
   let title_section = column![
     text(theme::flavor(
       s.health_diagnostics_title(),
-      "Rapport au Commissariat",
+      "Report to the Commissariat",
     ))
     .size(22)
     .font(theme::flavor_title_font()),
@@ -71,18 +71,24 @@ pub fn view<'a>(
     .into();
   }
 
-  // Group checks by category in order
-  let categories = ["Installation", "Agent GPG", "Sécurité"];
+  // Group checks by category in order.
+  // Category keys must match the strings stored in HealthCheck.category by the GPG layer.
+  let categories: [(&str, &str); 3] = [
+    ("Installation", s.health_category_installation()),
+    ("Agent GPG", s.health_category_agent()),
+    ("Sécurité", s.health_category_security()),
+  ];
 
   let sections: Vec<Element<Message>> = categories
     .iter()
-    .filter_map(|cat| {
-      let cat_checks: Vec<&HealthCheck> = checks.iter().filter(|c| c.category == *cat).collect();
+    .filter_map(|(cat_key, cat_label)| {
+      let cat_checks: Vec<&HealthCheck> =
+        checks.iter().filter(|c| c.category == *cat_key).collect();
       if cat_checks.is_empty() {
         return None;
       }
 
-      let header = text(*cat).size(13).font(bold);
+      let header = text(*cat_label).size(13).font(bold);
 
       let rows: Vec<Element<Message>> = cat_checks
         .iter()

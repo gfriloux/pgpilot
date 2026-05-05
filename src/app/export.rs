@@ -75,7 +75,8 @@ impl App {
       .key_by_fp(&fp)
       .map(|k| k.key_id.clone())
       .unwrap_or_default();
-    Task::perform(backup_key_to_dir(fp, key_id), Message::BackupDone)
+    let title = self.strings.dialog_choose_backup_folder();
+    Task::perform(backup_key_to_dir(fp, key_id, title), Message::BackupDone)
   }
 
   pub(super) fn on_backup_done(&mut self, result: Result<Option<String>, String>) -> Task<Message> {

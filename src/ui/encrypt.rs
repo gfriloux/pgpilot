@@ -122,7 +122,11 @@ pub fn view<'a>(
   let mut recipient_items: Vec<Element<'static, Message>> = Vec::new();
 
   if !own_keys.is_empty() {
-    recipient_items.push(section_header("Mes clefs").padding([2, 8]).into());
+    recipient_items.push(
+      section_header(s.encrypt_tab_my_keys())
+        .padding([2, 8])
+        .into(),
+    );
     for key in &own_keys {
       recipient_items.push(key_row(key, form.recipients.contains(&key.fingerprint)));
     }
@@ -141,7 +145,11 @@ pub fn view<'a>(
         .into(),
       );
     }
-    recipient_items.push(section_header("Clefs publiques").padding([2, 8]).into());
+    recipient_items.push(
+      section_header(s.encrypt_tab_public_keys())
+        .padding([2, 8])
+        .into(),
+    );
     for key in &public_keys {
       recipient_items.push(key_row(key, form.recipients.contains(&key.fingerprint)));
     }
@@ -149,7 +157,7 @@ pub fn view<'a>(
 
   if encr_keys.is_empty() {
     recipient_items.push(
-      container(text("Aucune clef avec capacité de chiffrement.").size(12))
+      container(text(s.encrypt_no_keys()).size(12))
         .padding([8, 8])
         .style(|_: &iced::Theme| container::Style {
           text_color: Some(theme::text_muted()),
@@ -217,7 +225,7 @@ pub fn view<'a>(
   let add_files_btn = button(
     row![
       text("\u{f067}").font(theme::ICONS).size(12),
-      text("Choisir des fichiers...").size(13),
+      text(s.encrypt_choose_files()).size(13),
     ]
     .spacing(6)
     .align_y(Alignment::Center),
@@ -259,7 +267,7 @@ pub fn view<'a>(
               color: Some(theme::text_muted()),
             }
           }),
-        text("Glissez des fichiers ici")
+        text(s.encrypt_drop_hint())
           .size(13)
           .style(|_: &iced::Theme| {
             iced::widget::text::Style {
@@ -269,7 +277,7 @@ pub fn view<'a>(
         button(
           row![
             text("\u{f067}").font(theme::ICONS).size(12),
-            text("Choisir des fichiers...").size(13),
+            text(s.encrypt_choose_files()).size(13),
           ]
           .spacing(6)
           .align_y(Alignment::Center),
@@ -405,9 +413,9 @@ pub fn view<'a>(
   };
 
   let fmt_hint = if armor {
-    "Texte ASCII — pour coller dans un email ou un message."
+    s.encrypt_format_ascii_desc()
   } else {
-    "Binaire compact — pour pièces jointes et stockage."
+    s.encrypt_format_binary_desc()
   };
 
   let action_bar: Element<'_, Message> = row![
@@ -538,11 +546,7 @@ pub fn view<'a>(
   let info_banner: Element<'_, Message> = container(
     row![
       text("\u{f05a}").font(theme::ICONS).size(14),
-      text(
-        "Chaque destinataire peut déchiffrer le fichier indépendamment avec sa propre clef. \
-         Pensez à vous ajouter pour conserver un accès au fichier chiffré."
-      )
-      .size(12),
+      text(s.encrypt_multi_recipient_hint()).size(12),
     ]
     .spacing(8)
     .align_y(Alignment::Center),
@@ -571,15 +575,15 @@ pub fn view<'a>(
   let card = container(
     column![
       column![
-        text(theme::flavor(s.encrypt_title(), "Chiffrer pour le Peuple"))
+        text(theme::flavor(s.encrypt_title(), "Encrypt for the People"))
           .size(22)
           .font(theme::flavor_title_font()),
-        container(text("Sélectionnez les destinataires et les fichiers.").size(13)).style(
-          |_: &iced::Theme| container::Style {
+        container(text(s.encrypt_select_hint()).size(13)).style(|_: &iced::Theme| {
+          container::Style {
             text_color: Some(theme::text_secondary()),
             ..Default::default()
           }
-        ),
+        }),
       ]
       .spacing(6),
       separator(),
