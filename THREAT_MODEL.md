@@ -209,3 +209,51 @@ violée, les atténuations décrites peuvent devenir inefficaces.
 | `gpg-agent` n'est pas compromis | Les clefs privées y sont stockées et protégées. |
 | `pinentry` fonctionne correctement et n'est pas remplacé | La saisie de passphrase doit être isolée du reste de la session. |
 | L'OS n'est pas compromis au moment de l'exécution | Les primitives de sécurité (mémoire, processus, filesystem) doivent être fiables. |
+
+---
+
+## Chat PGP (v0.6.0)
+
+La v0.6.0 introduit un sous-système de chat chiffré PGP de bout en bout transporté
+via MQTT (TLS). Les messages sont éphémères par conception : seuls les salons
+sont persistés (`~/.config/pgpilot/rooms.yaml`), jamais le contenu des messages.
+
+### Nouveaux actifs à protéger
+
+| Actif | Description |
+|---|---|
+| **`rooms.yaml`** | Liste des salons et de leurs participants (fingerprints, dates de jointure, relay MQTT, identité locale `my_fp`). N'inclut aucun contenu de message. Plafonné à 1 Mio à la lecture. |
+| **Messages en RAM** | `chat_messages: HashMap<RoomId, VecDeque<ChatMessage>>` — déchiffrés, bornés à 500 entrées par salon (FIFO), perdus à la fermeture de l'application. |
+| **Connexion MQTT over TLS** | Socket persistante vers le broker (`mqtts://`). Transporte les blobs PGP chiffrés et les payloads de présence/ACK. |
+| **`my_fp` par room** | Identité PGP locale utilisée dans chaque salon. Un utilisateur multi-clef peut séparer identité pro et perso par salon. |
+| **Join codes** | Invitations partagées hors-bande (`pgpilot:join:<base64url>`). Contiennent `room_id`, `relay`, `invited_by` et une signature PGP de l'invitant. |
+| **`ChatCryptoCtx`** | Contexte crypto résident en RAM pour la durée de la session : `homedir` GPG + `local_fp`. Toutes les opérations passent par des subprocesses `gpg`. |
+
+### Nouvelles menaces et contre-mesures
+
+| Menace | Scénario | Contre-mesure | Résiduel |
+|---|---|---|---|
+| **Lecture des messages par le broker** | Un broker compromis ou malveillant inspecte les payloads transitant sur le topic chat. | Chiffrement E2E PGP multi-destinataires (`gpg --encrypt --sign --armor`). Le broker ne voit que des blobs PGP armored. | Le broker observe les timestamps de publication, les topics, et la cardinalité des participants. |
+| **Usurpation d'identité émetteur** | Un attaquant modifie `wire.sender` dans le JSON pour faire passer son message pour un autre. | `decrypt_message` exige le token `[GNUPG:] VALIDSIG <fp40>` et compare strictement le fingerprint extrait avec ce qui est attendu côté handler. La signature étant intégrée au message PGP, modifier `wire.sender` ne change pas le résultat de la vérification. | Limité aux clefs présentes dans le keyring local : un signataire inconnu produit `ChatError::SignatureInvalid` et le message est ignoré. |
+| **Injection de messages par tiers** | Un participant externe (qui connaît le topic) publie un message chiffré pour un destinataire valide du salon. | À la réception, `signer_fp` (extrait de `VALIDSIG`) est comparé à `room.participants` avant affichage. Tout signataire hors liste est rejeté silencieusement. | Quiconque connaît le topic peut publier ; la confidentialité reste assurée car seuls les destinataires listés peuvent déchiffrer. |
+| **Fausse invitation (redirection broker)** | Un join code forgé pointe vers un broker contrôlé par l'attaquant pour intercepter ou bloquer le trafic. | `JoinCode::verify()` vérifie la signature PGP de l'invitant via `gpg --batch --verify` sur la canonicalisation `room_id ‖ \x00 ‖ relay ‖ \x00 ‖ invited_by`. Le relay doit commencer par `mqtts://` (sauf `mqtt://localhost` / `mqtt://127.x.x.x` pour les tests locaux) — sinon `ChatError::InvalidJoinCode`. | L'invitant doit déjà être présent dans le keyring local ; sinon l'invitation est rejetée (`ChatError::JoinCodeInviterUnknown`). L'utilisateur doit importer la clef de l'invitant avant d'accepter. |
+| **Usurpation de présence** | Un attaquant publie un payload `online` ou `offline` pour le compte d'un fingerprint tiers. | Aucune en v0.6.0 : la présence n'est pas signée. Limitation explicitement documentée. | Faux statut Online/Offline possible par broker malveillant ou tiers connaissant le topic présence. Sans impact sur la confidentialité ni l'authenticité des messages. |
+| **Replay de messages** | Un attaquant rejoue un ancien `WireMessage` capturé pour faire croire qu'un message est récent. | Validation à la réception : `|wire.ts - now| ≤ 86400 s` (fenêtre de 24 h). La signature PGP intégrée couvre `id`, `sender`, `ts`, `payload` (canonicalisation `SIGN_CANONICAL_PREFIX ‖ id ‖ \x00 ‖ sender ‖ \x00 ‖ ts ‖ \x00 ‖ payload`) — modifier `ts` casse la signature. | Replay possible à l'intérieur de la fenêtre 24 h si le `msg_id` n'a pas déjà été vu (dédup côté récepteur). |
+| **DoS via gros messages** | Un attaquant publie un payload de plusieurs Mio sur le topic chat pour saturer la mémoire du client. | `mqtt_task` rejette les payloads > 64 Kio (`MAX_WIRE_MESSAGE_BYTES`) avant copie en mémoire. Validation appliquée côté émetteur ET récepteur. | Dépend du broker : un broker mal configuré pourrait accepter des payloads plus larges, mais le client les jette avant déchiffrement. |
+| **Leak `room_id` via topic** | Un observateur déduit le nom ou l'identité d'un salon depuis le topic MQTT. | Le topic chat est dérivé via `sha256(room_id)[0..8]` en hex (16 caractères) — opaque. Le nom du salon n'apparaît jamais sur le wire. | 64 bits du hash de `room_id` exposés sur le broker ; cardinalité et corrélation temporelle restent observables. |
+| **Surveillance des métadonnées** | Le broker observe qui publie, quand, et sur quels topics. | Topics opaques (hash tronqué). Fingerprints des fingerprints tronqués à 16 hex (64 bits) dans les topics présence/ACK. Pas de liste de destinataires sur le wire — implicite dans les session keys PGP. | Le broker voit le timing et la cardinalité de chaque salon. C'est une limite inhérente à MQTT public. |
+| **`rooms.yaml` malveillant** | Un fichier `rooms.yaml` corrompu ou trop volumineux (rempli par un autre processus) cause une consommation mémoire excessive. | Vérification de taille via `metadata().len()` avant lecture : rejet au-delà de 1 Mio (`MAX_ROOMS_YAML_BYTES`) avec `ChatError::RoomsYamlLoadFailed`. Validation des champs `JoinCode` après désérialisation (UUID, fingerprint 40-hex, schéma relay, taille `room_name`). | Corruption partielle possible : un salon malformé n'empêche pas le chargement du reste, mais provoque l'échec global de `serde_yaml::from_str`. |
+| **Forward secrecy absente** | Un attaquant capture les blobs PGP en transit, puis compromet la clef privée plus tard ; il peut alors déchiffrer rétrospectivement les messages. | Aucune en v0.6.0 — documentée hors-scope. Mitigation indirecte : le broker ne persiste rien (QoS 1, pas de retain sur le topic chat), donc la fenêtre d'enregistrement de l'attaquant est limitée à ce qu'il a pu intercepter en temps réel. | Pas de PFS (Perfect Forward Secrecy) en v0.6.0. La compromission d'une clef privée expose tous les messages capturés et déchiffrables. |
+
+### Hors-scope explicite v0.6.0
+
+Les éléments suivants sont reconnus mais ne font pas partie du périmètre de la v0.6.0 :
+
+- **Forward secrecy** : pas de Double Ratchet, X3DH ou per-message ephemeral keys. La compromission ultérieure d'une clef privée permet de déchiffrer les messages capturés en temps réel.
+- **Signature des payloads de présence** : les statuts Online/Offline ne sont pas signés. Un broker malveillant peut publier de faux statuts.
+- **Support YubiKey pour le chat** : la clef privée d'une YubiKey n'étant pas exportable, l'utilisation d'une clef sur smartcard pour le chat est refusée (`ChatError::SignFailed`). L'utilisateur doit créer ou importer une clef logicielle dédiée.
+- **Persistance chiffrée des messages** : conformément à l'exigence "éphémère par conception". Aucun message n'est jamais écrit sur disque. Reporté à v0.7+ avec chiffrement local SQLite + sequoia.
+- **Authentification broker** : pas de support `user`/`password` ni de mTLS client cert dans `MqttConfig`. La v0.6.0 cible des brokers publics ou privés sans authentification.
+- **Multi-device** : un même utilisateur ne peut pas synchroniser ses salons et ses messages entre deux instances pgpilot.
+- **Zeroize de `ChatCryptoCtx`** : pas de wipe explicite de la mémoire au quit. Mitigation OS-level uniquement (mémoire libérée à la fermeture, pas de swap recommandé sur les machines sensibles).
+- **Modération / kick / ban** : un participant retiré reste capable de lire les messages capturés ; la révocation effective nécessiterait un re-keying complet du salon (non implémenté).
