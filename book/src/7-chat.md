@@ -12,7 +12,8 @@ your private key. The relay server sees only encrypted blobs.
 
 - Your contacts' public keys must be in your local keyring.
   Import them from a keyserver or file before creating a room.
-- A working private key (software or YubiKey — gpg-agent handles both).
+- A working private key (software key or YubiKey — gpg-agent handles both, including
+  PIN prompts and touch policies).
 
 ## Creating a room
 
@@ -43,6 +44,24 @@ your private key. The relay server sees only encrypted blobs.
 
 Type in the compose bar and press **Enter** (or click **►**).
 Messages are encrypted for all participants before being published.
+
+## Verifying sender identity
+
+Every message displays a **lock icon** next to the sender's name when the
+GPG signature was successfully verified.
+
+Click the lock icon (or the sender's name) to expand an identity panel showing:
+- **Verified signature** — GPG confirmed the message was signed with this key
+- **Name and email** — from the key metadata
+- **Full fingerprint** — the 40-character cryptographic identifier; compare it
+  out-of-band (phone, Signal, in person) to confirm the sender's identity
+- **Trust level** — your local assessment of this key (Undefined / Marginal / Full)
+
+If you see **⚠** instead of a lock icon, the sender's public key is not in your keyring.
+The message still decrypted (your private key worked), but the signature could
+not be verified. Import the sender's key to verify future messages.
+
+Click again to close the identity panel.
 
 ## Presence indicators
 
@@ -76,8 +95,8 @@ for production use.
 
 - **No offline delivery.** Messages sent while you are offline are lost.
 - **No persistence.** Restarting PGPilot clears all message history.
-- **Public relay (default).** `broker.hivemq.com:8883` has no SLA. Use a
-  private broker for sensitive communications.
+- **Public relay (default).** `broker.hivemq.com:8883` (HiveMQ public broker, TLS, no SLA).
+  Use a private MQTT broker for sensitive communications.
 - **YubiKey with touch policy**: if your card requires a physical touch per
   operation, you will need to touch it for each message sent and each message
   received (decryption). With a "touch once per session" policy this is

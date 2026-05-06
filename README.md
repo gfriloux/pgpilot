@@ -44,6 +44,17 @@ pgpilot wraps GnuPG's command-line interface behind a themeable graphical interf
 - GPG health page: 8 checks across Installation, GPG Agent, and Security categories
 - Checks include: GPG version, agent status, pinentry configuration, cache TTL values, `~/.gnupg` directory permissions, and presence of revocation certificates
 
+**PGP Chat**
+- End-to-end encrypted ephemeral chat via MQTT + OpenPGP
+- Messages are encrypted with `gpg --encrypt --sign` for all room participants; only the intended recipients can read them
+- The relay server sees only encrypted blobs — zero trust transport
+- Rooms persist in `~/.config/pgpilot/rooms.yaml` (room IDs and participant fingerprints only); messages live in RAM only and are lost on exit
+- Invite others via a signed join code (`pgpilot:join:...`) — the signature prevents broker-redirect attacks
+- Presence indicators (● / ○) and per-recipient delivery receipts (✓ / ⏳)
+- Click the lock icon on any message to see the sender's verified fingerprint, email, and trust level
+- Works with software keys and YubiKey (gpg-agent handles PIN prompts and touch policy)
+- Default relay: `mqtts://broker.hivemq.com:8883` (TLS; bring your own MQTT broker for production)
+
 **YubiKey / smartcard**
 - Detect connected card and display serial number
 - Migrate private subkeys to a YubiKey
