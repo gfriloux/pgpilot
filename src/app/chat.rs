@@ -159,7 +159,7 @@ impl App {
         }
         Ok::<(), String>(())
       },
-      |_| Message::ChatAckSent(Ok(())), // réutilise ChatAckSent comme no-op
+      |_| Message::ChatBackgroundDone,
     )
   }
 
@@ -215,13 +215,6 @@ impl App {
       return self.set_status(
         StatusKind::Error,
         "Please select your identity for this room.".to_string(),
-      );
-    }
-
-    if my_fp.is_empty() {
-      return self.set_status(
-        StatusKind::Error,
-        "Aucune clef privée disponible pour le chat.".to_string(),
       );
     }
 
@@ -317,11 +310,15 @@ impl App {
         use crate::chat::RoomParticipant;
         use chrono::Utc;
 
+        // Correction 4b : obtenir le homedir GPG et vérifier le JoinCode.
+        let homedir = crate::gpg::gnupg_dir().map_err(|e| anyhow::anyhow!("{e}"))?;
+
         let join_code = JoinCode::decode(&code_str).map_err(|e| anyhow::anyhow!("{e}"))?;
 
-        // La vérification de signature est déléguée à axe 4 (crypto).
-        // Pour l'instant on accepte le join code sans vérifier la sig.
-        // TODO(axe4): join_code.verify()?;
+        // Vérifier la signature cryptographique du code d'invitation.
+        join_code
+          .verify(&homedir)
+          .map_err(|e| anyhow::anyhow!("{e}"))?;
 
         let now = Utc::now();
         let room = Room {
@@ -466,16 +463,10 @@ impl App {
         // Sérialiser + valider taille.
         let bytes = wire.to_json_bytes().map_err(|e| anyhow::anyhow!("{e}"))?;
 
-        // Publier sur MQTT via le handle (cmd_tx est synchrone, pas besoin de block_on).
-        // MqttHandle::publish envoie une MqttCmd::Publish sur le canal unbounded — c'est
-        // synchrone côté émetteur (le vrai MQTT est dans la tâche tokio).
-        {
-          use crate::chat::mqtt::ChatTransport as _;
-          let rt = tokio::runtime::Handle::try_current()
-            .map_err(|e| anyhow::anyhow!("Runtime tokio manquant: {e}"))?;
-          rt.block_on(mqtt.publish(&chat_topic, bytes, 1, false))
-            .map_err(|e| anyhow::anyhow!("{e}"))?;
-        }
+        // Publier sur MQTT via le canal synchrone cmd_tx (pas de block_on nécessaire).
+        mqtt
+          .publish_sync(&chat_topic, bytes, 1, false)
+          .map_err(|e| anyhow::anyhow!("{e}"))?;
 
         // Construire le ChatMessage local (Sent).
         let chat_msg = ChatMessage {
@@ -537,28 +528,39 @@ impl App {
   // Join code
   // -------------------------------------------------------------------------
 
-  /// Encode et copie le join code du salon dans le presse-papier.
+  /// Encode, signe et copie le join code du salon dans le presse-papier.
   pub(super) fn on_chat_join_code_copy(&mut self, room_id: String) -> Task<Message> {
     let Some(room) = self.room_by_id(&room_id) else {
       return Task::none();
     };
 
-    // Pour signer le join code, il faudrait le contexte crypto (axe 4).
-    // Pour l'instant on produit un code non signé avec une sig vide.
-    // TODO(axe4): signer le join code via ChatCryptoCtx.
-    let join_code = crate::chat::rooms::JoinCode {
-      room_id: room.id.clone(),
-      relay: room.relay.clone(),
-      invited_by: room.my_fp.clone(),
-      room_name: Some(room.name.clone()),
-      sig: String::new(), // TODO(axe4): signature réelle
-    };
+    // Capturer les champs nécessaires avant de passer dans la closure.
+    let room_id_str = room.id.clone();
+    let relay = room.relay.clone();
+    let my_fp = room.my_fp.clone();
+    let room_name = Some(room.name.clone());
 
     Task::perform(
-      async move {
-        let encoded = join_code.encode().map_err(|e| e.to_string())?;
-        Ok::<String, String>(encoded)
-      },
+      blocking_task(move || {
+        let homedir = crate::gpg::gnupg_dir().map_err(|e| anyhow::anyhow!("{e}"))?;
+
+        // Construire le join code sans sig.
+        let mut join_code = crate::chat::rooms::JoinCode {
+          room_id: room_id_str,
+          relay,
+          invited_by: my_fp.clone(),
+          room_name,
+          sig: String::new(),
+        };
+
+        // Signer via JoinCode::sign.
+        join_code.sig = join_code
+          .sign(&homedir, &my_fp)
+          .map_err(|e| anyhow::anyhow!("{e}"))?;
+
+        // Encoder le join code signé.
+        join_code.encode().map_err(|e| anyhow::anyhow!("{e}"))
+      }),
       Message::ChatJoinCodeCopied,
     )
   }
@@ -603,7 +605,7 @@ impl App {
               }
               Ok::<(), String>(())
             },
-            |_| Message::ChatAckSent(Ok(())),
+            |_| Message::ChatBackgroundDone,
           )
         } else {
           Task::none()
@@ -662,117 +664,181 @@ impl App {
   /// ```
   fn dispatch_mqtt_payload(&self, topic: String, payload: Vec<u8>) -> Task<Message> {
     if topic.starts_with(CHAT_TOPIC_PREFIX) {
-      // Trouver la room correspondant au topic.
-      let room_id = self
-        .rooms
-        .iter()
-        .find(|r| r.chat_topic() == topic)
-        .map(|r| r.id.clone());
-
-      let Some(room_id) = room_id else {
-        // Topic inconnu — race au reconnect, on jette.
-        return Task::none();
-      };
-
-      let Some(crypto) = self.chat_crypto.clone() else {
-        return Task::none();
-      };
-
-      let my_fp = self
-        .room_by_id(&room_id)
-        .map(|r| r.my_fp.clone())
-        .unwrap_or_default();
-
-      return Task::perform(
-        blocking_task(move || {
-          use crate::chat::{ChatPayload, MessageDirection};
-          use chrono::Utc;
-
-          let wire = WireMessage::from_json_bytes(&payload).map_err(|e| anyhow::anyhow!("{e}"))?;
-
-          // Ignorer nos propres messages (déjà dans la liste côté Sent).
-          if wire.sender.to_uppercase() == my_fp.to_uppercase() {
-            anyhow::bail!("own_message"); // signal interne
-          }
-
-          let chat_payload = ChatPayload {
-            ciphertext_armored: wire.payload.clone(),
-            signature_armored: wire.signature.clone(),
-          };
-
-          let verified = crypto
-            .decrypt_message(&chat_payload)
-            .map_err(|e| anyhow::anyhow!("{e}"))?;
-
-          let now = Utc::now();
-          let msg = ChatMessage {
-            id: wire.id,
-            sender_fp: wire.sender,
-            text: verified.plaintext,
-            ts: chrono::DateTime::<chrono::Utc>::from_timestamp(wire.ts, 0).unwrap_or(now),
-            received_at: now,
-            direction: MessageDirection::Received,
-            acks: std::collections::HashMap::new(),
-          };
-
-          Ok((room_id, msg))
-        }),
-        |r: Result<(String, ChatMessage), String>| match r {
-          Ok((rid, msg)) => Message::ChatReceived(rid, msg),
-          Err(_) => {
-            // Message non déchiffrable ou propre message : ignoré silencieusement.
-            Message::ChatAckSent(Ok(())) // no-op
-          }
-        },
-      );
+      return self.dispatch_chat_message(topic, payload);
     }
-
     if topic.starts_with(PRESENCE_TOPIC_PREFIX) {
-      // Extraire le fp16 du topic.
-      let fp16 = topic
-        .strip_prefix(&format!("{PRESENCE_TOPIC_PREFIX}/"))
-        .unwrap_or("")
-        .to_string();
+      return self.dispatch_presence(topic, payload);
+    }
+    if topic.starts_with(ACK_TOPIC_PREFIX) {
+      return self.dispatch_ack(payload);
+    }
+    Task::none()
+  }
 
-      // Trouver le fingerprint complet dans les rooms.
-      let full_fp = self
-        .rooms
-        .iter()
-        .flat_map(|r| r.participants.iter())
-        .find(|p| p.fp.starts_with(&fp16) || p.fp[..p.fp.len().min(16)] == fp16)
-        .map(|p| p.fp.clone())
-        .unwrap_or(fp16);
+  /// Déchiffre un message de chat reçu sur un topic `pgpilot/chat/{hash}`.
+  fn dispatch_chat_message(&self, topic: String, payload: Vec<u8>) -> Task<Message> {
+    // Trouver la room correspondant au topic.
+    let room_id = self
+      .rooms
+      .iter()
+      .find(|r| r.chat_topic() == topic)
+      .map(|r| r.id.clone());
 
-      if let Some(update) = PresenceTracker::decode_payload(&full_fp, &payload) {
-        return Task::perform(async move { update }, Message::PresenceUpdated);
-      }
+    let Some(room_id) = room_id else {
+      // Topic inconnu — race au reconnect, on jette.
+      return Task::none();
+    };
+
+    let Some(crypto) = self.chat_crypto.clone() else {
+      return Task::none();
+    };
+
+    let my_fp = self
+      .room_by_id(&room_id)
+      .map(|r| r.my_fp.clone())
+      .unwrap_or_default();
+
+    // Participants de la room (pour vérifier l'appartenance).
+    let participants: Vec<String> = self
+      .room_by_id(&room_id)
+      .map(|r| r.participants.iter().map(|p| p.fp.clone()).collect())
+      .unwrap_or_default();
+
+    Task::perform(
+      blocking_task(move || {
+        use crate::chat::{ChatPayload, MessageDirection};
+        use chrono::Utc;
+
+        let wire = WireMessage::from_json_bytes(&payload).map_err(|e| anyhow::anyhow!("{e}"))?;
+
+        // Ignorer nos propres messages AVANT de tenter de déchiffrer (correction 11).
+        // Comparaison case-insensitive : les fingerprints peuvent être en majuscules
+        // ou minuscules selon les implémentations.
+        if wire.sender.eq_ignore_ascii_case(&my_fp) {
+          return Ok(None);
+        }
+
+        // Validation du timestamp (correction 12) : rejeter les messages trop anciens
+        // (>24h) ou du futur (>5 min).
+        let now_ts = Utc::now().timestamp();
+        if (wire.ts - now_ts).abs() > 86_400 {
+          eprintln!(
+            "[chat] message rejeté — timestamp hors plage : {} (now={})",
+            wire.ts, now_ts
+          );
+          return Ok(None);
+        }
+
+        let chat_payload = ChatPayload {
+          ciphertext_armored: wire.payload.clone(),
+          signature_armored: wire.signature.clone(),
+        };
+
+        let verified = crypto
+          .decrypt_message(&chat_payload)
+          .map_err(|e| anyhow::anyhow!("{e}"))?;
+
+        // Correction 3a : vérifier que le signataire correspond à l'émetteur déclaré.
+        if !verified.signer_fp.eq_ignore_ascii_case(&wire.sender) {
+          eprintln!(
+            "[chat] sender mismatch: wire says {} but signature from {}",
+            wire.sender, verified.signer_fp
+          );
+          return Err(anyhow::anyhow!(
+            "sender mismatch: wire says {} but signature from {}",
+            wire.sender,
+            verified.signer_fp
+          ));
+        }
+
+        // Correction 3b : vérifier que le signataire est membre du salon.
+        if !participants
+          .iter()
+          .any(|p| p.eq_ignore_ascii_case(&verified.signer_fp))
+        {
+          eprintln!(
+            "[chat] message ignoré — expéditeur non membre : {}",
+            verified.signer_fp
+          );
+          return Ok(None);
+        }
+
+        let now = Utc::now();
+        let msg_ts = chrono::DateTime::from_timestamp(wire.ts, 0).unwrap_or(now);
+
+        // Correction 3c : utiliser verified.signer_fp (pas wire.sender) comme sender_fp.
+        let msg = ChatMessage {
+          id: wire.id,
+          sender_fp: verified.signer_fp,
+          text: verified.plaintext,
+          ts: msg_ts,
+          received_at: now,
+          direction: MessageDirection::Received,
+          acks: std::collections::HashMap::new(),
+        };
+
+        Ok(Some((room_id, msg)))
+      }),
+      |r: Result<Option<(String, ChatMessage)>, String>| match r {
+        Ok(Some((rid, msg))) => Message::ChatReceived(rid, msg),
+        Ok(None) => {
+          // Propre message, timestamp invalide, ou expéditeur non membre : ignoré silencieusement.
+          Message::ChatBackgroundDone
+        }
+        Err(e) => {
+          // Erreur réelle (déchiffrement, mismatch signataire) : log uniquement.
+          eprintln!("[chat] erreur réception: {e}");
+          Message::ChatBackgroundDone
+        }
+      },
+    )
+  }
+
+  /// Décode un message de présence reçu sur un topic `pgpilot/presence/{fp16}`.
+  fn dispatch_presence(&self, topic: String, payload: Vec<u8>) -> Task<Message> {
+    // Extraire et valider le fp16 du topic (correction 10).
+    let fp16 = topic
+      .strip_prefix(&format!("{PRESENCE_TOPIC_PREFIX}/"))
+      .unwrap_or("")
+      .to_string();
+
+    // Rejeter les topics malformés : fp16 doit être exactement 16 chars hex.
+    if fp16.len() != 16 || !fp16.chars().all(|c| c.is_ascii_hexdigit()) {
       return Task::none();
     }
 
-    if topic.starts_with(ACK_TOPIC_PREFIX) {
-      if let Ok(ack) = WireAck::from_json_bytes(&payload) {
-        // Trouver la room qui contient ce msg_id.
-        let room_id = self
-          .chat_messages
-          .iter()
-          .find(|(_, msgs)| {
-            msgs.iter().any(|m| {
-              m.id.starts_with(&ack.msg_id[..ack.msg_id.len().min(16)])
-                || ack.msg_id.starts_with(&m.id[..m.id.len().min(16)])
-                || m.id == ack.msg_id
-            })
-          })
-          .map(|(rid, _)| rid.clone());
+    // Trouver le fingerprint complet dans les rooms.
+    let full_fp = self
+      .rooms
+      .iter()
+      .flat_map(|r| r.participants.iter())
+      .find(|p| p.fp.len() >= 16 && p.fp[..16].eq_ignore_ascii_case(&fp16))
+      .map(|p| p.fp.clone())
+      .unwrap_or(fp16);
 
-        if let Some(rid) = room_id {
-          return Task::perform(
-            async move { (rid, ack.msg_id, ack.from) },
-            |(rid, mid, from)| Message::ChatAckReceived(rid, mid, from),
-          );
-        }
+    if let Some(update) = PresenceTracker::decode_payload(&full_fp, &payload) {
+      return Task::perform(async move { update }, Message::PresenceUpdated);
+    }
+    Task::none()
+  }
+
+  /// Parse un ACK reçu sur un topic `pgpilot/ack/{msg_id16}`.
+  fn dispatch_ack(&self, payload: Vec<u8>) -> Task<Message> {
+    if let Ok(ack) = WireAck::from_json_bytes(&payload) {
+      // Correction 9 : comparaison stricte UUID complet uniquement.
+      let room_id = self
+        .chat_messages
+        .iter()
+        .find(|(_, msgs)| msgs.iter().any(|m| m.id == ack.msg_id))
+        .map(|(rid, _)| rid.clone());
+
+      if let Some(rid) = room_id {
+        return Task::perform(
+          async move { (rid, ack.msg_id, ack.from) },
+          |(rid, mid, from)| Message::ChatAckReceived(rid, mid, from),
+        );
       }
     }
-
     Task::none()
   }
 
@@ -798,11 +864,10 @@ impl App {
     sender_fp: String,
   ) -> Task<Message> {
     if let Some(msgs) = self.chat_messages.get_mut(&room_id) {
-      for msg in msgs.iter_mut() {
-        if msg.id == msg_id || msg.id.starts_with(&msg_id[..msg_id.len().min(16)]) {
-          msg.acks.insert(sender_fp.clone(), AckStatus::Received);
-          break;
-        }
+      // Correction 9 : comparaison stricte UUID complet uniquement — pas de
+      // correspondance partielle qui permettrait de forger des ACK.
+      if let Some(msg) = msgs.iter_mut().find(|m| m.id == msg_id) {
+        msg.acks.insert(sender_fp, AckStatus::Received);
       }
     }
     Task::none()

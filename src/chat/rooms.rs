@@ -5,6 +5,7 @@
 //! `~/.config/pgpilot/rooms.yaml` ainsi que l'encodage/décodage/vérification
 //! des codes d'invitation ([`JoinCode`]).
 
+use std::io::Write as _;
 use std::path::PathBuf;
 
 use chrono::{DateTime, Utc};
@@ -52,21 +53,13 @@ impl Room {
   /// reconstituer le nom du salon depuis le topic.
   #[must_use]
   pub fn chat_topic(&self) -> String {
-    // Utilisation de sha2 n'est pas disponible sans l'ajouter en dépendance.
-    // On délègue au futur axe 4 (crypto) via todo!, mais on fournit une
-    // implémentation minimale fonctionnelle via sha256 from sequoia.
-    //
-    // Pour l'instant on utilise une implémentation inline simple : sequoia
-    // n'exporte pas sha256 directement depuis son API publique, et ajouter
-    // sha2 serait hors-scope de cet axe. On utilise donc une approximation
-    // reproducible via `std::collections::hash_map::DefaultHasher` pour les
-    // stubs — NOTE : ce n'est PAS sha256, il faudra remplacer dans l'axe 4.
-    //
-    // TODO(axe4): remplacer par sha256(self.id.as_bytes())[..16]
-    let mut hasher = std::collections::hash_map::DefaultHasher::new();
-    std::hash::Hasher::write(&mut hasher, self.id.as_bytes());
-    let hash = std::hash::Hasher::finish(&hasher);
-    format!("{}/{:016x}", crate::chat::CHAT_TOPIC_PREFIX, hash)
+    use sha2::{Digest, Sha256};
+    let hash = Sha256::digest(self.id.as_bytes());
+    format!(
+      "{}/{:016x}",
+      crate::chat::CHAT_TOPIC_PREFIX,
+      u64::from_be_bytes(hash[..8].try_into().unwrap())
+    )
   }
 }
 
@@ -86,6 +79,9 @@ impl RoomStore {
       .join("rooms.yaml")
   }
 
+  /// Taille maximale autorisée pour le fichier `rooms.yaml` (1 Mio).
+  const MAX_ROOMS_YAML_BYTES: u64 = 1_048_576;
+
   /// Charge le store depuis le disque.
   ///
   /// Si le fichier est absent, retourne `Self::default()` (pas d'erreur).
@@ -93,11 +89,20 @@ impl RoomStore {
   /// # Errors
   ///
   /// Retourne [`ChatError::RoomsYamlLoadFailed`] si le fichier existe mais
-  /// ne peut pas être lu ou parsé.
+  /// ne peut pas être lu, dépasse la taille maximale, ou n'est pas parsable.
   pub fn load() -> ChatResult<Self> {
     let path = Self::path();
     if !path.exists() {
       return Ok(Self::default());
+    }
+    // Correction 7 : vérifier la taille avant lecture pour éviter d'allouer
+    // une quantité arbitraire de mémoire sur un fichier corrompu ou malveillant.
+    let meta =
+      std::fs::metadata(&path).map_err(|e| ChatError::RoomsYamlLoadFailed(e.to_string()))?;
+    if meta.len() > Self::MAX_ROOMS_YAML_BYTES {
+      return Err(ChatError::RoomsYamlLoadFailed(
+        "rooms.yaml trop volumineux (> 1 Mio)".to_string(),
+      ));
     }
     let content =
       std::fs::read_to_string(&path).map_err(|e| ChatError::RoomsYamlLoadFailed(e.to_string()))?;
@@ -208,7 +213,9 @@ impl JoinCode {
   /// # Errors
   ///
   /// - [`ChatError::InvalidJoinCode`] si le préfixe est absent, si le
-  ///   base64 est invalide ou si le JSON est malformé.
+  ///   base64 est invalide, si le JSON est malformé, ou si les champs ne
+  ///   passent pas la validation.
+  /// - [`ChatError::JoinCodeSignatureInvalid`] si le champ `sig` est vide.
   pub fn decode(s: &str) -> ChatResult<Self> {
     use base64::Engine as _;
     let b64 = s
@@ -217,21 +224,122 @@ impl JoinCode {
     let bytes = base64::engine::general_purpose::URL_SAFE_NO_PAD
       .decode(b64)
       .map_err(|_| ChatError::InvalidJoinCode)?;
-    serde_json::from_slice(&bytes).map_err(|_| ChatError::InvalidJoinCode)
+    let jc: Self = serde_json::from_slice(&bytes).map_err(|_| ChatError::InvalidJoinCode)?;
+
+    // Correction 5 : validation des champs après désérialisation.
+
+    // Valider room_id comme UUID.
+    uuid::Uuid::parse_str(&jc.room_id).map_err(|_| ChatError::InvalidJoinCode)?;
+
+    // Valider invited_by comme fingerprint 40-hex.
+    if jc.invited_by.len() != 40 || !jc.invited_by.chars().all(|c| c.is_ascii_hexdigit()) {
+      return Err(ChatError::InvalidJoinCode);
+    }
+
+    // Valider relay via parse_relay_url (rejette mqtt://localhost.evil.com, schémas inconnus…).
+    crate::chat::mqtt::parse_relay_url(&jc.relay).map_err(|_| ChatError::InvalidJoinCode)?;
+
+    // Borner room_name à 256 octets.
+    if jc.room_name.as_ref().map_or(0, |n| n.len()) > 256 {
+      return Err(ChatError::InvalidJoinCode);
+    }
+
+    // sig non vide (la vérification cryptographique a lieu dans verify()).
+    if jc.sig.is_empty() {
+      return Err(ChatError::JoinCodeSignatureInvalid);
+    }
+
+    Ok(jc)
   }
 
-  /// Vérifie la signature du code d'invitation.
+  /// Signe les octets du join code avec la clef locale et retourne la signature armored.
   ///
-  /// La vérification utilise `gpg::validate_fp` puis le keyring local.
-  /// Si la clef de l'invitant est absente, retourne
-  /// [`ChatError::JoinCodeInviterUnknown`].
+  /// Utilise `gpg --batch --armor --detach-sign --local-user <signer_fp>`.
   ///
   /// # Errors
   ///
-  /// - [`ChatError::JoinCodeInviterUnknown`] — clef absente.
-  /// - [`ChatError::JoinCodeSignatureInvalid`] — signature invalide.
-  pub fn verify(&self) -> ChatResult<()> {
-    // TODO(axe4): impl via ChatCryptoCtx::verify_detached
-    todo!("impl in axe 4 (crypto)")
+  /// - [`ChatError::InvalidJoinCode`] — erreur I/O lors de la signature.
+  /// - [`ChatError::JoinCodeSignatureInvalid`] — gpg a échoué à signer.
+  pub fn sign(&self, homedir: &str, signer_fp: &str) -> ChatResult<String> {
+    use crate::gpg::gpg_command;
+
+    let signed_bytes = self.signed_bytes();
+
+    let mut child = gpg_command(homedir)
+      .args([
+        "--batch",
+        "--armor",
+        "--detach-sign",
+        "--local-user",
+        signer_fp,
+      ])
+      .stdin(std::process::Stdio::piped())
+      .stdout(std::process::Stdio::piped())
+      .stderr(std::process::Stdio::null())
+      .spawn()
+      .map_err(|_| ChatError::InvalidJoinCode)?;
+
+    if let Some(stdin) = child.stdin.as_mut() {
+      stdin
+        .write_all(&signed_bytes)
+        .map_err(|_| ChatError::InvalidJoinCode)?;
+    }
+
+    let out = child
+      .wait_with_output()
+      .map_err(|_| ChatError::JoinCodeSignatureInvalid)?;
+
+    if !out.status.success() {
+      return Err(ChatError::JoinCodeSignatureInvalid);
+    }
+
+    String::from_utf8(out.stdout).map_err(|_| ChatError::JoinCodeSignatureInvalid)
+  }
+
+  /// Vérifie la signature du code d'invitation via le keyring GPG local.
+  ///
+  /// Utilise `gpg --batch --verify` pour valider la signature détachée
+  /// portée par le champ `sig` sur les octets retournés par `signed_bytes()`.
+  ///
+  /// # Errors
+  ///
+  /// - [`ChatError::JoinCodeSignatureInvalid`] — signature absente ou invalide.
+  /// - [`ChatError::InvalidJoinCode`] — erreur I/O lors de la vérification.
+  pub fn verify(&self, homedir: &str) -> ChatResult<()> {
+    use crate::gpg::gpg_command;
+
+    if self.sig.is_empty() {
+      return Err(ChatError::JoinCodeSignatureInvalid);
+    }
+
+    let data = self.signed_bytes();
+
+    // Écrire les données dans un fichier temporaire.
+    let mut data_tmp = tempfile::NamedTempFile::new().map_err(|_| ChatError::InvalidJoinCode)?;
+    data_tmp
+      .write_all(&data)
+      .map_err(|_| ChatError::InvalidJoinCode)?;
+
+    // Écrire la signature dans un fichier temporaire.
+    let mut sig_tmp = tempfile::NamedTempFile::new().map_err(|_| ChatError::InvalidJoinCode)?;
+    sig_tmp
+      .write_all(self.sig.as_bytes())
+      .map_err(|_| ChatError::InvalidJoinCode)?;
+
+    let out = gpg_command(homedir)
+      .args([
+        "--batch",
+        "--verify",
+        sig_tmp.path().to_str().unwrap_or(""),
+        data_tmp.path().to_str().unwrap_or(""),
+      ])
+      .output()
+      .map_err(|_| ChatError::JoinCodeSignatureInvalid)?;
+
+    if out.status.success() {
+      Ok(())
+    } else {
+      Err(ChatError::JoinCodeSignatureInvalid)
+    }
   }
 }

@@ -396,6 +396,9 @@ pub enum Message {
   /// ACK reçu : (room_id, msg_id, sender_fp).
   ChatAckReceived(String, String, String),
   ChatAckSent(Result<(), String>),
+
+  /// Signal interne — opération de fond sans résultat pertinent pour l'UI.
+  ChatBackgroundDone,
 }
 
 pub(crate) fn truncate_error(msg: String) -> String {
@@ -829,6 +832,7 @@ impl App {
       Message::PresenceUpdated(u) => self.on_presence_updated(u),
       Message::ChatAckReceived(rid, mid, sfp) => self.on_chat_ack_received(rid, mid, sfp),
       Message::ChatAckSent(r) => self.on_chat_ack_sent(r),
+      Message::ChatBackgroundDone => Task::none(),
     }
   }
 

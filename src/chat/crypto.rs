@@ -30,6 +30,7 @@ pub struct ChatCryptoCtx {
 impl ChatCryptoCtx {
   /// Vérifie que la clef privée locale est disponible dans le keyring.
   pub fn load(local_fp: &str, _peers: &[Fingerprint]) -> ChatResult<Self> {
+    crate::gpg::validate_fp(local_fp).map_err(|e| ChatError::InvalidFingerprint(e.to_string()))?;
     let homedir = gnupg_dir().map_err(|e| ChatError::InvalidConfig(format!("GPG homedir: {e}")))?;
 
     // Vérifier que la clef secrète existe.
@@ -140,21 +141,17 @@ impl ChatCryptoCtx {
     let plaintext = String::from_utf8(output.stdout)
       .map_err(|e| ChatError::DecryptFailed(format!("utf8: {e}")))?;
 
-    // Extraire le fingerprint du signataire depuis le status fd.
-    let stderr = String::from_utf8_lossy(&output.stderr);
-    let signer_fp = stderr
+    // Extraire le fingerprint 40-hex du signataire depuis le status fd.
+    // On exige VALIDSIG (pas GOODSIG) car VALIDSIG contient le fingerprint
+    // 40-hex complet, ce qui permet la vérification stricte de l'identité.
+    let stderr_str = String::from_utf8_lossy(&output.stderr);
+    let signer_fp = stderr_str
       .lines()
-      .find(|l| l.contains("[GNUPG:] GOODSIG") || l.contains("[GNUPG:] VALIDSIG"))
-      .and_then(|l| {
-        // VALIDSIG <fp40> ...
-        if l.contains("VALIDSIG") {
-          l.split_whitespace().nth(2).map(|s| s.to_string())
-        } else {
-          // GOODSIG <key_id> ...
-          l.split_whitespace().nth(2).map(|s| s.to_string())
-        }
-      })
-      .unwrap_or_default();
+      .find(|l| l.contains("[GNUPG:] VALIDSIG"))
+      .and_then(|l| l.split_whitespace().nth(2))
+      .filter(|fp| fp.len() == 40 && fp.chars().all(|c| c.is_ascii_hexdigit()))
+      .map(|fp| fp.to_string())
+      .ok_or(ChatError::SignatureInvalid)?;
 
     Ok(VerifiedMessage {
       plaintext,

@@ -51,7 +51,7 @@ fn expiry_to_str(expiry: &KeyExpiry) -> &'static str {
   }
 }
 
-pub(super) fn validate_fp(fp: &str) -> Result<()> {
+pub(crate) fn validate_fp(fp: &str) -> Result<()> {
   if fp.len() != 40 || !fp.chars().all(|c| c.is_ascii_hexdigit()) {
     anyhow::bail!("Fingerprint invalide : doit être 40 caractères hexadécimaux");
   }

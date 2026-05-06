@@ -186,6 +186,12 @@ impl MqttHandle {
   /// - [`ChatError::TlsError`] — URL `mqtt://` non-locale en production.
   /// - [`ChatError::InvalidConfig`] — URL malformée.
   pub fn spawn(config: MqttConfig) -> ChatResult<Self> {
+    // Correction 8 : valider le fingerprint de présence avant tout traitement.
+    if config.presence_fp.len() != 40 || !config.presence_fp.chars().all(|c| c.is_ascii_hexdigit())
+    {
+      return Err(ChatError::InvalidFingerprint(config.presence_fp.clone()));
+    }
+
     let (host, port, use_tls) = parse_relay_url(&config.relay)?;
 
     // Tronquer le client_id à 23 caractères (limite du protocole MQTT 3.1).
@@ -209,11 +215,9 @@ impl MqttHandle {
 
     // Last Will Testament — publié automatiquement par le broker en cas de
     // déconnexion brutale.
-    let fp16 = if config.presence_fp.len() >= 16 {
-      &config.presence_fp[..16]
-    } else {
-      &config.presence_fp
-    };
+    // Le fingerprint a été validé à 40 chars ci-dessus ; on utilise .min()
+    // pour satisfaire le borrow checker sans panic.
+    let fp16 = &config.presence_fp[..16_usize.min(config.presence_fp.len())];
     let lwt_topic = format!("{PRESENCE_TOPIC_PREFIX}/{fp16}");
     let lwt = LastWill::new(lwt_topic, b"offline".to_vec(), QoS::AtLeastOnce, true);
     options.set_last_will(lwt);
@@ -244,6 +248,34 @@ impl MqttHandle {
     // try_lock est safe ici car la méthode est appelée lors de la construction
     // de la Subscription, jamais sur le chemin chaud de réception de messages.
     self.inner.event_rx.try_lock().ok()?.take()
+  }
+
+  /// Publie un message de façon synchrone en envoyant sur le canal `cmd_tx`.
+  ///
+  /// Peut être appelé depuis un `blocking_task` sans `block_on` — le canal
+  /// `UnboundedSender` est synchrone côté émetteur.
+  ///
+  /// # Errors
+  ///
+  /// Retourne [`ChatError::MqttNotConnected`] si le canal interne est fermé
+  /// (tâche tokio terminée).
+  pub fn publish_sync(
+    &self,
+    topic: &str,
+    payload: Vec<u8>,
+    qos: u8,
+    retain: bool,
+  ) -> ChatResult<()> {
+    self
+      .inner
+      .cmd_tx
+      .send(MqttCmd::Publish {
+        topic: topic.to_string(),
+        payload,
+        qos,
+        retain,
+      })
+      .map_err(|_| ChatError::MqttNotConnected)
   }
 
   /// Envoie une commande d'arrêt propre à la tâche tokio.
@@ -380,13 +412,19 @@ async fn mqtt_task(
             try_send(&event_tx, MqttEvent::Connected);
           }
           Ok(rumqttc::Event::Incoming(rumqttc::Packet::Publish(p))) => {
-            try_send(
-              &event_tx,
-              MqttEvent::MessageReceived {
-                topic: p.topic.clone(),
-                payload: p.payload.to_vec(),
-              },
-            );
+            // Correction 6 : dropper les payloads trop longs AVANT de copier
+            // en mémoire pour éviter les allocations DoS.
+            if p.payload.len() > crate::chat::MAX_WIRE_MESSAGE_BYTES {
+              // Ignorer silencieusement.
+            } else {
+              try_send(
+                &event_tx,
+                MqttEvent::MessageReceived {
+                  topic: p.topic.clone(),
+                  payload: p.payload.to_vec(),
+                },
+              );
+            }
           }
           Ok(_) => {
             // Autres packets (SubAck, PingResp, etc.) — ignorés silencieusement.
@@ -448,7 +486,7 @@ fn try_send(tx: &mpsc::Sender<MqttEvent>, event: MqttEvent) {
 ///
 /// - [`ChatError::InvalidConfig`] — URL malformée.
 /// - [`ChatError::TlsError`] — `mqtt://` non-local refusé en production.
-fn parse_relay_url(relay: &str) -> ChatResult<(String, u16, bool)> {
+pub(crate) fn parse_relay_url(relay: &str) -> ChatResult<(String, u16, bool)> {
   let (scheme, rest) = relay
     .split_once("://")
     .ok_or_else(|| ChatError::InvalidConfig(format!("URL malformée : {relay}")))?;
