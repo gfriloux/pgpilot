@@ -30,6 +30,16 @@ fn make_test_app() -> App {
     expiry_warnings: Vec::new(),
     config,
     strings,
+    // Chat fields
+    rooms: Vec::new(),
+    active_room: None,
+    chat_messages: std::collections::HashMap::new(),
+    presence: pgpilot::chat::PresenceTracker::new(),
+    mqtt_state: pgpilot::app::MqttState::Disconnected,
+    mqtt: None,
+    chat_input: String::new(),
+    chat_new_form: pgpilot::app::ChatNewForm::default(),
+    chat_crypto: None,
   }
 }
 
