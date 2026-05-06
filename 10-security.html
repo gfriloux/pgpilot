@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Key Management - pgpilot</title>
+        <title>Security - pgpilot</title>
 
 
         <!-- Custom HTML head -->
@@ -146,7 +146,7 @@
                         <a href="https://github.com/gfriloux/pgpilot" title="Git repository" aria-label="Git repository">
                             <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
                         </a>
-                        <a href="https://github.com/gfriloux/pgpilot/edit/main/book/src/src/3-key-management.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                        <a href="https://github.com/gfriloux/pgpilot/edit/main/book/src/src/10-security.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
                             <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
                         </a>
 
@@ -180,323 +180,17 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <h1 id="key-management"><a class="header" href="#key-management">Key Management</a></h1>
-<p>Detailed workflows for managing GPG keys with pgpilot.</p>
-<h2 id="understanding-key-structure"><a class="header" href="#understanding-key-structure">Understanding Key Structure</a></h2>
-<p>pgpilot creates keys with a specific structure optimized for modern cryptography:</p>
-<ul>
-<li><strong>Primary key</strong> (master cert): ed25519, certification-only (doesn’t expire)</li>
-<li><strong>Sign subkey</strong> (S): ed25519, for signing files and commits</li>
-<li><strong>Encryption subkey</strong> (E): cv25519, for decryption of messages/files</li>
-<li><strong>Auth subkey</strong> (A): ed25519 (optional), for SSH authentication</li>
-</ul>
-<p>This structure follows best practices: subkeys can be rotated without changing your master key identity.</p>
-<hr>
-<h2 id="navigating-the-key-list"><a class="header" href="#navigating-the-key-list">Navigating the Key List</a></h2>
-<p>The <strong>My Keys</strong> view displays your secret keys in a 2-column layout:</p>
-<p><strong>Left panel (320px fixed)</strong>:</p>
-<ul>
-<li>Master key list with name, email, creation date, and expiry badge</li>
-<li>Trust level indicator (colored badge: Undefined / Marginal / Full)</li>
-<li>Key icons (S E A) for subkey types present</li>
-</ul>
-<p><strong>Right panel (fills remaining space)</strong>:</p>
-<ul>
-<li>Detailed key information</li>
-<li>Subkey list (read-only)</li>
-<li>Action buttons (Export, Backup, Migrate, Publish, Delete)</li>
-<li>Trust level picker</li>
-</ul>
-<p>Click a key in the list to select it and view details on the right.</p>
-<hr>
-<h2 id="managing-trust-levels"><a class="header" href="#managing-trust-levels">Managing Trust Levels</a></h2>
-<p><strong>Trust levels</strong> tell pgpilot how much you trust a key. When encrypting, only keys at sufficient trust (Full or Ultimate) are recommended without warning.</p>
-<h3 id="view-trust-level"><a class="header" href="#view-trust-level">View trust level</a></h3>
-<ol>
-<li>Select a key in the list (right panel shows details)</li>
-<li>Find the <strong>Trust</strong> badge — shows current level
-<ul>
-<li><strong>Undefined</strong> (gray) — you haven’t verified this key</li>
-<li><strong>Marginal</strong> (amber) — you’ve partially verified the owner</li>
-<li><strong>Full</strong> (green) — you’ve fully verified the owner</li>
-<li><strong>Ultimate</strong> (green, rare) — you own this key</li>
-</ul>
-</li>
-</ol>
-<h3 id="change-trust-level"><a class="header" href="#change-trust-level">Change trust level</a></h3>
-<ol>
-<li>Select a key in the list</li>
-<li>In the detail panel, click the <strong>Trust</strong> badge</li>
-<li>A picker appears with three options: Undefined, Marginal, Full</li>
-<li>Click your choice</li>
-<li>Trust is saved immediately (calls <code>gpg --import-ownertrust</code>)</li>
-</ol>
-<p><strong>Best practice</strong>: Set trust only after meeting someone in person and verifying their fingerprint by hand.</p>
-<hr>
-<h2 id="working-with-subkeys"><a class="header" href="#working-with-subkeys">Working with Subkeys</a></h2>
-<p>Subkeys are the workhorses of your key. They handle encryption and signing, while the primary key stays secure.</p>
-<h3 id="view-subkeys"><a class="header" href="#view-subkeys">View subkeys</a></h3>
-<p>Select a key in the list. The right panel shows a <strong>Subkeys</strong> section:</p>
-<pre><code>[S] Sign             Created: 2024-01-15   Expires: Never
-    Algo: ed25519  ID: ABC123...
-
-[E] Encrypt          Created: 2024-01-15   Expires: Never
-    Algo: cv25519  ID: DEF456...
-
-[A] Auth SSH         Created: 2024-01-20   Expires: 2026-01-20
-    Algo: ed25519  ID: GHI789...
-</code></pre>
-<p>Legend: <strong>[S]</strong> = Sign, <strong>[E]</strong> = Encrypt, <strong>[A]</strong> = Authentication.</p>
-<h3 id="add-a-subkey"><a class="header" href="#add-a-subkey">Add a subkey</a></h3>
-<p>If you’re missing a subkey (e.g., you created a key without SSH Auth and want to add it now):</p>
-<ol>
-<li>Select your key</li>
-<li>Click <strong>+ Add Subkey</strong></li>
-<li>Choose the type: Sign / Encrypt / Auth</li>
-<li>Confirm</li>
-<li>pgpilot calls <code>gpg --quick-add-key</code> with the new subkey</li>
-</ol>
-<p>This is useful when you realize you need a subkey you didn’t include at creation.</p>
-<h3 id="renew-subkey-expiry"><a class="header" href="#renew-subkey-expiry">Renew subkey expiry</a></h3>
-<p>Subkeys expire by default (after 1, 2, or 5 years — see <a href="2-quickstart.html">Quickstart</a>). Renewal extends the expiry date.</p>
-<ol>
-<li>Select a key, then click a subkey card’s <strong>Renew</strong> button</li>
-<li>A modal appears asking for new expiry duration (1/2/5 years)</li>
-<li>Click <strong>Renew</strong></li>
-<li>pgpilot calls <code>gpg --quick-set-expire</code></li>
-<li>The subkey’s expiry updates</li>
-</ol>
-<p>You can renew a subkey as many times as needed.</p>
-<h3 id="rotate-a-subkey-replace"><a class="header" href="#rotate-a-subkey-replace">Rotate a subkey (Replace)</a></h3>
-<p>Rotation creates a <strong>new</strong> subkey with fresh parameters and <strong>revokes</strong> the old one. Use this when:</p>
-<ul>
-<li>A subkey is compromised or suspected compromised</li>
-<li>You want to keep the primary key but refresh all subkeys</li>
-</ul>
-<p>Process:</p>
-<ol>
-<li>Select a key, then click a subkey card’s <strong>Replace</strong> button</li>
-<li>A modal appears asking for new expiry duration</li>
-<li>Click <strong>Replace</strong></li>
-<li>pgpilot:
-<ul>
-<li>Snapshots your secret key (backup)</li>
-<li>Creates a new subkey with <code>gpg --quick-add-key</code></li>
-<li>Revokes the old subkey via <code>gpg --edit-key</code> (dialogue-driven)</li>
-<li>If revocation fails, restores the snapshot</li>
-</ul>
-</li>
-<li>When done, the old subkey is marked revoked; new one is active</li>
-</ol>
-<p><strong>Note</strong>: The primary key identity is unchanged — fingerprint stays the same.</p>
-<hr>
-<h2 id="exporting-keys"><a class="header" href="#exporting-keys">Exporting Keys</a></h2>
-<p>Share your public key with contacts, or backup your secret key.</p>
-<h3 id="export-public-key-file"><a class="header" href="#export-public-key-file">Export public key (file)</a></h3>
-<ol>
-<li>Select your key</li>
-<li>Click <strong>Export</strong> or the three-dot menu</li>
-<li>Choose <strong>File</strong></li>
-<li>pgpilot opens a file-save dialog</li>
-<li>Choose a location (default: <code>YourName.pub.asc</code>)</li>
-<li>Click <strong>Save</strong></li>
-</ol>
-<p>The <code>.asc</code> file contains only your <strong>public key</strong>. It’s safe to share widely.</p>
-<h3 id="export-public-key-clipboard"><a class="header" href="#export-public-key-clipboard">Export public key (clipboard)</a></h3>
-<ol>
-<li>Select your key</li>
-<li>Click <strong>Export</strong> or the three-dot menu</li>
-<li>Choose <strong>Clipboard</strong></li>
-<li>A confirmation modal appears (to avoid accidental copy)</li>
-<li>Click <strong>Copy</strong></li>
-<li>pgpilot copies the public key to clipboard</li>
-<li>A green status message confirms: “Key copied”</li>
-</ol>
-<p>Now paste it into an email, chat, or website.</p>
-<h3 id="export-public-key-upload-to-pasters"><a class="header" href="#export-public-key-upload-to-pasters">Export public key (upload to paste.rs)</a></h3>
-<ol>
-<li>Select your key</li>
-<li>Click <strong>Export</strong> or the three-dot menu</li>
-<li>Choose <strong>Paste</strong></li>
-<li>A confirmation modal appears</li>
-<li>Click <strong>Paste</strong></li>
-<li>pgpilot uploads to paste.rs and returns a shareable link (e.g., <code>https://paste.rs/abc123</code>)</li>
-<li>Share that link — anyone can fetch your public key without needing email or GitHub</li>
-</ol>
-<p>This is handy for temporary sharing or embedding in a bio.</p>
-<h3 id="backup-secret-key"><a class="header" href="#backup-secret-key">Backup secret key</a></h3>
-<p><strong>IMPORTANT</strong>: Your secret key is what allows you to decrypt messages and sign files. Back it up in a secure location!</p>
-<ol>
-<li>Select your key</li>
-<li>Click <strong>Backup</strong></li>
-<li>pgpilot opens a folder-picker dialog</li>
-<li>Choose a secure location (USB drive, external SSD, safe, etc.)</li>
-<li>Click <strong>Select Folder</strong></li>
-<li>pgpilot exports two files:
-<ul>
-<li><code>&lt;KeyID&gt;_secret.asc</code> — your <strong>secret key</strong> (encrypted, requires password to use)</li>
-<li><code>&lt;KeyID&gt;_revocation.rev</code> — <strong>revocation certificate</strong> (if available)</li>
-</ul>
-</li>
-<li>A status message confirms: “Backup complete”</li>
-</ol>
-<p><strong>Security practices</strong>:</p>
-<ul>
-<li>Store backup offline (no network)</li>
-<li>Encrypt the USB drive itself</li>
-<li>Keep a copy in a physical safe if critical</li>
-<li>Test recovery annually (decrypt, check fingerprint)</li>
-</ul>
-<hr>
-<h2 id="importing-keys"><a class="header" href="#importing-keys">Importing Keys</a></h2>
-<p>Add someone else’s public key to your keyring so you can send them encrypted messages.</p>
-<h3 id="import-from-file"><a class="header" href="#import-from-file">Import from file</a></h3>
-<ol>
-<li>Click <strong>Import</strong> in the sidebar</li>
-<li>The <strong>Import</strong> view opens with tabs</li>
-<li>Select <strong>File</strong></li>
-<li>Click <strong>Choose file</strong></li>
-<li>Select an <code>.asc</code> file containing a PGP key</li>
-<li>Click <strong>Import</strong></li>
-<li>pgpilot validates and imports the key</li>
-<li>If successful, you’re returned to <strong>My Keys</strong> with the new key listed</li>
-</ol>
-<h3 id="import-from-url"><a class="header" href="#import-from-url">Import from URL</a></h3>
-<ol>
-<li>Click <strong>Import</strong></li>
-<li>Select <strong>URL</strong></li>
-<li>Paste an HTTPS link to a <code>.asc</code> file (e.g., <code>https://example.com/keys/alice.asc</code>)</li>
-<li>Click <strong>Load from URL</strong></li>
-<li>pgpilot fetches the file and imports it</li>
-</ol>
-<p>Must be HTTPS; HTTP is rejected for security.</p>
-<h3 id="import-from-keyserver"><a class="header" href="#import-from-keyserver">Import from keyserver</a></h3>
-<ol>
-<li>Click <strong>Import</strong></li>
-<li>Select <strong>Keyserver</strong></li>
-<li>Enter a search query:
-<ul>
-<li><strong>Fingerprint</strong> (40 hex chars): <code>ABCD1234...</code></li>
-<li><strong>Key ID</strong> (16 hex chars): <code>1234567890ABCDEF</code></li>
-<li><strong>Email</strong>: <code>alice@example.com</code></li>
-</ul>
-</li>
-<li>Choose keyserver:
-<ul>
-<li><strong>keys.openpgp.org</strong> (default, recommended — privacy-respecting)</li>
-<li><strong>keyserver.ubuntu.com</strong> (traditional, returns all matching keys)</li>
-</ul>
-</li>
-<li>Click <strong>Search</strong></li>
-<li>pgpilot queries the keyserver and shows matching key(s)</li>
-<li>Click <strong>Import</strong> for the key you want</li>
-</ol>
-<p>For email queries, pgpilot URL-encodes the address and uses the <code>/pks/lookup?op=get</code> API endpoint.</p>
-<h3 id="import-from-pasted-text"><a class="header" href="#import-from-pasted-text">Import from pasted text</a></h3>
-<ol>
-<li>Click <strong>Import</strong></li>
-<li>Select <strong>Paste</strong></li>
-<li>Paste the entire armored key text (begins with <code>-----BEGIN PGP PUBLIC KEY BLOCK-----</code>)</li>
-<li>The preview updates live</li>
-<li>Click <strong>Import</strong></li>
-<li>pgpilot validates and adds the key</li>
-</ol>
-<p><strong>Security note</strong>: pgpilot validates that input starts with <code>-----BEGIN PGP</code>, rejecting HTML pages, error messages, etc.</p>
-<hr>
-<h2 id="deleting-keys"><a class="header" href="#deleting-keys">Deleting Keys</a></h2>
-<p>Remove a key from your keyring.</p>
-<h3 id="delete-public-key"><a class="header" href="#delete-public-key">Delete public key</a></h3>
-<p>If you have only the <strong>public key</strong> (no secret):</p>
-<ol>
-<li>Select the key in <strong>My Keys</strong></li>
-<li>Click <strong>Delete</strong></li>
-<li>A confirmation modal appears: “Are you sure?”</li>
-<li>Click <strong>Delete</strong></li>
-<li>pgpilot calls <code>gpg --delete-keys &lt;fingerprint&gt;</code></li>
-<li>Key is removed; status shows: “Key deleted”</li>
-</ol>
-<h3 id="delete-secret-key"><a class="header" href="#delete-secret-key">Delete secret key</a></h3>
-<p>If you have the <strong>secret key</strong>:</p>
-<ol>
-<li>Select the key</li>
-<li>Click <strong>Delete</strong></li>
-<li>A warning modal appears: “This action cannot be undone…”</li>
-<li>Click <strong>Delete secret key</strong></li>
-<li>pgpilot calls <code>gpg --delete-secret-and-public-keys &lt;fingerprint&gt;</code></li>
-<li>Both secret and public key are erased</li>
-<li>Status: “Key deleted”</li>
-</ol>
-<p><strong>CRITICAL</strong>: Before deleting your secret key, export a backup! Once deleted, you cannot decrypt old messages or revoke the key if it’s compromised.</p>
-<h3 id="delete-yubikey-stub"><a class="header" href="#delete-yubikey-stub">Delete YubiKey stub</a></h3>
-<p>If a key is stored on a <strong>YubiKey</strong> (smart card):</p>
-<ol>
-<li>Select the key</li>
-<li>Click <strong>Supprimer</strong></li>
-<li>Confirm</li>
-<li>pgpilot removes the key from your local keyring</li>
-</ol>
-<p>The stub remains on the card; you can re-import it later. The private key is <strong>not</strong> erased from the card (only a <code>gpg</code> delete on the keyring stub).</p>
-<hr>
-<h2 id="publishing-to-keyservers"><a class="header" href="#publishing-to-keyservers">Publishing to Keyservers</a></h2>
-<p>Make your public key discoverable so others can find you by email.</p>
-<h3 id="publish-a-key"><a class="header" href="#publish-a-key">Publish a key</a></h3>
-<ol>
-<li>Select your key</li>
-<li>Click <strong>Publish</strong></li>
-<li>A modal appears asking which keyserver:
-<ul>
-<li><strong>keys.openpgp.org</strong> (recommended — verified keys only, privacy-preserving)</li>
-<li><strong>keyserver.ubuntu.com</strong> (traditional, lists all keys)</li>
-</ul>
-</li>
-<li>Click <strong>Publish</strong></li>
-<li>pgpilot calls <code>gpg --keyserver &lt;url&gt; --send-keys &lt;fingerprint&gt;</code></li>
-<li>If successful, status shows: “Key published to <code>&lt;serveur&gt;</code>”</li>
-</ol>
-<h3 id="check-publication-status"><a class="header" href="#check-publication-status">Check publication status</a></h3>
-<ol>
-<li>Select your key</li>
-<li>In the detail panel, find the <strong>Keyserver</strong> badge:
-<ul>
-<li><strong>Unknown</strong> (gray) — not yet checked</li>
-<li><strong>Checking</strong> (spinner) — checking now</li>
-<li><strong>Published</strong> (green) — found on keyserver</li>
-<li><strong>Not Published</strong> (red) — not found</li>
-</ul>
-</li>
-</ol>
-<p>pgpilot automatically checks status every time you view a key (calls <code>safe_get(https://keys.openpgp.org/...)</code> to verify).</p>
-<h3 id="auto-republish"><a class="header" href="#auto-republish">Auto-republish</a></h3>
-<p>pgpilot automatically re-publishes <strong>already-published</strong> keys every 4 weeks:</p>
-<ul>
-<li>When you rotate a subkey, pgpilot remembers which keyserver you used</li>
-<li>Every 28 days, it re-sends the key to keep your certificate fresh on the keyserver</li>
-<li>You can trigger manually anytime by clicking <strong>Publish</strong> again</li>
-</ul>
-<p>This ensures your key stays visible and your latest subkeys are always discoverable.</p>
-<h3 id="share-a-keyserver-link"><a class="header" href="#share-a-keyserver-link">Share a keyserver link</a></h3>
-<p>Once published, you can share a direct link to your key:</p>
-<pre><code>https://keys.openpgp.org/search?q=alice@example.com
-</code></pre>
-<p>Others can fetch your key without your email or any central authority.</p>
-<hr>
-<h2 id="next-steps"><a class="header" href="#next-steps">Next steps</a></h2>
-<ul>
-<li>Encrypt files for contacts — see <a href="5-file-operations.html">File Operations</a></li>
-<li>Use SSH with your Auth subkey — see <a href="6-smartcard.html">YubiKey / Smartcard</a> (SSH section)</li>
-<li>Rotate keys on hardware — see <a href="6-smartcard.html">YubiKey / Smartcard</a></li>
-<li>Troubleshoot issues — see <a href="8-troubleshooting.html">Troubleshooting</a></li>
-</ul>
+                        <h1 id="security"><a class="header" href="#security">Security</a></h1>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="2-quickstart.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="9-troubleshooting.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                             </a>
 
-                            <a rel="next prefetch" href="4-keyserver.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="11-settings.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                             </a>
 
@@ -506,11 +200,11 @@
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="2-quickstart.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="9-troubleshooting.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                     </a>
 
-                    <a rel="next prefetch" href="4-keyserver.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="11-settings.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                     </a>
             </nav>

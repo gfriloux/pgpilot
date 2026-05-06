@@ -36,10 +36,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-81af80cd.js";
+            window.path_to_searchindex_js = "searchindex-2f8bd295.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-a800ce08.js"></script>
+        <script src="toc-002d9d84.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -220,7 +220,7 @@
 <li><a href="#installation">Installation</a> — Install pgpilot on your system</li>
 <li><a href="#quickstart">Quickstart</a> — Create your first key in 5 minutes</li>
 <li><a href="#key-management">Key Management</a> — Detailed workflows for all operations</li>
-<li><a href="#security-1">Security</a> — Learn about threat models and best practices</li>
+<li><a href="9-security.html">Security</a> — Learn about threat models and best practices</li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="installation"><a class="header" href="#installation">Installation</a></h1>
@@ -309,7 +309,7 @@ echo $WAYLAND_DISPLAY  # Wayland
 <p>Open the <strong>Diagnostic</strong> page (sidebar, “Diagnostic” button):</p>
 <ul>
 <li>All checks should show “OK” or “Info” (green/blue icons)</li>
-<li>If you see “Error” in red, follow the troubleshooting guide (see <a href="#troubleshooting-4">Troubleshooting</a>)</li>
+<li>If you see “Error” in red, follow the troubleshooting guide (see <a href="8-troubleshooting.html">Troubleshooting</a>)</li>
 </ul>
 </li>
 </ol>
@@ -345,7 +345,7 @@ rm -rf ~/.gnupg/
 <ul>
 <li>Read <a href="#quickstart">Quickstart</a> to create your first key</li>
 <li>See <a href="#key-management">Key Management</a> for detailed workflows</li>
-<li>Check <a href="#troubleshooting-4">Troubleshooting</a> if you encounter issues</li>
+<li>Check <a href="8-troubleshooting.html">Troubleshooting</a> if you encounter issues</li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="quickstart"><a class="header" href="#quickstart">Quickstart</a></h1>
@@ -765,7 +765,7 @@ rm -rf ~/.gnupg/
 <li>Encrypt files for contacts — see <a href="#file-operations">File Operations</a></li>
 <li>Use SSH with your Auth subkey — see <a href="#yubikey--smartcard">YubiKey / Smartcard</a> (SSH section)</li>
 <li>Rotate keys on hardware — see <a href="#yubikey--smartcard">YubiKey / Smartcard</a></li>
-<li>Troubleshoot issues — see <a href="#troubleshooting-4">Troubleshooting</a></li>
+<li>Troubleshoot issues — see <a href="8-troubleshooting.html">Troubleshooting</a></li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="keyserver--sharing"><a class="header" href="#keyserver--sharing">Keyserver &amp; Sharing</a></h1>
@@ -1181,7 +1181,7 @@ The key was revoked (reason: compromise)
 <h2 id="troubleshooting-1"><a class="header" href="#troubleshooting-1">Troubleshooting</a></h2>
 <p><strong>“Password prompt hangs”</strong></p>
 <ul>
-<li>See <a href="#troubleshooting-4">Troubleshooting</a> — pinentry issues</li>
+<li>See <a href="8-troubleshooting.html">Troubleshooting</a> — pinentry issues</li>
 </ul>
 <p><strong>“File already exists”</strong></p>
 <ul>
@@ -1232,7 +1232,7 @@ The key was revoked (reason: compromise)
 <ul>
 <li>Hardware key plugged in (USB-A, USB-C, or NFC depending on model)</li>
 <li>GnuPG ≥ 2.2 (with smart card support)</li>
-<li><code>scdaemon</code> running (usually automatic; see <a href="#troubleshooting-4">Troubleshooting</a>)</li>
+<li><code>scdaemon</code> running (usually automatic; see <a href="8-troubleshooting.html">Troubleshooting</a>)</li>
 </ul>
 <hr>
 <h2 id="checking-card-status"><a class="header" href="#checking-card-status">Checking Card Status</a></h2>
@@ -1249,7 +1249,7 @@ The key was revoked (reason: compromise)
 <p>If no card is detected:</p>
 <ul>
 <li>Check that the key is plugged in</li>
-<li>See <a href="#troubleshooting-4">Troubleshooting</a> for scdaemon issues</li>
+<li>See <a href="8-troubleshooting.html">Troubleshooting</a> for scdaemon issues</li>
 </ul>
 <hr>
 <h2 id="migrating-a-subkey-to-hardware"><a class="header" href="#migrating-a-subkey-to-hardware">Migrating a Subkey to Hardware</a></h2>
@@ -1385,7 +1385,7 @@ quit
 <ul>
 <li>Plug in the key (USB-A, USB-C, or NFC)</li>
 <li>Check: <code>gpg --card-status</code></li>
-<li>If error, see <a href="#troubleshooting-4">Troubleshooting</a> — scdaemon section</li>
+<li>If error, see <a href="8-troubleshooting.html">Troubleshooting</a> — scdaemon section</li>
 </ul>
 <p><strong>“Migration failed”</strong></p>
 <ul>
@@ -1400,7 +1400,7 @@ quit
 <ul>
 <li>Card unplugged</li>
 <li>Card unresponsive (try unplugging and re-plugging)</li>
-<li>See <a href="#troubleshooting-4">Troubleshooting</a> — pinentry/scdaemon issues</li>
+<li>See <a href="8-troubleshooting.html">Troubleshooting</a> — pinentry/scdaemon issues</li>
 </ul>
 <p><strong>“Two keys on same card”</strong></p>
 <ul>
@@ -1453,7 +1453,98 @@ quit
 <ul>
 <li>Learn about encryption &amp; signing — see <a href="#file-operations">File Operations</a></li>
 <li>Publish keys with migrated subkeys — see <a href="#keyserver--sharing">Keyserver &amp; Sharing</a></li>
-<li>Diagnose issues — see <a href="#troubleshooting-4">Troubleshooting</a></li>
+<li>Diagnose issues — see <a href="8-troubleshooting.html">Troubleshooting</a></li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="pgp-chat"><a class="header" href="#pgp-chat">PGP Chat</a></h1>
+<p>PGPilot includes an end-to-end encrypted chat, built on OpenPGP and MQTT.
+Messages are ephemeral — closing PGPilot deletes them permanently.</p>
+<h2 id="security-model-in-one-sentence"><a class="header" href="#security-model-in-one-sentence">Security model in one sentence</a></h2>
+<p>Every message is encrypted with the recipients’ public keys and signed with
+your private key. The relay server sees only encrypted blobs.</p>
+<h2 id="prerequisites-1"><a class="header" href="#prerequisites-1">Prerequisites</a></h2>
+<ul>
+<li>Your contacts’ public keys must be in your local keyring.
+Import them from a keyserver or file before creating a room.</li>
+<li>A working private key (software key or YubiKey — gpg-agent handles both, including
+PIN prompts and touch policies).</li>
+</ul>
+<h2 id="creating-a-room"><a class="header" href="#creating-a-room">Creating a room</a></h2>
+<ol>
+<li>Click <strong>Rooms</strong> in the sidebar.</li>
+<li>Click <strong>+ New</strong>.</li>
+<li>Select <strong>Your identity</strong> in this room (your private key).</li>
+<li>Enter a <strong>Room name</strong> (local only — not shared).</li>
+<li>Enter the <strong>Relay</strong> URL (default: <code>mqtts://broker.hivemq.com:8883</code>).</li>
+<li>Select <strong>Participants</strong> from your keyring.</li>
+<li>Click <strong>Create room</strong>.</li>
+</ol>
+<h2 id="sharing-an-invitation"><a class="header" href="#sharing-an-invitation">Sharing an invitation</a></h2>
+<ol>
+<li>Open the room.</li>
+<li>Click <strong>Copy invite</strong> in the header.</li>
+<li>Share the <code>pgpilot:join:...</code> code out-of-band (email, Signal, in person).
+The code is signed with your private key — recipients verify it is from you.</li>
+</ol>
+<h2 id="joining-a-room"><a class="header" href="#joining-a-room">Joining a room</a></h2>
+<ol>
+<li>Click <strong>Rooms → Join</strong>.</li>
+<li>Select <strong>Your identity</strong> in this room.</li>
+<li>Paste the <code>pgpilot:join:...</code> code.</li>
+<li>Click <strong>Join</strong>.
+PGPilot verifies the invitation signature before connecting.</li>
+</ol>
+<h2 id="sending-a-message"><a class="header" href="#sending-a-message">Sending a message</a></h2>
+<p>Type in the compose bar and press <strong>Enter</strong> (or click <strong>►</strong>).
+Messages are encrypted for all participants before being published.</p>
+<h2 id="verifying-sender-identity"><a class="header" href="#verifying-sender-identity">Verifying sender identity</a></h2>
+<p>Every message displays a <strong>lock icon</strong> next to the sender’s name when the
+GPG signature was successfully verified.</p>
+<p>Click the lock icon (or the sender’s name) to expand an identity panel showing:</p>
+<ul>
+<li><strong>Verified signature</strong> — GPG confirmed the message was signed with this key</li>
+<li><strong>Name and email</strong> — from the key metadata</li>
+<li><strong>Full fingerprint</strong> — the 40-character cryptographic identifier; compare it
+out-of-band (phone, Signal, in person) to confirm the sender’s identity</li>
+<li><strong>Trust level</strong> — your local assessment of this key (Undefined / Marginal / Full)</li>
+</ul>
+<p>If you see <strong>⚠</strong> instead of a lock icon, the sender’s public key is not in your keyring.
+The message still decrypted (your private key worked), but the signature could
+not be verified. Import the sender’s key to verify future messages.</p>
+<p>Click again to close the identity panel.</p>
+<h2 id="presence-indicators"><a class="header" href="#presence-indicators">Presence indicators</a></h2>
+<ul>
+<li><strong>●</strong> Online — participant is connected to the relay.</li>
+<li><strong>○</strong> Offline — participant has disconnected or not yet joined.</li>
+</ul>
+<h2 id="delivery-receipts-ack"><a class="header" href="#delivery-receipts-ack">Delivery receipts (ACK)</a></h2>
+<p>Below each sent message:</p>
+<ul>
+<li><strong>✓ Name</strong> — the participant decrypted your message.</li>
+<li><strong>⏳ Name</strong> — the participant is offline; receipt pending.</li>
+</ul>
+<h2 id="security"><a class="header" href="#security">Security</a></h2>
+<p><strong>Messages are ephemeral.</strong> Closing PGPilot permanently deletes all messages.
+No chat log is written to disk. Only <code>rooms.yaml</code> persists (room IDs and
+participant fingerprints — no message content).</p>
+<p><strong>The relay is blind.</strong> The MQTT broker sees only encrypted blobs, an opaque
+room identifier (<code>SHA256(room_id)</code> truncated), and presence status.</p>
+<p><strong>Identity is cryptographic.</strong> Every message carries a GPG signature.
+PGPilot verifies the signature before displaying any content. Spoofing your
+identity requires your private key.</p>
+<p><strong>Change the relay.</strong> You can use any MQTT broker supporting TLS (port 8883).
+Self-host <a href="https://mosquitto.org/">Mosquitto</a> or <a href="https://www.hivemq.com/">HiveMQ</a>
+for production use.</p>
+<h2 id="limitations"><a class="header" href="#limitations">Limitations</a></h2>
+<ul>
+<li><strong>No offline delivery.</strong> Messages sent while you are offline are lost.</li>
+<li><strong>No persistence.</strong> Restarting PGPilot clears all message history.</li>
+<li><strong>Public relay (default).</strong> <code>broker.hivemq.com:8883</code> (HiveMQ public broker, TLS, no SLA).
+Use a private MQTT broker for sensitive communications.</li>
+<li><strong>YubiKey with touch policy</strong>: if your card requires a physical touch per
+operation, you will need to touch it for each message sent and each message
+received (decryption). With a “touch once per session” policy this is
+transparent.</li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="faq"><a class="header" href="#faq">FAQ</a></h1>
@@ -1657,7 +1748,7 @@ gpg --keyserver keys.openpgp.org --send-keys &lt;fingerprint&gt;
 </ol>
 <p>This catches mistakes before sending.</p>
 <hr>
-<h2 id="security"><a class="header" href="#security">Security</a></h2>
+<h2 id="security-1"><a class="header" href="#security-1">Security</a></h2>
 <h3 id="is-pgpilot-secure"><a class="header" href="#is-pgpilot-secure">Is pgpilot secure?</a></h3>
 <p>pgpilot is a <strong>GUI wrapper</strong> around <code>gpg</code>. Security depends on:</p>
 <ul>
@@ -1712,7 +1803,7 @@ gpg --keyserver keys.openpgp.org --send-keys &lt;fingerprint&gt;
 <h2 id="more-questions"><a class="header" href="#more-questions">More questions?</a></h2>
 <ul>
 <li>See <a href="#troubleshooting-4">Troubleshooting</a> for common issues</li>
-<li>See <a href="#security-1">Security</a> for threat models</li>
+<li>See <a href="#security-2">Security</a> for threat models</li>
 <li>Email: guillaume+code@friloux.me (not monitored 24/7; use GitHub issues for bugs)</li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div>
@@ -2087,244 +2178,7 @@ echo '&lt;fingerprint&gt;:5:' | gpg --import-ownertrust
 </code></pre>
 <p>These commands do exactly what pgpilot does behind the scenes.</p>
 <div style="break-before: page; page-break-before: always;"></div>
-<h1 id="security-1"><a class="header" href="#security-1">Security</a></h1>
-<p>Threat model, best practices, and limitations.</p>
-<h2 id="threat-model"><a class="header" href="#threat-model">Threat Model</a></h2>
-<p>pgpilot is designed to protect against these threats:</p>
-<h3 id="data-eavesdropping"><a class="header" href="#data-eavesdropping">Data Eavesdropping</a></h3>
-<p><strong>Threat</strong>: Attacker intercepts your files in transit (email, cloud, USB).</p>
-<p><strong>Protection</strong>: File encryption.</p>
-<ul>
-<li><strong>How</strong>: Use pgpilot to encrypt files before sending.</li>
-<li><strong>Result</strong>: Only recipients with private keys can decrypt.</li>
-</ul>
-<h3 id="forged-messages"><a class="header" href="#forged-messages">Forged Messages</a></h3>
-<p><strong>Threat</strong>: Attacker sends a message claiming to be you (impersonation).</p>
-<p><strong>Protection</strong>: Digital signatures.</p>
-<ul>
-<li><strong>How</strong>: Use pgpilot to sign files. Recipients verify with your public key.</li>
-<li><strong>Result</strong>: Only you could have signed (proves authenticity).</li>
-</ul>
-<h3 id="key-theft-disk"><a class="header" href="#key-theft-disk">Key Theft (Disk)</a></h3>
-<p><strong>Threat</strong>: Attacker steals your computer or disk.</p>
-<p><strong>Protection</strong>: Hardware keys (YubiKey) or passphrases.</p>
-<ul>
-<li><strong>Hardware</strong>: Private keys never leave the card. Attacker gets nothing.</li>
-<li><strong>Passphrase</strong>: Private key is encrypted on disk. Attacker must crack passphrase.</li>
-</ul>
-<h3 id="subkey-compromise"><a class="header" href="#subkey-compromise">Subkey Compromise</a></h3>
-<p><strong>Threat</strong>: One subkey (e.g., Encryption) is compromised, but you don’t know.</p>
-<p><strong>Protection</strong>: Subkey rotation and revocation.</p>
-<ul>
-<li><strong>How</strong>: Use pgpilot <strong>Replace</strong> to create new subkey and revoke old.</li>
-<li><strong>Result</strong>: Old subkey marked revoked; new one is active.</li>
-</ul>
-<h3 id="key-loss"><a class="header" href="#key-loss">Key Loss</a></h3>
-<p><strong>Threat</strong>: You lose access to your private key (hardware failure, deletion).</p>
-<p><strong>Protection</strong>: Backups.</p>
-<ul>
-<li><strong>How</strong>: Use pgpilot <strong>Backup</strong> to export secret key and revocation cert.</li>
-<li><strong>Result</strong>: If you lose key, you can restore from backup. If you can’t restore, you can revoke and create new key.</li>
-</ul>
-<hr>
-<h2 id="what-pgpilot-does-not-protect-against"><a class="header" href="#what-pgpilot-does-not-protect-against">What pgpilot Does NOT Protect Against</a></h2>
-<h3 id="compromised-computer"><a class="header" href="#compromised-computer">Compromised Computer</a></h3>
-<p><strong>Threat</strong>: Malware installs on your computer and reads private keys, passphrases, or plaintext files.</p>
-<p><strong>Limitations</strong>:</p>
-<ul>
-<li>pgpilot uses <code>gpg</code> on your computer. If OS is compromised, attacker can intercept.</li>
-<li>If using a YubiKey, keys themselves are protected, but attacker could intercept commands to sign/decrypt.</li>
-<li>Decrypted files on disk are readable to malware.</li>
-</ul>
-<p><strong>Mitigation</strong>:</p>
-<ul>
-<li>Keep OS patched (fewer vulnerabilities)</li>
-<li>Use antivirus / malware scanner</li>
-<li>Don’t run untrusted binaries</li>
-<li>Use a hardware key (harder to extract secrets)</li>
-</ul>
-<h3 id="weak-passphrases"><a class="header" href="#weak-passphrases">Weak Passphrases</a></h3>
-<p><strong>Threat</strong>: Attacker brute-forces your private key password.</p>
-<p><strong>Limitations</strong>:</p>
-<ul>
-<li>If passphrase is weak (e.g., “password123”), attacker can try all possibilities.</li>
-<li>2024 GPUs can test billions of passphrases per second.</li>
-</ul>
-<p><strong>Mitigation</strong>:</p>
-<ul>
-<li>Use strong passphrases: 15+ characters, mixed case, numbers, symbols</li>
-<li>Use a passphrase manager (Bitwarden, 1Password, KeePass)</li>
-<li>Use a hardware key (no passphrase needed, can’t be brute-forced)</li>
-</ul>
-<h3 id="trust-mistakes"><a class="header" href="#trust-mistakes">Trust Mistakes</a></h3>
-<p><strong>Threat</strong>: You trust the wrong person’s key (you don’t actually verify their identity).</p>
-<p><strong>Limitations</strong>:</p>
-<ul>
-<li>pgpilot relies on you to verify fingerprints in person.</li>
-<li>If you skip verification, you might encrypt to an attacker’s key.</li>
-</ul>
-<p><strong>Mitigation</strong>:</p>
-<ul>
-<li><strong>Always</strong> verify fingerprints by comparing in person or via a secure channel.</li>
-<li>Use pgpilot’s trust levels (Marginal / Full) to mark who you’ve verified.</li>
-<li>Encrypt test files to yourself first; only encrypt to strangers after verification.</li>
-</ul>
-<h3 id="network-eavesdropping-keyserver-lookups"><a class="header" href="#network-eavesdropping-keyserver-lookups">Network Eavesdropping (Keyserver Lookups)</a></h3>
-<p><strong>Threat</strong>: Attacker monitors your network and sees which keys you’re searching for (privacy leak).</p>
-<p><strong>Limitations</strong>:</p>
-<ul>
-<li>When you search a keyserver, your search query is visible (unless VPN/Tor).</li>
-<li>Attacker can infer who you’re communicating with.</li>
-</ul>
-<p><strong>Mitigation</strong>:</p>
-<ul>
-<li>Use VPN or Tor for keyserver lookups</li>
-<li>Use keys.openpgp.org (doesn’t return email addresses in searches, more private)</li>
-<li>Avoid searching by email; search by fingerprint instead</li>
-</ul>
-<h3 id="gpg-bugs"><a class="header" href="#gpg-bugs">GPG Bugs</a></h3>
-<p><strong>Threat</strong>: Undiscovered vulnerability in GnuPG could leak keys or signatures.</p>
-<p><strong>Limitations</strong>:</p>
-<ul>
-<li>pgpilot delegates all crypto to <code>gpg</code>. If <code>gpg</code> is broken, pgpilot is broken.</li>
-</ul>
-<p><strong>Mitigation</strong>:</p>
-<ul>
-<li>Keep GnuPG updated: <code>gpg --version</code> should show latest version</li>
-<li>Monitor security advisories: https://gnupg.org/security.html</li>
-<li>Use a hardware key (reduces attack surface; much of crypto happens on-chip)</li>
-</ul>
-<hr>
-<h2 id="best-practices-3"><a class="header" href="#best-practices-3">Best Practices</a></h2>
-<h3 id="key-creation"><a class="header" href="#key-creation">Key Creation</a></h3>
-<ol>
-<li><strong>Create via pgpilot or <code>gpg --batch</code></strong> (not interactive; avoids mistakes)</li>
-<li><strong>No expiry on master key</strong> (pgpilot default; correct design)</li>
-<li><strong>2-year expiry on subkeys</strong> (pgpilot default; balance freshness + usability)</li>
-<li><strong>Use ed25519 / cv25519</strong> (pgpilot default; modern, secure)</li>
-</ol>
-<h3 id="passphrases"><a class="header" href="#passphrases">Passphrases</a></h3>
-<ol>
-<li><strong>Strong</strong>: 15+ characters, mix of case + numbers + symbols</li>
-<li><strong>Unique</strong>: Don’t reuse passwords from other accounts</li>
-<li><strong>Backed up</strong>: Store securely in a password manager</li>
-<li><strong>Reviewed regularly</strong>: Ensure you still remember it</li>
-</ol>
-<h3 id="backups"><a class="header" href="#backups">Backups</a></h3>
-<ol>
-<li><strong>Backup immediately after key creation</strong> (use pgpilot <strong>Backup</strong>)</li>
-<li><strong>Store offline</strong>: USB in a safe, not on your computer</li>
-<li><strong>Encrypt the backup</strong> (use VeraCrypt, LUKS, BitLocker)</li>
-<li><strong>Test annual recovery</strong>: Restore to temp machine, verify it works</li>
-<li><strong>Document passphrases</strong>: Store separately from key backup (in password manager)</li>
-</ol>
-<h3 id="trust--verification"><a class="header" href="#trust--verification">Trust &amp; Verification</a></h3>
-<ol>
-<li><strong>Verify fingerprints in person</strong> (meet face-to-face if possible)</li>
-<li><strong>Or via trusted channel</strong> (video call, phone call from known number)</li>
-<li><strong>Never trust email/text</strong> (attacker can intercept)</li>
-<li><strong>Set trust explicitly</strong> (don’t encrypt to Undefined-trust keys)</li>
-<li><strong>Review trust annually</strong> (revoke if person is no longer trustworthy)</li>
-</ol>
-<h3 id="key-rotation"><a class="header" href="#key-rotation">Key Rotation</a></h3>
-<ol>
-<li><strong>Renew subkeys before expiry</strong> (1-2 months before expiration date)</li>
-<li><strong>Rotate compromised subkeys immediately</strong> (use pgpilot <strong>Replace</strong>)</li>
-<li><strong>Publish rotations to keyserver</strong> (use pgpilot <strong>Publish</strong>)</li>
-<li><strong>Announce to contacts</strong> (email with new key details)</li>
-</ol>
-<h3 id="hardware-keys-yubikey"><a class="header" href="#hardware-keys-yubikey">Hardware Keys (YubiKey)</a></h3>
-<ol>
-<li><strong>Change default PIN</strong> (from <code>12345678</code> to strong PIN)</li>
-<li><strong>Keep with you</strong> (don’t leave unattended)</li>
-<li><strong>Backup master key offline</strong> (YubiKey only holds subkeys)</li>
-<li><strong>Test recovery</strong>: If card lost, can you restore from backup?</li>
-<li><strong>Document serial number</strong> (in case of loss/theft)</li>
-</ol>
-<h3 id="file-encryption"><a class="header" href="#file-encryption">File Encryption</a></h3>
-<ol>
-<li><strong>Test encryption/decryption</strong> (encrypt to yourself first)</li>
-<li><strong>Use armor format</strong> (<code>.asc</code>) for plain text / email</li>
-<li><strong>Use binary format</strong> (<code>.gpg</code>) for files, archives</li>
-<li><strong>Keep signatures with files</strong> (store <code>.sig</code> next to encrypted file)</li>
-<li><strong>Verify signatures before trusting</strong> (always check signer trust)</li>
-</ol>
-<hr>
-<h2 id="limitations-of-pgpilot"><a class="header" href="#limitations-of-pgpilot">Limitations of pgpilot</a></h2>
-<h3 id="no-master-key-expiry"><a class="header" href="#no-master-key-expiry">No Master Key Expiry</a></h3>
-<p>pgpilot doesn’t let you set master key expiry. This is intentional:</p>
-<ul>
-<li>Master key expiry is complex and rarely needed</li>
-<li>Modern practice: keep master key forever; rotate subkeys instead</li>
-<li>If you need expiring master keys, use <code>gpg --quick-gen-key "Name" ed25519 cert 1y</code></li>
-</ul>
-<h3 id="no-key-server-pulling-search-only"><a class="header" href="#no-key-server-pulling-search-only">No Key Server Pulling (Search Only)</a></h3>
-<p>pgpilot can import keys from keyservers (pull), but cannot pull <strong>updates</strong> to your existing keys.</p>
-<p><strong>Workaround</strong>: Periodically re-import your contacts’ keys to get latest versions:</p>
-<pre><code class="language-bash">gpg --keyserver keys.openpgp.org --recv-keys &lt;their-fingerprint&gt;
-</code></pre>
-<p>Or use external tools:</p>
-<pre><code class="language-bash">gpg --auto-key-retrieve  # Fetches unknown signing keys automatically
-</code></pre>
-<h3 id="no-expiry-modification-master-key"><a class="header" href="#no-expiry-modification-master-key">No Expiry Modification (Master Key)</a></h3>
-<p>You cannot change master key expiry in pgpilot. Use <code>gpg</code> directly:</p>
-<pre><code class="language-bash">gpg --quick-set-expire &lt;master-fp&gt; &lt;duration&gt;
-</code></pre>
-<h3 id="no-user-id-management"><a class="header" href="#no-user-id-management">No User ID Management</a></h3>
-<p>pgpilot doesn’t add/remove user IDs (email addresses) on keys.</p>
-<p><strong>Workaround</strong>: Use <code>gpg --edit-key &lt;fp&gt;</code> → <code>adduid</code> / <code>deluid</code>.</p>
-<h3 id="no-direct-ssh-key-export-auth-subkey"><a class="header" href="#no-direct-ssh-key-export-auth-subkey">No Direct SSH Key Export (Auth Subkey)</a></h3>
-<p>pgpilot doesn’t export Auth subkeys as SSH public keys. Use:</p>
-<pre><code class="language-bash">gpg --export-ssh-key &lt;fingerprint&gt; &gt; ~/.ssh/id_pgp.pub
-</code></pre>
-<p>pgpilot may add this in a future version.</p>
-<h3 id="no-key-signing-web-of-trust"><a class="header" href="#no-key-signing-web-of-trust">No Key Signing (Web of Trust)</a></h3>
-<p>pgpilot doesn’t sign other keys (key signing parties). Use:</p>
-<pre><code class="language-bash">gpg --default-key &lt;your-fp&gt; --sign-key &lt;their-fp&gt;
-</code></pre>
-<h3 id="no-revocation-generation-master-key"><a class="header" href="#no-revocation-generation-master-key">No Revocation Generation (Master Key)</a></h3>
-<p>pgpilot cannot generate revocation certificates for master keys. Use:</p>
-<pre><code class="language-bash">gpg --gen-revoke &lt;master-fp&gt; &gt; revocation.asc
-</code></pre>
-<p>Keep this file offline in case of emergency.</p>
-<hr>
-<h2 id="reporting-security-issues"><a class="header" href="#reporting-security-issues">Reporting Security Issues</a></h2>
-<p>If you discover a security vulnerability in pgpilot:</p>
-<ol>
-<li><strong>Do NOT post on GitHub issues</strong> (public disclosure could harm users)</li>
-<li><strong>Email</strong>: guillaume+code@friloux.me</li>
-<li><strong>Include</strong>:
-<ul>
-<li>Detailed description of vulnerability</li>
-<li>Steps to reproduce</li>
-<li>Potential impact</li>
-<li>Suggested fix (if any)</li>
-</ul>
-</li>
-<li><strong>Allow time</strong> for pgpilot maintainers to respond and patch</li>
-</ol>
-<p>Responsible disclosure is appreciated. Security researchers will be credited.</p>
-<hr>
-<h2 id="openpgp-standards"><a class="header" href="#openpgp-standards">OpenPGP Standards</a></h2>
-<p>pgpilot uses:</p>
-<ul>
-<li><strong>OpenPGP RFC 4880</strong> (IETF standard)</li>
-<li><strong>Modern algorithms</strong>: ed25519 (sign), cv25519 (encrypt), SHA-256+</li>
-<li><strong>Deprecated algorithms avoided</strong>: RSA 1024, SHA-1, MD5, IDEA, 3DES, etc.</li>
-</ul>
-<p>GnuPG enforces these standards, preventing weak keys.</p>
-<hr>
-<h2 id="further-reading"><a class="header" href="#further-reading">Further Reading</a></h2>
-<ul>
-<li><strong>GnuPG Manual</strong>: https://gnupg.org/documentation/manuals/gnupg/</li>
-<li><strong>RFC 4880</strong> (OpenPGP spec): https://tools.ietf.org/html/rfc4880</li>
-<li><strong>keys.openpgp.org privacy policy</strong>: https://keys.openpgp.org/about</li>
-<li><strong>YubiKey documentation</strong>: https://support.yubico.com/</li>
-<li><strong>NIST Cybersecurity Framework</strong>: https://www.nist.gov/cyberframework</li>
-</ul>
-<hr>
-<h2 id="questions"><a class="header" href="#questions">Questions?</a></h2>
-<p>See <a href="#faq">FAQ</a> or <a href="#troubleshooting-4">Troubleshooting</a> for answers to common questions.</p>
+<h1 id="security-2"><a class="header" href="#security-2">Security</a></h1>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="settings"><a class="header" href="#settings">Settings</a></h1>
 <p>Configure pgpilot appearance and language preferences.</p>
