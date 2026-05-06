@@ -3,6 +3,44 @@
 All notable changes to pgpilot are documented here.
 Releases follow [Semantic Versioning](https://semver.org/).
 
+## [0.6.0] — 2026-05-06
+
+### Bug Fixes
+
+- **chat**: audit fixes, SHA-256 topics, JoinCode signing, sender verification ([`38a3a84`](https://github.com/gfriloux/pgpilot/commit/38a3a84d0eb8aecb3128753a27ffda5427715f4a))
+- **chat**: show decrypt errors in UI, use primary key fp from VALIDSIG ([`5040aa3`](https://github.com/gfriloux/pgpilot/commit/5040aa3bb0bde8c84d413cb421838b754d121fb8))
+- **chat**: pre-fill relay with HiveMQ default in new room form ([`07d583c`](https://github.com/gfriloux/pgpilot/commit/07d583cc1d53236592fffcb217d311b232256d9a))
+
+### Documentation
+
+- **THREAT_MODEL**: chat feature ([`6d49912`](https://github.com/gfriloux/pgpilot/commit/6d49912ca06d357ee97d942b1fe6b870134c93ac))
+- **book**: add v0.6.0 documentation ([`a522657`](https://github.com/gfriloux/pgpilot/commit/a522657175738c2c43416dc2c89e62b025f50b5c))
+- **THREAT_MODEL**: fix YubiKey limitation (GPG subprocess supports smartcards) ([`8fb710b`](https://github.com/gfriloux/pgpilot/commit/8fb710b7ade082d3842b91d78d21fa1a1c1260a7))
+- **mdbook**: fix YubiKey limitation (GPG subprocess supports smartcards) ([`b300793`](https://github.com/gfriloux/pgpilot/commit/b30079364fc545f76d87c0de1ec9bcfb66867c2a))
+- **all**: Update README.md and chat guide ([`ae6c745`](https://github.com/gfriloux/pgpilot/commit/ae6c745331c0264e937bafbd7edfc38c57edfd8e))
+
+### Features
+
+- **ui**: better english support ([`ca19506`](https://github.com/gfriloux/pgpilot/commit/ca19506cda0552320a552e5ff519b53cf7f2ed89))
+- **all**: bump version to v0.6.0 ([`cc2751f`](https://github.com/gfriloux/pgpilot/commit/cc2751ff45bcc6ec4b50462831e97986e88c2562))
+- **keys**: expiry warning banner and revocation cert manager ([`7e0f111`](https://github.com/gfriloux/pgpilot/commit/7e0f111b95284e7df1b4400ae24b52be39733aa2))
+- **chat**: add MQTT transport layer and chat module skeleton ([`c247488`](https://github.com/gfriloux/pgpilot/commit/c2474883f2494f7afa0818d8b80b8f91763fb4ec))
+- **chat**: core rooms, crypto, App integration and handlers ([`450fbbf`](https://github.com/gfriloux/pgpilot/commit/450fbbf30f4c436bee239a5ab8f8f51185bf8064))
+- **chat/ui**: add chat UI — room list, conversation, modals, i18n ([`a0e48b9`](https://github.com/gfriloux/pgpilot/commit/a0e48b94a9ed4c438d85ee488db598a1eb89a201))
+- **chat**: presence publish/subscribe and ACK integration ([`a6423d3`](https://github.com/gfriloux/pgpilot/commit/a6423d3d65ab92f06acf6379d4812a9f94609730))
+- **chat**: gpg subprocess crypto, identity picker, TLS webpki-roots, UI bubbles ([`3189fd6`](https://github.com/gfriloux/pgpilot/commit/3189fd6e5bf7d1e346fa8a7f0b0fe37b94604897))
+- **chat**: identity panel per message, click-to-show sender verification ([`b9cf7a4`](https://github.com/gfriloux/pgpilot/commit/b9cf7a486956d900c9b917644e26cfee6064b977))
+
+### Refactoring
+
+- **ui**: harmonize card layout with page_layout/card_* helpers ([`e4808a7`](https://github.com/gfriloux/pgpilot/commit/e4808a765f45194113ef1493636fb7948125dbd0))
+
+### Testing
+
+- **ui**: i18n tests ([`2ea0dcc`](https://github.com/gfriloux/pgpilot/commit/2ea0dcc4b1a5cb61febee2e7c48163049c14600d))
+- **keys**: expiry warning banner and revocation cert manager ([`c5dce62`](https://github.com/gfriloux/pgpilot/commit/c5dce624803432400d84d7f4e32833ef144345b6))
+- **chat**: tests on rooms, wire, presence, crypto, app handlers ([`5b63d6b`](https://github.com/gfriloux/pgpilot/commit/5b63d6b562941772655413379b94c9822746880d))
+- **all**: still trying to get tests working on CI ([`1dfc042`](https://github.com/gfriloux/pgpilot/commit/1dfc042c6b12130a96991602ae23d74399868ad5))
 ## [0.5.1] — 2026-05-04
 
 ### Features
