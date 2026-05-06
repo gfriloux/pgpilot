@@ -53,14 +53,13 @@ jobs:
           GNUPGHOME=/tmp/pgpilot-test-slow-${{ github.run_id }}
           mkdir -p "$GNUPGHOME"
           chmod 700 "$GNUPGHOME"
-          # Allow loopback pinentry so gpg --batch can create keys without
-          # a physical pinentry in headless CI. Does NOT remove passphrase
-          # from production key creation — only affects this test GNUPGHOME.
+          # Allow loopback pinentry so gpg --batch can create keys in headless CI.
+          # Does NOT affect production — only this isolated test GNUPGHOME.
+          # We do NOT start gpg-agent here: the Nix shell's gpg will start
+          # its own compatible agent on first use, avoiding version mismatches
+          # between the system agent and the Nix-provided gpg binary.
           echo "allow-loopback-pinentry" > "$GNUPGHOME/gpg-agent.conf"
           echo "pinentry-mode loopback" > "$GNUPGHOME/gpg.conf"
-          gpg-agent --homedir "$GNUPGHOME" --daemon || true
-        env:
-          GNUPGHOME: /tmp/pgpilot-test-slow-${{ github.run_id }}
 
       - name: cargo test (integration)
         run: nix develop --command cargo test -- --ignored
