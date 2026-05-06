@@ -64,6 +64,7 @@ fn make_test_app() -> App {
     chat_input: String::new(),
     chat_new_form: ChatNewForm::default(),
     chat_crypto: None,
+    chat_identity_popup: None,
   }
 }
 

@@ -476,34 +476,175 @@ fn message_bubble<'a>(msg: &'a ChatMessage, is_own: bool, app: &'a App) -> Eleme
     .map(|k| k.name.clone())
     .unwrap_or_else(|| msg.sender_fp.get(..8).unwrap_or(&msg.sender_fp).to_string());
 
-  // Indicateur de signature : chercher le signataire dans le keyring.
-  let sig_indicator: Element<Message> = {
-    let known =
-      !msg.sender_fp.is_empty() && app.keys.iter().any(|k| k.fingerprint == msg.sender_fp);
-    if known {
-      text("\u{f023}") // FA4 lock
-        .font(theme::ICONS)
-        .size(10)
-        .color(theme::success())
-        .into()
-    } else if msg.sender_fp.is_empty() {
-      text("\u{f071}") // FA4 warning
-        .font(theme::ICONS)
-        .size(10)
-        .color(theme::peach())
-        .into()
+  // Chercher la clef dans le keyring pour construire le tooltip d'identité.
+  let key_info = app.keys.iter().find(|k| k.fingerprint == msg.sender_fp);
+  let is_known = key_info.is_some();
+
+  // Tooltip d'identité : affiché au survol du bloc signature+nom.
+  let identity_tooltip: Element<Message> = {
+    let muted = |_: &iced::Theme| iced::widget::text::Style {
+      color: Some(theme::text_muted()),
+    };
+    let strong = |_: &iced::Theme| iced::widget::text::Style {
+      color: Some(theme::text_strong()),
+    };
+
+    let header = if is_known {
+      row![
+        text("\u{f023}")
+          .font(theme::ICONS)
+          .size(11)
+          .color(theme::success()),
+        text("Verified signature")
+          .size(11)
+          .style(|_: &iced::Theme| iced::widget::text::Style {
+            color: Some(theme::success()),
+          }),
+      ]
+      .spacing(4)
+      .align_y(Alignment::Center)
     } else {
-      text("").size(1).into() // pas de signature connue — rien
+      row![
+        text("\u{f071}")
+          .font(theme::ICONS)
+          .size(11)
+          .color(theme::peach()),
+        text("Unverified — key not in keyring")
+          .size(11)
+          .style(|_: &iced::Theme| iced::widget::text::Style {
+            color: Some(theme::peach()),
+          }),
+      ]
+      .spacing(4)
+      .align_y(Alignment::Center)
+    };
+
+    // Fingerprint formaté en groupes de 4
+    let fp_display = if msg.sender_fp.len() == 40 {
+      let s = &msg.sender_fp;
+      format!(
+        "{} {} {} {} {}\n{} {} {} {} {}",
+        &s[0..4],
+        &s[4..8],
+        &s[8..12],
+        &s[12..16],
+        &s[16..20],
+        &s[20..24],
+        &s[24..28],
+        &s[28..32],
+        &s[32..36],
+        &s[36..40]
+      )
+    } else {
+      msg.sender_fp.clone()
+    };
+
+    let mut col = column![
+      header,
+      rule::horizontal(1).style(|_: &iced::Theme| rule::Style {
+        color: theme::border(),
+        radius: 0.0.into(),
+        fill_mode: rule::FillMode::Full,
+        snap: false,
+      }),
+    ]
+    .spacing(6);
+
+    if let Some(k) = key_info {
+      col = col
+        .push(
+          column![
+            text(k.name.as_str()).size(12).style(strong),
+            text(k.email.as_str()).size(11).style(muted),
+          ]
+          .spacing(2),
+        )
+        .push(
+          column![
+            text("Fingerprint").size(10).style(muted),
+            text(fp_display.clone())
+              .size(10)
+              .font(theme::MONO)
+              .style(strong),
+          ]
+          .spacing(2),
+        )
+        .push(row![
+          text("Trust: ").size(10).style(muted),
+          text(format!("{:?}", k.trust)).size(10).style(strong),
+        ]);
+    } else {
+      col = col.push(
+        column![
+          text("Fingerprint").size(10).style(muted),
+          text(fp_display.clone())
+            .size(10)
+            .font(theme::MONO)
+            .style(strong),
+          text("Import this key to verify identity.")
+            .size(10)
+            .style(muted),
+        ]
+        .spacing(2),
+      );
     }
+
+    container(col.padding(10))
+      .max_width(260)
+      .style(|_: &iced::Theme| container::Style {
+        background: Some(Background::Color(theme::card_bg())),
+        border: Border {
+          color: theme::border(),
+          width: 1.0,
+          radius: 8.0.into(),
+        },
+        ..Default::default()
+      })
+      .into()
   };
 
+  // Bloc cliquable avec tooltip : cadenas + nom.
+  let sig_icon: Element<Message> = if is_known {
+    text("\u{f023}")
+      .font(theme::ICONS)
+      .size(10)
+      .color(theme::success())
+      .into()
+  } else if msg.sender_fp.is_empty() {
+    text("\u{f071}")
+      .font(theme::ICONS)
+      .size(10)
+      .color(theme::peach())
+      .into()
+  } else {
+    text("\u{f29c}")
+      .font(theme::ICONS)
+      .size(10)
+      .color(theme::text_muted())
+      .into()
+  };
+
+  // Identifié par msg.id (pas sender_fp) pour que chaque message ait son propre toggle.
+  let popup_active = app.chat_identity_popup.as_deref() == Some(msg.id.as_str());
+  let msg_id_for_toggle = msg.id.clone();
+
+  let sig_and_name: Element<Message> = mouse_area(
+    row![
+      sig_icon,
+      text(sender_name)
+        .size(11)
+        .style(|_: &iced::Theme| iced::widget::text::Style {
+          color: Some(theme::text_muted()),
+        }),
+    ]
+    .spacing(4)
+    .align_y(Alignment::Center),
+  )
+  .on_press(Message::ChatIdentityPopupToggle(msg_id_for_toggle))
+  .into();
+
   let meta = row![
-    sig_indicator,
-    text(sender_name)
-      .size(11)
-      .style(|_: &iced::Theme| iced::widget::text::Style {
-        color: Some(theme::text_muted()),
-      }),
+    sig_and_name,
     text(" · ")
       .size(10)
       .style(|_: &iced::Theme| iced::widget::text::Style {
@@ -555,11 +696,25 @@ fn message_bubble<'a>(msg: &'a ChatMessage, is_own: bool, app: &'a App) -> Eleme
       .into()
   };
 
-  let bubble_content: Element<Message> = if is_own {
-    let acks = ack_indicators(&msg.acks, app);
-    column![meta, body_text, acks].spacing(4).into()
-  } else {
-    column![meta, body_text].spacing(4).into()
+  let bubble_content: Element<Message> = {
+    let mut col = column![meta, body_text].spacing(4);
+
+    if is_own {
+      col = col.push(ack_indicators(&msg.acks, app));
+    }
+
+    // Panneau d'identité inline, visible après un clic sur le cadenas/nom.
+    if popup_active {
+      let sep = rule::horizontal(1).style(|_: &iced::Theme| rule::Style {
+        color: theme::border(),
+        radius: 0.0.into(),
+        fill_mode: rule::FillMode::Full,
+        snap: false,
+      });
+      col = col.push(sep).push(identity_tooltip);
+    }
+
+    col.into()
   };
 
   let bubble_style = move |_: &iced::Theme| {

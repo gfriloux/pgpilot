@@ -234,6 +234,8 @@ pub struct App {
   pub chat_new_form: ChatNewForm,
   /// Contexte crypto (Cert local + peers), chargé une fois par session.
   pub chat_crypto: Option<std::sync::Arc<crate::chat::ChatCryptoCtx>>,
+  /// Fingerprint du signataire dont le panneau d'identité est affiché dans le chat.
+  pub chat_identity_popup: Option<String>,
 }
 
 #[derive(Debug, Clone)]
@@ -399,6 +401,8 @@ pub enum Message {
 
   /// Signal interne — opération de fond sans résultat pertinent pour l'UI.
   ChatBackgroundDone,
+  /// Toggle le panneau d'identité inline pour un fingerprint de signataire.
+  ChatIdentityPopupToggle(String),
 }
 
 pub(crate) fn truncate_error(msg: String) -> String {
@@ -527,6 +531,7 @@ impl App {
           ..ChatNewForm::default()
         },
         chat_crypto: None,
+        chat_identity_popup: None,
       },
       task,
     )
@@ -833,6 +838,14 @@ impl App {
       Message::ChatAckReceived(rid, mid, sfp) => self.on_chat_ack_received(rid, mid, sfp),
       Message::ChatAckSent(r) => self.on_chat_ack_sent(r),
       Message::ChatBackgroundDone => Task::none(),
+      Message::ChatIdentityPopupToggle(fp) => {
+        if self.chat_identity_popup.as_deref() == Some(&fp) {
+          self.chat_identity_popup = None;
+        } else {
+          self.chat_identity_popup = Some(fp);
+        }
+        Task::none()
+      }
     }
   }
 
