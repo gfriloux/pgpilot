@@ -316,7 +316,7 @@ fingerprints — no message content). The file is capped at 1 MiB.
 | Metadata visible | Relay sees who is online and when | Use a private relay; presence fingerprints are truncated to 16 hex |
 | Public relay (default) | `broker.hivemq.com` has no SLA | Self-host Mosquitto or HiveMQ for production |
 | No offline delivery | Messages sent while offline are lost | Accept the tradeoff; future: NATS JetStream |
-| YubiKey not supported | Chat requires an exportable private key | Use a software key for chat; YubiKey planned for v0.7 |
+| YubiKey touch policy | A touch-per-operation card requires a touch for each message sent/received | Use a "touch once per session" policy, or a software key |
 
 ---
 

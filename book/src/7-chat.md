@@ -12,7 +12,7 @@ your private key. The relay server sees only encrypted blobs.
 
 - Your contacts' public keys must be in your local keyring.
   Import them from a keyserver or file before creating a room.
-- A working private key (not on YubiKey for v0.6.0).
+- A working private key (software or YubiKey — gpg-agent handles both).
 
 ## Creating a room
 
@@ -78,4 +78,7 @@ for production use.
 - **No persistence.** Restarting PGPilot clears all message history.
 - **Public relay (default).** `broker.hivemq.com:8883` has no SLA. Use a
   private broker for sensitive communications.
-- **YubiKey not supported** for chat in v0.6.0 (key must be exportable).
+- **YubiKey with touch policy**: if your card requires a physical touch per
+  operation, you will need to touch it for each message sent and each message
+  received (decryption). With a "touch once per session" policy this is
+  transparent.
