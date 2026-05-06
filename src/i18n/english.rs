@@ -277,7 +277,7 @@ impl Strings for EnglishStrings {
     "English"
   }
   fn settings_language_french(&self) -> &'static str {
-    "Francais"
+    "French"
   }
   fn settings_scale_factor(&self) -> &'static str {
     "UI Scale"
@@ -540,5 +540,459 @@ impl Strings for EnglishStrings {
   }
   fn err_no_decryptable_file(&self) -> &'static str {
     "No decryptable file selected."
+  }
+
+  // key_list.rs
+  fn key_list_error(&self, err: &str) -> String {
+    format!("Error: {err}")
+  }
+  fn key_list_header_name(&self) -> &'static str {
+    "Name / Email"
+  }
+  fn key_list_header_expires(&self) -> &'static str {
+    "Expires"
+  }
+  fn key_list_header_status(&self) -> &'static str {
+    "Status"
+  }
+  fn key_list_select_hint(&self) -> &'static str {
+    "Select a key to view details."
+  }
+
+  // key_detail.rs
+  fn key_type_on_card(&self) -> &'static str {
+    "On YubiKey"
+  }
+  fn key_type_public_private(&self) -> &'static str {
+    "Public + Private"
+  }
+  fn key_type_public_only(&self) -> &'static str {
+    "Public"
+  }
+  fn subkey_type_signature(&self) -> &'static str {
+    "Signature"
+  }
+  fn subkey_type_encryption(&self) -> &'static str {
+    "Encryption"
+  }
+  fn subkey_type_ssh_auth(&self) -> &'static str {
+    "SSH Auth"
+  }
+  fn export_menu_save_disk(&self) -> &'static str {
+    "Save to disk"
+  }
+  fn export_menu_copy_clipboard(&self) -> &'static str {
+    "Copy to clipboard"
+  }
+  fn export_menu_paste_link(&self) -> &'static str {
+    "Get a public link (paste.rs)"
+  }
+  fn subkey_expiry_1_year(&self) -> &'static str {
+    "1 year"
+  }
+  fn subkey_expiry_2_years(&self) -> &'static str {
+    "2 years"
+  }
+  fn subkey_expiry_5_years(&self) -> &'static str {
+    "5 years"
+  }
+
+  // create_key.rs
+  fn create_key_generating(&self) -> &'static str {
+    "Generating..."
+  }
+  fn create_key_title(&self) -> &'static str {
+    "New PGP Key"
+  }
+  fn create_key_subtitle(&self) -> &'static str {
+    "Generates a master key and its dedicated subkeys."
+  }
+  fn create_key_section_identity(&self) -> &'static str {
+    "Identity"
+  }
+  fn create_key_field_name(&self) -> &'static str {
+    "Name"
+  }
+  fn create_key_field_email(&self) -> &'static str {
+    "Email"
+  }
+  fn create_key_section_subkeys(&self) -> &'static str {
+    "Subkeys"
+  }
+  fn create_key_section_expiration(&self) -> &'static str {
+    "Expiration"
+  }
+  fn create_key_include_ssh(&self) -> &'static str {
+    "Include SSH authentication key"
+  }
+  fn create_key_about_master(&self) -> &'static str {
+    "About the master key"
+  }
+  fn create_key_hint_expiry(&self) -> &'static str {
+    "Subkeys expire automatically. A short duration limits damage in case of compromise — you can renew them before they expire."
+  }
+  fn create_key_hint_ssh(&self) -> &'static str {
+    "Allows you to authenticate on remote servers without a password, using your PGP key as an SSH key."
+  }
+  fn create_key_hint_master(&self) -> &'static str {
+    "The master key defines your long-term PGP identity — it is only used to certify your subkeys. It never expires. Keep it offline with its revocation certificate."
+  }
+
+  // encrypt.rs
+  fn encrypt_tab_my_keys(&self) -> &'static str {
+    "My keys"
+  }
+  fn encrypt_tab_public_keys(&self) -> &'static str {
+    "Public keys"
+  }
+  fn encrypt_no_keys(&self) -> &'static str {
+    "No keys with encryption capability."
+  }
+  fn encrypt_choose_files(&self) -> &'static str {
+    "Choose files..."
+  }
+  fn encrypt_drop_hint(&self) -> &'static str {
+    "Drag files here"
+  }
+  fn encrypt_format_ascii_desc(&self) -> &'static str {
+    "ASCII text — for pasting in an email or message."
+  }
+  fn encrypt_format_binary_desc(&self) -> &'static str {
+    "Compact binary — for attachments and storage."
+  }
+  fn encrypt_multi_recipient_hint(&self) -> &'static str {
+    "Each recipient can decrypt the file independently with their own key. \
+     Remember to add yourself to retain access to the encrypted file."
+  }
+  fn encrypt_select_hint(&self) -> &'static str {
+    "Select recipients and files."
+  }
+
+  // sign.rs
+  fn sign_no_keys(&self) -> &'static str {
+    "No private key with signing capability."
+  }
+  fn sign_about(&self) -> &'static str {
+    "Signing a file creates cryptographic proof that you are its author. \
+     The original file is not modified — the signature is saved in a separate .sig file."
+  }
+
+  // verify.rs
+  fn verify_sig_file_placeholder(&self) -> &'static str {
+    "Signature file (.sig)..."
+  }
+  fn verify_trust_warning(&self) -> &'static str {
+    "The displayed identity is not verified by your trust network."
+  }
+  fn verify_fingerprint_label(&self) -> &'static str {
+    "Fingerprint:"
+  }
+  fn verify_bad_sig_desc(&self) -> &'static str {
+    "The signature does not match this file. \
+     Verify that you have selected the correct file and signature."
+  }
+  fn verify_unknown_key_desc(&self) -> &'static str {
+    "The signer's public key is not in your keyring. \
+     Import it to verify the signer's identity."
+  }
+  fn verify_expired_key_desc(&self) -> &'static str {
+    "The signature is mathematically valid, but the signer's key was expired \
+     at the time of verification."
+  }
+  fn verify_revoked_key_desc(&self) -> &'static str {
+    "The key that signed this file has been revoked. \
+     The signature is no longer considered trustworthy."
+  }
+  fn verify_about(&self) -> &'static str {
+    "Verifying a signature confirms that the file has not been modified and identifies its author."
+  }
+  fn verify_sig_auto_hint_with_name(&self, auto_name: &str) -> String {
+    format!("Optional — will automatically search for {auto_name}")
+  }
+
+  // import.rs
+  fn import_source_from_file(&self) -> &'static str {
+    "From file"
+  }
+  fn import_select_source(&self) -> &'static str {
+    "Choose the source of the key to import."
+  }
+  fn import_url_hint(&self) -> &'static str {
+    "Paste a URL pointing to an armored key (paste.rs, web page, etc.)."
+  }
+  fn import_url_button(&self) -> &'static str {
+    "Import from URL"
+  }
+  fn import_keyserver_hint(&self) -> &'static str {
+    "Full fingerprint (40 hex), long ID (16 hex) or email address."
+  }
+  fn import_keyserver_button(&self) -> &'static str {
+    "Import from keyserver"
+  }
+  fn import_paste_hint(&self) -> &'static str {
+    "Paste the content of an armored PGP key (-----BEGIN PGP...)."
+  }
+  fn import_paste_button(&self) -> &'static str {
+    "Import pasted key"
+  }
+
+  // health.rs
+  fn health_category_installation(&self) -> &'static str {
+    "Installation"
+  }
+  fn health_category_agent(&self) -> &'static str {
+    "GPG Agent"
+  }
+  fn health_category_security(&self) -> &'static str {
+    "Security"
+  }
+
+  // decrypt.rs
+  fn decrypt_auto_key_hint(&self) -> &'static str {
+    "GPG will automatically use your private key. \
+     If it is protected by a passphrase, a window will open to ask for it."
+  }
+  fn decrypt_drop_hint(&self) -> &'static str {
+    "Drag .gpg or .asc files here, or use the button below."
+  }
+  fn decrypt_key_available(&self) -> &'static str {
+    "Key available"
+  }
+  fn decrypt_key_missing(&self) -> &'static str {
+    "Key missing"
+  }
+  fn decrypt_key_checking(&self) -> &'static str {
+    "Checking..."
+  }
+  fn decrypt_no_key_warning(&self) -> &'static str {
+    "Some files cannot be decrypted — you do not have the corresponding private key. \
+     These files will be skipped."
+  }
+  fn decrypt_about(&self) -> &'static str {
+    "Decrypt files encrypted with GPG."
+  }
+
+  // Expiry warning banner
+  fn expiry_warning_title(&self) -> &'static str {
+    "Subkey(s) expiring within 90 days"
+  }
+  fn expiry_warning_renew(&self) -> &'static str {
+    "Renew"
+  }
+
+  // File dialog titles
+  fn dialog_choose_files_encrypt(&self) -> &'static str {
+    "Choose files to encrypt"
+  }
+  fn dialog_choose_files_decrypt(&self) -> &'static str {
+    "Choose files to decrypt"
+  }
+  fn dialog_filter_gpg_files(&self) -> &'static str {
+    "GPG files"
+  }
+  fn dialog_choose_file_sign(&self) -> &'static str {
+    "Choose a file to sign"
+  }
+  fn dialog_choose_file_verify(&self) -> &'static str {
+    "Choose the file to verify"
+  }
+  fn dialog_choose_sig_file(&self) -> &'static str {
+    "Choose the signature file (.sig)"
+  }
+  fn dialog_choose_backup_folder(&self) -> &'static str {
+    "Choose a backup folder"
+  }
+
+  // Revocation certificate section
+  fn revocation_cert_title(&self) -> &'static str {
+    "Revocation Certificate"
+  }
+  fn revocation_cert_found(&self) -> &'static str {
+    "Certificate found"
+  }
+  fn revocation_cert_missing(&self) -> &'static str {
+    "Certificate not found"
+  }
+  fn revocation_cert_export(&self) -> &'static str {
+    "Export .rev"
+  }
+  fn revocation_cert_generate(&self) -> &'static str {
+    "Generate"
+  }
+  fn revocation_cert_copy_path(&self) -> &'static str {
+    "Copy path"
+  }
+  fn status_revocation_cert_generated(&self) -> &'static str {
+    "Revocation certificate generated"
+  }
+
+  // --- Chat v0.6.0 ---
+
+  fn nav_section_chat(&self) -> &'static str {
+    "CHAT"
+  }
+  fn nav_chat_rooms(&self) -> &'static str {
+    "Rooms"
+  }
+  fn nav_chat_rooms_ussr(&self) -> &'static str {
+    "TRANSMISSIONS"
+  }
+
+  fn chat_no_rooms(&self) -> &'static str {
+    "No conversations yet."
+  }
+  fn chat_no_rooms_ussr(&self) -> &'static str {
+    "No comrades yet. Establish secure communications."
+  }
+  fn chat_create_room(&self) -> &'static str {
+    "+ New"
+  }
+  fn chat_join_room(&self) -> &'static str {
+    "Join"
+  }
+
+  fn chat_mqtt_connected(&self) -> &'static str {
+    "Connected"
+  }
+  fn chat_mqtt_connecting(&self) -> &'static str {
+    "Connecting..."
+  }
+  fn chat_mqtt_reconnecting(&self) -> &'static str {
+    "Reconnecting..."
+  }
+  fn chat_mqtt_disconnected(&self) -> &'static str {
+    "Disconnected"
+  }
+  fn chat_mqtt_failed(&self) -> &'static str {
+    "Connection failed"
+  }
+  fn chat_mqtt_disconnected_banner(&self) -> &'static str {
+    "Disconnected — reconnecting..."
+  }
+
+  fn chat_copy_invite(&self) -> &'static str {
+    "Copy invite"
+  }
+  fn chat_leave_room(&self) -> &'static str {
+    "Leave"
+  }
+
+  fn chat_decrypt_failed(&self) -> &'static str {
+    "Could not decrypt this message"
+  }
+  fn chat_type_message(&self) -> &'static str {
+    "Type a message..."
+  }
+  fn chat_select_room(&self) -> &'static str {
+    "Select a room to start chatting."
+  }
+
+  fn chat_send(&self) -> &'static str {
+    "Send"
+  }
+
+  fn chat_create_room_title(&self) -> &'static str {
+    "Create a room"
+  }
+  fn chat_create_room_title_ussr(&self) -> &'static str {
+    "ESTABLISH SECURE CHANNEL"
+  }
+  fn chat_room_name_label(&self) -> &'static str {
+    "Room name"
+  }
+  fn chat_room_name_placeholder(&self) -> &'static str {
+    "e.g. Ops Team"
+  }
+  fn chat_relay_label(&self) -> &'static str {
+    "MQTT relay"
+  }
+  fn chat_relay_placeholder(&self) -> &'static str {
+    "mqtts://host:8883"
+  }
+  fn chat_relay_hint(&self) -> &'static str {
+    "TLS required. Use your own broker for maximum privacy."
+  }
+  fn chat_participants_label(&self) -> &'static str {
+    "Participants (one fingerprint per line)"
+  }
+  fn chat_participants_hint(&self) -> &'static str {
+    "Add participants' PGP fingerprints, one per line."
+  }
+  fn chat_create_room_btn(&self) -> &'static str {
+    "Create room"
+  }
+
+  fn chat_join_room_title(&self) -> &'static str {
+    "Join a room"
+  }
+  fn chat_join_code_label(&self) -> &'static str {
+    "Join code"
+  }
+  fn chat_join_code_placeholder(&self) -> &'static str {
+    "pgpilot:join:..."
+  }
+  fn chat_join_code_hint(&self) -> &'static str {
+    "Paste the invite code you received."
+  }
+  fn chat_join_btn(&self) -> &'static str {
+    "Join room"
+  }
+
+  fn chat_choose_identity_title(&self) -> &'static str {
+    "Choose your identity"
+  }
+  fn chat_choose_identity_hint(&self) -> &'static str {
+    "You have multiple private keys. Select the one to use in this room:"
+  }
+  fn chat_enter_room_btn(&self) -> &'static str {
+    "Enter room"
+  }
+  fn chat_confirm_identity_btn(&self) -> &'static str {
+    "Use this identity"
+  }
+
+  fn chat_leave_confirm_title(&self) -> &'static str {
+    "Leave room?"
+  }
+  fn chat_leave_confirm_body_with_name(&self, name: &str) -> String {
+    format!(
+      "You will no longer receive messages from \"{name}\". \
+       This cannot be undone — you would need a new invite to rejoin."
+    )
+  }
+  fn chat_leave_room_btn(&self) -> &'static str {
+    "Leave room"
+  }
+
+  fn status_chat_room_created(&self) -> &'static str {
+    "Room created."
+  }
+  fn status_chat_room_joined(&self) -> &'static str {
+    "Room joined."
+  }
+  fn status_chat_room_left(&self) -> &'static str {
+    "You have left the room."
+  }
+  fn status_chat_invite_copied(&self) -> &'static str {
+    "Invite code copied."
+  }
+  fn status_chat_message_sent(&self) -> &'static str {
+    "Message sent."
+  }
+
+  fn err_chat_room_create_failed(&self) -> &'static str {
+    "Failed to create room."
+  }
+  fn err_chat_room_join_failed(&self) -> &'static str {
+    "Failed to join room."
+  }
+  fn err_chat_room_leave_failed(&self) -> &'static str {
+    "Failed to leave room."
+  }
+  fn err_chat_send_failed(&self) -> &'static str {
+    "Failed to send message."
+  }
+  fn err_chat_invite_copy_failed(&self) -> &'static str {
+    "Failed to copy invite code."
   }
 }

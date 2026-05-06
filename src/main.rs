@@ -1,4 +1,5 @@
 mod app;
+mod chat;
 mod config;
 mod gpg;
 mod i18n;

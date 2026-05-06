@@ -18,6 +18,16 @@ pub struct Config {
   #[serde(default = "default_scale_factor")]
   pub scale_factor: f64,
   pub theme: ThemeVariant,
+  /// URL du broker MQTT par défaut.
+  /// `None` → fallback vers `mqtts://broker.hivemq.com:8883` (Let's Encrypt,
+  /// compatible webpki-roots). test.mosquitto.org:8883 utilise une CA v1 rejetée
+  /// par rustls — ne pas l'utiliser comme valeur par défaut.
+  #[serde(default)]
+  pub mqtt_default_relay: Option<String>,
+  /// Fingerprint 40 hex de la clef locale utilisée pour le chat.
+  /// `None` → première clef privée disponible dans le keyring.
+  #[serde(default)]
+  pub chat_local_fp: Option<String>,
 }
 
 fn default_scale_factor() -> f64 {
@@ -30,6 +40,8 @@ impl Default for Config {
       language: detect_system_language(),
       scale_factor: 1.0,
       theme: ThemeVariant::default(),
+      mqtt_default_relay: None,
+      chat_local_fp: None,
     }
   }
 }
@@ -65,15 +77,19 @@ impl Config {
   }
 }
 
-fn detect_system_language() -> Language {
-  let locale = std::env::var("LANG")
-    .or_else(|_| std::env::var("LC_ALL"))
-    .unwrap_or_default();
+fn detect_language_from_locale(locale: &str) -> Language {
   if locale.starts_with("fr") {
     Language::French
   } else {
     Language::English
   }
+}
+
+fn detect_system_language() -> Language {
+  let locale = std::env::var("LANG")
+    .or_else(|_| std::env::var("LC_ALL"))
+    .unwrap_or_default();
+  detect_language_from_locale(&locale)
 }
 
 #[cfg(test)]
@@ -82,49 +98,34 @@ mod tests {
 
   #[test]
   fn detect_language_fr() {
-    let orig_lang = std::env::var("LANG").ok();
-    let orig_lc = std::env::var("LC_ALL").ok();
-    std::env::set_var("LANG", "fr_FR.UTF-8");
-    std::env::remove_var("LC_ALL");
-    assert_eq!(detect_system_language(), Language::French);
-    match orig_lang {
-      Some(v) => std::env::set_var("LANG", v),
-      None => std::env::remove_var("LANG"),
-    }
-    if let Some(v) = orig_lc {
-      std::env::set_var("LC_ALL", v);
-    }
+    assert_eq!(detect_language_from_locale("fr_FR.UTF-8"), Language::French);
+    assert_eq!(detect_language_from_locale("fr_BE.UTF-8"), Language::French);
+    assert_eq!(detect_language_from_locale("fr"), Language::French);
   }
 
   #[test]
   fn detect_language_en() {
-    let orig_lang = std::env::var("LANG").ok();
-    let orig_lc = std::env::var("LC_ALL").ok();
-    std::env::set_var("LANG", "en_US.UTF-8");
-    std::env::remove_var("LC_ALL");
-    assert_eq!(detect_system_language(), Language::English);
-    match orig_lang {
-      Some(v) => std::env::set_var("LANG", v),
-      None => std::env::remove_var("LANG"),
-    }
-    if let Some(v) = orig_lc {
-      std::env::set_var("LC_ALL", v);
-    }
+    assert_eq!(
+      detect_language_from_locale("en_US.UTF-8"),
+      Language::English
+    );
+    assert_eq!(
+      detect_language_from_locale("en_GB.UTF-8"),
+      Language::English
+    );
   }
 
   #[test]
   fn detect_language_fallback() {
-    let orig_lang = std::env::var("LANG").ok();
-    let orig_lc = std::env::var("LC_ALL").ok();
-    std::env::remove_var("LANG");
-    std::env::remove_var("LC_ALL");
-    assert_eq!(detect_system_language(), Language::English);
-    if let Some(v) = orig_lang {
-      std::env::set_var("LANG", v);
-    }
-    if let Some(v) = orig_lc {
-      std::env::set_var("LC_ALL", v);
-    }
+    assert_eq!(detect_language_from_locale(""), Language::English);
+    assert_eq!(
+      detect_language_from_locale("de_DE.UTF-8"),
+      Language::English
+    );
+    assert_eq!(
+      detect_language_from_locale("ja_JP.UTF-8"),
+      Language::English
+    );
   }
 
   #[test]
@@ -135,6 +136,8 @@ mod tests {
       language: Language::French,
       scale_factor: 1.25,
       theme: ThemeVariant::Ussr,
+      mqtt_default_relay: None,
+      chat_local_fp: None,
     };
     let yaml = serde_yaml::to_string(&cfg).unwrap();
     std::fs::write(&path, &yaml).unwrap();

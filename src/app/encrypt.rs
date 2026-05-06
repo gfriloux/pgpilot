@@ -6,10 +6,11 @@ use super::{blocking_task, truncate_error, App, Message, StatusKind};
 
 impl App {
   pub(super) fn on_encrypt_pick_files(&mut self) -> Task<Message> {
+    let title = self.strings.dialog_choose_files_encrypt();
     Task::perform(
-      async {
+      async move {
         let handles = rfd::AsyncFileDialog::new()
-          .set_title("Choisir des fichiers à chiffrer")
+          .set_title(title)
           .pick_files()
           .await
           .unwrap_or_default();

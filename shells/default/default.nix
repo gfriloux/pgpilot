@@ -32,10 +32,13 @@ mkShell {
     gtk3
     # gpg (for testing)
     gnupg
+    # CA bundle — requis pour rustls-native-certs (connexions TLS MQTT, HTTPS)
+    cacert
   ];
 
   shellHook = ''
         export LIBCLANG_PATH="${pkgs.llvmPackages.libclang.lib}/lib"
+        export SSL_CERT_FILE="${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
         export LD_LIBRARY_PATH=${pkgs.lib.makeLibraryPath [
       pkgs.wayland
       pkgs.libxkbcommon

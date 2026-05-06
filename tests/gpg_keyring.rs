@@ -37,6 +37,11 @@ fn list_keys_empty_homedir() {
 #[test]
 #[ignore]
 fn create_key_returns_valid_fingerprint() {
+  // Key creation prompts for a passphrase via pinentry (GUI or TTY).
+  // Requires an interactive user session — skip gracefully in headless CI.
+  if std::env::var("CI").is_ok() {
+    return;
+  }
   let (_dir, _homedir) = setup_test_gnupghome();
   let result = pgpilot::gpg::keyring::create_key(
     "Test User",
@@ -50,6 +55,11 @@ fn create_key_returns_valid_fingerprint() {
 #[test]
 #[ignore]
 fn create_key_has_sign_encr_auth_subkeys() {
+  // Key creation prompts for a passphrase via pinentry (GUI or TTY).
+  // Requires an interactive user session — skip gracefully in headless CI.
+  if std::env::var("CI").is_ok() {
+    return;
+  }
   let (_dir, _homedir) = setup_test_gnupghome();
   let result = pgpilot::gpg::keyring::create_key(
     "Test User",

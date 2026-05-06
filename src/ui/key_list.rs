@@ -1,8 +1,10 @@
 use iced::{
   font,
-  widget::{column, container, mouse_area, row, rule, scrollable, text, Column},
+  widget::{button, column, container, mouse_area, row, rule, scrollable, text, Column},
   Alignment, Background, Border, Element, Font, Length,
 };
+
+use crate::gpg::SubkeyType;
 
 use crate::app::{App, KeyserverStatus, Message, View};
 use crate::ui::key_detail::ViewCtx;
@@ -22,7 +24,7 @@ pub fn view(app: &App) -> Element<'_, Message> {
   }
 
   if let Some(ref err) = app.error {
-    return container(text(format!("Erreur : {err}")).size(14))
+    return container(text(s.key_list_error(err)).size(14))
       .padding(24)
       .style(|_: &iced::Theme| container::Style {
         text_color: Some(theme::error()),
@@ -60,9 +62,18 @@ pub fn view(app: &App) -> Element<'_, Message> {
 
   let header = container(
     row![
-      text("Nom / Email").size(11).width(Length::Fill).font(bold),
-      text("Expire").size(11).width(80).font(bold),
-      text("État").size(11).width(56).font(theme::heading_font()),
+      text(s.key_list_header_name())
+        .size(11)
+        .width(Length::Fill)
+        .font(bold),
+      text(s.key_list_header_expires())
+        .size(11)
+        .width(80)
+        .font(bold),
+      text(s.key_list_header_status())
+        .size(11)
+        .width(56)
+        .font(theme::heading_font()),
     ]
     .padding([0, 12])
     .spacing(8),
@@ -161,7 +172,106 @@ pub fn view(app: &App) -> Element<'_, Message> {
   let list_scrollable = scrollable(Column::with_children(key_rows).spacing(2).padding([4, 8]))
     .style(common::scroll_style);
 
-  let list_panel = column![header, list_scrollable.height(Length::Fill)]
+  let mut list_col = column![header];
+
+  if !app.expiry_warnings.is_empty() {
+    let warning_rows: Vec<Element<Message>> = app
+      .expiry_warnings
+      .iter()
+      .map(|w| {
+        let days_left = (w.expires_at - chrono::Utc::now()).num_days();
+        let days_label = if days_left < 1 {
+          "< 1 day".to_string()
+        } else if days_left == 1 {
+          "1 day".to_string()
+        } else {
+          format!("{days_left} days")
+        };
+        let type_label = match w.subkey_type {
+          Some(SubkeyType::Sign) => "Sign",
+          Some(SubkeyType::Encr) => "Encr",
+          Some(SubkeyType::Auth) => "Auth",
+          None => "?",
+        };
+        let key_fp = w.key_fp.clone();
+        let label = format!("{} · {} · {}", w.key_name, type_label, days_label);
+        let renew_fp = w.key_fp.clone();
+        let row_content = row![
+          container(
+            mouse_area(
+              text(label)
+                .size(12)
+                .style(|_: &iced::Theme| iced::widget::text::Style {
+                  color: Some(theme::text_strong()),
+                })
+            )
+            .on_press(Message::KeySelected(key_fp))
+          )
+          .width(Length::Fill),
+          button(
+            text(s.expiry_warning_renew())
+              .size(11)
+              .style(|_: &iced::Theme| iced::widget::text::Style {
+                color: Some(theme::text_on_accent()),
+              })
+          )
+          .on_press(Message::KeySelected(renew_fp))
+          .padding([2, 8])
+          .style(|_: &iced::Theme, _| button::Style {
+            background: Some(Background::Color(theme::accent())),
+            border: Border {
+              radius: 4.0.into(),
+              ..Default::default()
+            },
+            text_color: theme::text_on_accent(),
+            ..Default::default()
+          }),
+        ]
+        .spacing(8)
+        .align_y(Alignment::Center);
+        row_content.into()
+      })
+      .collect();
+
+    let warning_icon = text("\u{f071}")
+      .font(theme::ICONS)
+      .size(13)
+      .style(|_: &iced::Theme| iced::widget::text::Style {
+        color: Some(theme::text_strong()),
+      });
+    let warning_title = text(s.expiry_warning_title())
+      .size(12)
+      .font(Font {
+        weight: font::Weight::Bold,
+        ..Font::DEFAULT
+      })
+      .style(|_: &iced::Theme| iced::widget::text::Style {
+        color: Some(theme::text_strong()),
+      });
+    let title_row = row![warning_icon, warning_title]
+      .spacing(6)
+      .align_y(Alignment::Center);
+
+    let warning_body = column(
+      std::iter::once(title_row.into())
+        .chain(warning_rows)
+        .collect::<Vec<_>>(),
+    )
+    .spacing(4);
+
+    let banner = container(warning_body)
+      .padding([8, 12])
+      .width(Length::Fill)
+      .style(|_: &iced::Theme| container::Style {
+        background: Some(Background::Color(theme::warning_bg())),
+        ..Default::default()
+      });
+
+    list_col = list_col.push(banner);
+  }
+
+  let list_panel = list_col
+    .push(list_scrollable.height(Length::Fill))
     .spacing(0)
     .width(Length::Fixed(320.0))
     .height(Length::Fill);
@@ -207,7 +317,7 @@ pub fn view(app: &App) -> Element<'_, Message> {
     .into()
   } else {
     container(
-      text("Sélectionnez une clef pour voir les détails.")
+      text(s.key_list_select_hint())
         .size(13)
         .style(|_: &iced::Theme| iced::widget::text::Style {
           color: Some(theme::text_muted()),

@@ -27,12 +27,7 @@ pub fn view<'a>(form: &'a DecryptForm, s: &'static dyn Strings) -> Element<'a, M
   let info_banner: Element<'_, Message> = container(
     row![
       text("\u{f05a}").font(theme::ICONS).size(14),
-      text(
-        "GPG utilisera automatiquement votre clef privée. \
-         Si elle est protégée par un mot de passe, une fenêtre \
-         s'ouvrira pour vous le demander."
-      )
-      .size(12),
+      text(s.decrypt_auto_key_hint()).size(12),
     ]
     .spacing(8)
     .align_y(Alignment::Center),
@@ -57,16 +52,14 @@ pub fn view<'a>(form: &'a DecryptForm, s: &'static dyn Strings) -> Element<'a, M
     .any(|f| form.file_statuses.get(f) == Some(&DecryptStatus::NoKey));
 
   let file_items: Vec<Element<'_, Message>> = if form.files.is_empty() {
-    vec![container(
-      text("Glissez des fichiers .gpg ou .asc ici, ou utilisez le bouton ci-dessous.").size(13),
-    )
-    .padding([16, 0])
-    .width(Length::Fill)
-    .style(|_: &iced::Theme| container::Style {
-      text_color: Some(theme::text_muted()),
-      ..Default::default()
-    })
-    .into()]
+    vec![container(text(s.decrypt_drop_hint()).size(13))
+      .padding([16, 0])
+      .width(Length::Fill)
+      .style(|_: &iced::Theme| container::Style {
+        text_color: Some(theme::text_muted()),
+        ..Default::default()
+      })
+      .into()]
   } else {
     form
       .files
@@ -81,9 +74,13 @@ pub fn view<'a>(form: &'a DecryptForm, s: &'static dyn Strings) -> Element<'a, M
 
         let status = form.file_statuses.get(path);
         let (badge_icon, badge_color, badge_label) = match status {
-          Some(DecryptStatus::CanDecrypt) => ("\u{f058}", theme::success(), "Clef disponible"),
-          Some(DecryptStatus::NoKey) => ("\u{f057}", theme::error(), "Clef manquante"),
-          Some(DecryptStatus::Checking) => ("\u{f110}", theme::text_muted(), "Vérification..."),
+          Some(DecryptStatus::CanDecrypt) => {
+            ("\u{f058}", theme::success(), s.decrypt_key_available())
+          }
+          Some(DecryptStatus::NoKey) => ("\u{f057}", theme::error(), s.decrypt_key_missing()),
+          Some(DecryptStatus::Checking) => {
+            ("\u{f110}", theme::text_muted(), s.decrypt_key_checking())
+          }
           _ => ("\u{f059}", theme::text_muted(), ""),
         };
 
@@ -123,7 +120,7 @@ pub fn view<'a>(form: &'a DecryptForm, s: &'static dyn Strings) -> Element<'a, M
   let add_files_btn = button(
     row![
       text("\u{f067}").font(theme::ICONS).size(12),
-      text("Choisir des fichiers...").size(13),
+      text(s.encrypt_choose_files()).size(13),
     ]
     .spacing(6)
     .align_y(Alignment::Center),
@@ -167,11 +164,7 @@ pub fn view<'a>(form: &'a DecryptForm, s: &'static dyn Strings) -> Element<'a, M
           .font(theme::ICONS)
           .size(13)
           .color(theme::error()),
-        text(
-          "Certains fichiers ne peuvent pas être déchiffrés — vous ne possédez pas \
-           la clef privée correspondante. Ces fichiers seront ignorés."
-        )
-        .size(12),
+        text(s.decrypt_no_key_warning()).size(12),
       ]
       .spacing(8)
       .align_y(Alignment::Center),
@@ -248,66 +241,30 @@ pub fn view<'a>(form: &'a DecryptForm, s: &'static dyn Strings) -> Element<'a, M
       .align_y(Alignment::Center)
       .into();
 
-  let card = container(
+  let card = column![
     column![
-      column![
-        row![
-          text("\u{f13e}").font(theme::ICONS).size(20),
-          text(theme::flavor(
-            s.decrypt_title(),
-            "Décrypter par Ordre du Soviet"
-          ))
+      row![
+        text("\u{f13e}").font(theme::ICONS).size(20),
+        text(theme::flavor(s.decrypt_title(), "Decrypt by Soviet Decree"))
           .size(22)
           .font(theme::flavor_title_font()),
-        ]
-        .spacing(10)
-        .align_y(Alignment::Center),
-        container(text("Déchiffrez des fichiers chiffrés avec GPG.").size(13)).style(
-          |_: &iced::Theme| container::Style {
-            text_color: Some(theme::text_secondary()),
-            ..Default::default()
-          }
-        ),
       ]
-      .spacing(6),
-      separator(),
-      info_banner,
-      separator(),
-      files_section,
-      separator(),
-      action_bar,
+      .spacing(10)
+      .align_y(Alignment::Center),
+      container(text(s.decrypt_about()).size(13)).style(|_: &iced::Theme| container::Style {
+        text_color: Some(theme::text_secondary()),
+        ..Default::default()
+      }),
     ]
-    .spacing(16),
-  )
-  .padding(32)
-  .width(600)
-  .style(|_: &iced::Theme| container::Style {
-    background: Some(Background::Color(theme::card_bg())),
-    border: Border {
-      color: theme::border(),
-      width: 1.0,
-      radius: 12.0.into(),
-    },
-    text_color: Some(theme::text_strong()),
-    ..Default::default()
-  });
+    .spacing(6),
+    separator(),
+    info_banner,
+    separator(),
+    files_section,
+    separator(),
+    action_bar,
+  ]
+  .spacing(16);
 
-  container(
-    scrollable(
-      container(card)
-        .center_x(Length::Fill)
-        .padding([24, 0])
-        .width(Length::Fill),
-    )
-    .height(Length::Fill)
-    .width(Length::Fill)
-    .style(common::scroll_style),
-  )
-  .height(Length::Fill)
-  .width(Length::Fill)
-  .style(|_: &iced::Theme| container::Style {
-    background: Some(Background::Color(theme::sidebar_bg())),
-    ..Default::default()
-  })
-  .into()
+  common::page_layout(common::card_wide(card))
 }

@@ -1,7 +1,7 @@
 use iced::{
   font,
   widget::{column, container, radio, rule, text, Column},
-  Background, Border, Element, Font, Length,
+  Element, Font,
 };
 
 use crate::app::{App, Message};
@@ -100,62 +100,31 @@ pub fn view(app: &App) -> Element<'_, Message> {
   ];
   scale_section_children.extend(scale_radios);
 
-  let card = container(
+  let card_content = column![
+    text(s.settings_title())
+      .size(22)
+      .font(theme::heading_font()),
+    separator(),
+    // Theme section (first — most visual)
     column![
-      text(s.settings_title())
-        .size(22)
-        .font(theme::heading_font()),
-      separator(),
-      // Theme section (first — most visual)
-      column![
-        text(s.settings_theme()).size(12).font(bold),
-        theme_catppuccin,
-        theme_ussr,
-      ]
-      .spacing(8),
-      separator(),
-      // Scale factor section
-      Column::with_children(scale_section_children).spacing(8),
-      separator(),
-      // Language section
-      column![
-        text(s.settings_language()).size(12).font(bold),
-        lang_en,
-        lang_fr,
-      ]
-      .spacing(8),
+      text(s.settings_theme()).size(12).font(bold),
+      theme_catppuccin,
+      theme_ussr,
     ]
-    .spacing(16),
-  )
-  .padding(32)
-  .width(400)
-  .style(|_: &iced::Theme| container::Style {
-    background: Some(Background::Color(theme::card_bg())),
-    border: Border {
-      color: theme::border(),
-      width: 1.0,
-      radius: 12.0.into(),
-    },
-    text_color: Some(theme::text_strong()),
-    ..Default::default()
-  });
+    .spacing(8),
+    separator(),
+    // Scale factor section
+    Column::with_children(scale_section_children).spacing(8),
+    separator(),
+    // Language section
+    column![
+      text(s.settings_language()).size(12).font(bold),
+      lang_en,
+      lang_fr,
+    ]
+    .spacing(8),
+  ]
+  .spacing(16);
 
-  container(
-    iced::widget::scrollable(
-      container(card)
-        .center_x(Length::Fill)
-        .padding([24, 0])
-        .width(Length::Fill),
-    )
-    .height(Length::Fill)
-    .width(Length::Fill)
-    .style(common::scroll_style),
-  )
-  .height(Length::Fill)
-  .width(Length::Fill)
-  .style(|_: &iced::Theme| container::Style {
-    background: Some(Background::Color(theme::sidebar_bg())),
-    ..Default::default()
-  })
-  .into()
+  common::page_layout(common::card_narrow(card_content))
 }

@@ -1,4 +1,6 @@
 pub mod button_styles;
+pub mod chat;
+pub mod chat_modals;
 pub mod common;
 pub mod create_key;
 pub mod decrypt;
@@ -21,7 +23,7 @@ use iced::{
 use crate::app::{App, Message, StatusKind, View};
 
 pub fn root(app: &App) -> Element<'_, Message> {
-  let content = match app.view {
+  let content = match &app.view {
     View::MyKeys | View::PublicKeys => key_list::view(app),
     View::CreateKey => create_key::view(&app.create_form, app.strings),
     View::Import => import::view(&app.import_form, app.strings),
@@ -31,6 +33,10 @@ pub fn root(app: &App) -> Element<'_, Message> {
     View::Sign => sign::view(&app.sign_form, &app.keys, app.strings),
     View::Verify => verify::view(&app.sign_form, app.strings),
     View::Settings => settings::view(app),
+    // --- Chat v0.6.0 ---
+    View::ChatList | View::ChatRoom(_) => chat::view(app),
+    View::ChatNewRoom => chat_modals::create_room_view(app),
+    View::ChatJoinRoom => chat_modals::join_room_view(app),
   };
 
   let main: Element<Message> = match &app.status {
@@ -109,8 +115,9 @@ pub fn root(app: &App) -> Element<'_, Message> {
 
 fn sidebar(app: &App) -> Element<'_, Message> {
   let s = app.strings;
-  let nav_btn = |icon: &'static str, label: &'static str, view: View| {
-    let active = app.view == view;
+
+  // Nav button with explicit active state (supports multi-view highlight).
+  let nav_btn_ex = |icon: &'static str, label: &'static str, view: View, active: bool| {
     button(
       row![
         text(icon).font(theme::ICONS).size(14),
@@ -147,6 +154,11 @@ fn sidebar(app: &App) -> Element<'_, Message> {
         snap: false,
       },
     )
+  };
+
+  let nav_btn = |icon: &'static str, label: &'static str, view: View| {
+    let active = app.view == view;
+    nav_btn_ex(icon, label, view, active)
   };
 
   let title_font = Font {
@@ -216,6 +228,18 @@ fn sidebar(app: &App) -> Element<'_, Message> {
       nav_btn("\u{f00c}", s.nav_verify(), View::Verify),
     ]
     .spacing(2),
+    sep(),
+    {
+      let chat_active = matches!(
+        app.view,
+        View::ChatList | View::ChatRoom(_) | View::ChatNewRoom | View::ChatJoinRoom
+      );
+      column![
+        section_label(s.nav_section_chat()),
+        nav_btn_ex("\u{f0e5}", s.nav_chat_rooms(), View::ChatList, chat_active),
+      ]
+      .spacing(2)
+    },
     sep(),
     Space::new().height(Length::Fill),
     column![

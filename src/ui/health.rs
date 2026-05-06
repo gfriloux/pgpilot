@@ -1,6 +1,6 @@
 use iced::{
   font,
-  widget::{column, container, row, scrollable, text, Column},
+  widget::{column, container, row, text, Column},
   Background, Border, Element, Font, Length,
 };
 
@@ -26,7 +26,7 @@ pub fn view<'a>(
   let title_section = column![
     text(theme::flavor(
       s.health_diagnostics_title(),
-      "Rapport au Commissariat",
+      "Report to the Commissariat",
     ))
     .size(22)
     .font(theme::flavor_title_font()),
@@ -40,49 +40,37 @@ pub fn view<'a>(
   .spacing(6);
 
   if loading {
-    return scrollable(
-      container(
-        column![
-          title_section,
-          container(text(s.health_checking()).size(13)).style(|_: &iced::Theme| {
-            container::Style {
-              text_color: Some(theme::text_muted()),
-              ..Default::default()
-            }
-          }),
-        ]
-        .spacing(24),
-      )
-      .padding(32)
-      .width(560)
-      .style(|_: &iced::Theme| container::Style {
-        background: Some(Background::Color(theme::card_bg())),
-        border: Border {
-          color: theme::border(),
-          width: 1.0,
-          radius: 12.0.into(),
-        },
-        ..Default::default()
+    let loading_content = column![
+      title_section,
+      container(text(s.health_checking()).size(13)).style(|_: &iced::Theme| {
+        container::Style {
+          text_color: Some(theme::text_muted()),
+          ..Default::default()
+        }
       }),
-    )
-    .height(Length::Fill)
-    .width(Length::Fill)
-    .style(common::scroll_style)
-    .into();
+    ]
+    .spacing(24);
+    return common::page_layout(common::card_medium(loading_content));
   }
 
-  // Group checks by category in order
-  let categories = ["Installation", "Agent GPG", "Sécurité"];
+  // Group checks by category in order.
+  // Category keys must match the strings stored in HealthCheck.category by the GPG layer.
+  let categories: [(&str, &str); 3] = [
+    ("Installation", s.health_category_installation()),
+    ("Agent GPG", s.health_category_agent()),
+    ("Sécurité", s.health_category_security()),
+  ];
 
   let sections: Vec<Element<Message>> = categories
     .iter()
-    .filter_map(|cat| {
-      let cat_checks: Vec<&HealthCheck> = checks.iter().filter(|c| c.category == *cat).collect();
+    .filter_map(|(cat_key, cat_label)| {
+      let cat_checks: Vec<&HealthCheck> =
+        checks.iter().filter(|c| c.category == *cat_key).collect();
       if cat_checks.is_empty() {
         return None;
       }
 
-      let header = text(*cat).size(13).font(bold);
+      let header = text(*cat_label).size(13).font(bold);
 
       let rows: Vec<Element<Message>> = cat_checks
         .iter()
@@ -169,37 +157,8 @@ pub fn view<'a>(
     })
     .collect();
 
-  let card =
-    container(column![title_section, Column::with_children(sections).spacing(24),].spacing(24))
-      .padding(32)
-      .width(560)
-      .style(|_: &iced::Theme| container::Style {
-        background: Some(Background::Color(theme::card_bg())),
-        border: Border {
-          color: theme::border(),
-          width: 1.0,
-          radius: 12.0.into(),
-        },
-        text_color: Some(theme::text_strong()),
-        ..Default::default()
-      });
+  let card_content =
+    column![title_section, Column::with_children(sections).spacing(24),].spacing(24);
 
-  container(
-    scrollable(
-      container(card)
-        .center_x(Length::Fill)
-        .padding([24, 0])
-        .width(Length::Fill),
-    )
-    .height(Length::Fill)
-    .width(Length::Fill)
-    .style(common::scroll_style),
-  )
-  .height(Length::Fill)
-  .width(Length::Fill)
-  .style(|_: &iced::Theme| container::Style {
-    background: Some(Background::Color(theme::sidebar_bg())),
-    ..Default::default()
-  })
-  .into()
+  common::page_layout(common::card_medium(card_content))
 }

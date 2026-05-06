@@ -1,5 +1,7 @@
 use iced::Task;
 
+use crate::gpg::{ExpiryWarning, SubkeyType};
+
 use super::{blocking_task, App, KeyserverStatus, Message, View};
 
 impl App {
@@ -12,6 +14,7 @@ impl App {
         self.keys = keys;
         self.card_connected = card_connected;
         self.loading = false;
+        self.expiry_warnings = self.compute_expiry_warnings();
         let new_fps: Vec<String> = self
           .keys
           .iter()
@@ -47,10 +50,34 @@ impl App {
   }
 
   pub(super) fn on_nav_changed(&mut self, view: View) -> Task<Message> {
-    if matches!(view, View::CreateKey | View::Import) {
+    if matches!(
+      view,
+      View::CreateKey | View::Import | View::ChatRoom(_) | View::ChatNewRoom | View::ChatJoinRoom
+    ) {
       self.previous_view = Some(self.view.clone());
     }
     let is_health = view == View::Health;
+
+    // Logique additionnelle pour les vues chat.
+    match &view {
+      View::ChatRoom(room_id) => {
+        self.active_room = Some(room_id.clone());
+        self.chat_input.clear();
+        let rid = room_id.clone();
+        self.view = view;
+        self.selected = None;
+        self.reset_pending_ops();
+        self.decrypt_form = crate::app::DecryptForm::default();
+        return self.ensure_chat_started(rid);
+      }
+      View::ChatList | View::ChatNewRoom | View::ChatJoinRoom => {
+        self.active_room = None;
+      }
+      _ => {
+        // Pour les vues hors chat, on ne touche pas à active_room.
+      }
+    }
+
     self.view = view;
     self.selected = None;
     self.reset_pending_ops();
@@ -109,5 +136,43 @@ impl App {
       }
     }
     Task::none()
+  }
+
+  fn compute_expiry_warnings(&self) -> Vec<ExpiryWarning> {
+    let now = chrono::Utc::now();
+    let threshold = now + chrono::Duration::days(90);
+    let mut warnings = vec![];
+    for key in &self.keys {
+      for subkey in &key.subkeys {
+        let Some(ref expires_str) = subkey.expires else {
+          continue;
+        };
+        let Ok(naive_date) = chrono::NaiveDate::parse_from_str(expires_str, "%Y-%m-%d") else {
+          continue;
+        };
+        let expires_at: chrono::DateTime<chrono::Utc> = chrono::DateTime::from_naive_utc_and_offset(
+          naive_date.and_hms_opt(0, 0, 0).unwrap_or_default(),
+          chrono::Utc,
+        );
+        if expires_at > now && expires_at < threshold {
+          let subkey_type = if subkey.usage.contains('E') {
+            Some(SubkeyType::Encr)
+          } else if subkey.usage.contains('A') {
+            Some(SubkeyType::Auth)
+          } else if subkey.usage.contains('S') {
+            Some(SubkeyType::Sign)
+          } else {
+            None
+          };
+          warnings.push(ExpiryWarning {
+            key_fp: key.fingerprint.clone(),
+            key_name: key.name.clone(),
+            subkey_type,
+            expires_at,
+          });
+        }
+      }
+    }
+    warnings
   }
 }

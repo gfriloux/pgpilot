@@ -1,8 +1,6 @@
 use iced::{
   font,
-  widget::{
-    button, checkbox, column, container, pick_list, row, rule, scrollable, text, text_input,
-  },
+  widget::{button, checkbox, column, container, pick_list, row, rule, text, text_input},
   Background, Border, Color, Element, Font, Length,
 };
 
@@ -68,7 +66,7 @@ pub fn view<'a>(form: &'a CreateKeyForm, s: &'static dyn Strings) -> Element<'a,
   });
 
   let label = if form.submitting {
-    "Génération..."
+    s.create_key_generating()
   } else {
     s.btn_create()
   };
@@ -130,183 +128,141 @@ pub fn view<'a>(form: &'a CreateKeyForm, s: &'static dyn Strings) -> Element<'a,
     })
   };
 
-  let card = container(
+  let card_content = column![
     column![
+      text(theme::flavor(
+        s.create_key_title(),
+        "Forge a Weapon for the People"
+      ))
+      .size(22)
+      .font(theme::flavor_title_font()),
+      container(text(s.create_key_subtitle()).size(13),).style(|_: &iced::Theme| {
+        container::Style {
+          text_color: Some(theme::text_secondary()),
+          ..Default::default()
+        }
+      }),
+    ]
+    .spacing(6),
+    separator(),
+    column![
+      text(s.create_key_section_identity()).size(12).font(bold),
       column![
-        text(theme::flavor(
-          "Nouvelle clef PGP",
-          "Forger une Arme du Peuple"
-        ))
-        .size(22)
-        .font(theme::flavor_title_font()),
-        container(text("Génère une clef maître et ses sous-clefs dédiées.").size(13),).style(
-          |_: &iced::Theme| container::Style {
-            text_color: Some(theme::text_secondary()),
-            ..Default::default()
-          }
-        ),
+        text(s.create_key_field_name()).size(12),
+        text_input("Alice Martin", &form.name)
+          .on_input(Message::CreateKeyNameChanged)
+          .size(14)
+          .width(Length::Fill)
+          .style(|_: &iced::Theme, status| {
+            let border = match status {
+              text_input::Status::Focused { .. } => theme::accent(),
+              text_input::Status::Hovered => theme::accent_border(),
+              _ => theme::border(),
+            };
+            text_input::Style {
+              background: Background::Color(theme::header_bg()),
+              border: Border {
+                color: border,
+                width: 1.0,
+                radius: 6.0.into(),
+              },
+              icon: theme::text_muted(),
+              placeholder: theme::text_muted(),
+              value: theme::text_strong(),
+              selection: theme::accent_subtle(),
+            }
+          }),
+      ]
+      .spacing(4),
+      column![
+        text(s.create_key_field_email()).size(12),
+        text_input("alice@example.com", &form.email)
+          .on_input(Message::CreateKeyEmailChanged)
+          .size(14)
+          .width(Length::Fill)
+          .style(|_: &iced::Theme, status| {
+            let border = match status {
+              text_input::Status::Focused { .. } => theme::accent(),
+              text_input::Status::Hovered => theme::accent_border(),
+              _ => theme::border(),
+            };
+            text_input::Style {
+              background: Background::Color(theme::header_bg()),
+              border: Border {
+                color: border,
+                width: 1.0,
+                radius: 6.0.into(),
+              },
+              icon: theme::text_muted(),
+              placeholder: theme::text_muted(),
+              value: theme::text_strong(),
+              selection: theme::accent_subtle(),
+            }
+          }),
+      ]
+      .spacing(4),
+    ]
+    .spacing(10),
+    separator(),
+    column![
+      text(s.create_key_section_subkeys()).size(12).font(bold),
+      column![
+        text(s.create_key_section_expiration()).size(12),
+        expiry_list,
+        hint(s.create_key_hint_expiry()),
       ]
       .spacing(6),
-      separator(),
       column![
-        text("Identité").size(12).font(bold),
-        column![
-          text("Nom").size(12),
-          text_input("Alice Martin", &form.name)
-            .on_input(Message::CreateKeyNameChanged)
-            .size(14)
-            .width(Length::Fill)
-            .style(|_: &iced::Theme, status| {
-              let border = match status {
-                text_input::Status::Focused { .. } => theme::accent(),
-                text_input::Status::Hovered => theme::accent_border(),
-                _ => theme::border(),
-              };
-              text_input::Style {
-                background: Background::Color(theme::header_bg()),
-                border: Border {
-                  color: border,
-                  width: 1.0,
-                  radius: 6.0.into(),
-                },
-                icon: theme::text_muted(),
-                placeholder: theme::text_muted(),
-                value: theme::text_strong(),
-                selection: theme::accent_subtle(),
-              }
-            }),
-        ]
-        .spacing(4),
-        column![
-          text("Email").size(12),
-          text_input("alice@example.com", &form.email)
-            .on_input(Message::CreateKeyEmailChanged)
-            .size(14)
-            .width(Length::Fill)
-            .style(|_: &iced::Theme, status| {
-              let border = match status {
-                text_input::Status::Focused { .. } => theme::accent(),
-                text_input::Status::Hovered => theme::accent_border(),
-                _ => theme::border(),
-              };
-              text_input::Style {
-                background: Background::Color(theme::header_bg()),
-                border: Border {
-                  color: border,
-                  width: 1.0,
-                  radius: 6.0.into(),
-                },
-                icon: theme::text_muted(),
-                placeholder: theme::text_muted(),
-                value: theme::text_strong(),
-                selection: theme::accent_subtle(),
-              }
-            }),
-        ]
-        .spacing(4),
-      ]
-      .spacing(10),
-      separator(),
-      column![
-        text("Sous-clefs").size(12).font(bold),
-        column![
-          text("Expiration").size(12),
-          expiry_list,
-          hint(
-            "Les sous-clefs expirent automatiquement. \
-             Une courte durée limite les dégâts en cas de compromission \
-             — vous pourrez les renouveler avant échéance.",
-          ),
-        ]
-        .spacing(6),
-        column![
-          checkbox(form.include_auth)
-            .label("Inclure une clef d'authentification SSH")
-            .on_toggle(Message::CreateKeyIncludeAuthToggled)
-            .text_size(13)
-            .size(16)
-            .style(|_: &iced::Theme, status| {
-              let (is_checked, is_hovered) = match status {
-                checkbox::Status::Active { is_checked } => (is_checked, false),
-                checkbox::Status::Hovered { is_checked } => (is_checked, true),
-                checkbox::Status::Disabled { is_checked } => (is_checked, false),
-              };
-              checkbox::Style {
-                background: Background::Color(if is_checked {
+        checkbox(form.include_auth)
+          .label(s.create_key_include_ssh())
+          .on_toggle(Message::CreateKeyIncludeAuthToggled)
+          .text_size(13)
+          .size(16)
+          .style(|_: &iced::Theme, status| {
+            let (is_checked, is_hovered) = match status {
+              checkbox::Status::Active { is_checked } => (is_checked, false),
+              checkbox::Status::Hovered { is_checked } => (is_checked, true),
+              checkbox::Status::Disabled { is_checked } => (is_checked, false),
+            };
+            checkbox::Style {
+              background: Background::Color(if is_checked {
+                theme::accent()
+              } else {
+                theme::header_bg()
+              }),
+              icon_color: theme::text_on_accent(),
+              border: Border {
+                color: if is_checked {
                   theme::accent()
+                } else if is_hovered {
+                  theme::accent_border()
                 } else {
-                  theme::header_bg()
-                }),
-                icon_color: theme::text_on_accent(),
-                border: Border {
-                  color: if is_checked {
-                    theme::accent()
-                  } else if is_hovered {
-                    theme::accent_border()
-                  } else {
-                    theme::border()
-                  },
-                  width: 1.0,
-                  radius: 3.0.into(),
+                  theme::border()
                 },
-                text_color: Some(theme::text_strong()),
-              }
-            }),
-          hint(
-            "Permet de vous authentifier sur des serveurs distants sans mot de passe, \
-             en utilisant votre clef PGP comme clef SSH.",
-          ),
-        ]
-        .spacing(6),
+                width: 1.0,
+                radius: 3.0.into(),
+              },
+              text_color: Some(theme::text_strong()),
+            }
+          }),
+        hint(s.create_key_hint_ssh()),
       ]
-      .spacing(14),
-      separator(),
-      container(
-        column![
-          text("À propos de la clef maître").size(12).font(bold),
-          hint(
-            "La clef maître définit votre identité PGP à long terme — elle ne sert qu'à \
-             certifier vos sous-clefs. Elle n'expire jamais. \
-             Conservez-la hors ligne avec son certificat de révocation.",
-          ),
-        ]
-        .spacing(6),
-      )
-      .padding([4, 0]),
-      separator(),
-      row![cancel_btn, submit_btn].spacing(8),
+      .spacing(6),
     ]
-    .spacing(20),
-  )
-  .padding(32)
-  .width(520)
-  .style(|_: &iced::Theme| container::Style {
-    background: Some(Background::Color(theme::card_bg())),
-    border: Border {
-      color: theme::border(),
-      width: 1.0,
-      radius: 12.0.into(),
-    },
-    text_color: Some(theme::text_strong()),
-    ..Default::default()
-  });
-
-  container(
-    scrollable(
-      container(card)
-        .center_x(Length::Fill)
-        .padding([24, 0])
-        .width(Length::Fill),
+    .spacing(14),
+    separator(),
+    container(
+      column![
+        text(s.create_key_about_master()).size(12).font(bold),
+        hint(s.create_key_hint_master()),
+      ]
+      .spacing(6),
     )
-    .height(Length::Fill)
-    .width(Length::Fill)
-    .style(common::scroll_style),
-  )
-  .height(Length::Fill)
-  .width(Length::Fill)
-  .style(|_: &iced::Theme| container::Style {
-    background: Some(Background::Color(theme::sidebar_bg())),
-    ..Default::default()
-  })
-  .into()
+    .padding([4, 0]),
+    separator(),
+    row![cancel_btn, submit_btn].spacing(8),
+  ]
+  .spacing(20);
+
+  common::page_layout(common::card_medium(card_content))
 }

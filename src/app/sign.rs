@@ -6,11 +6,12 @@ use super::{blocking_task, truncate_error, App, Message, StatusKind, VerifyResul
 
 impl App {
   pub(super) fn on_sign_pick_file(&mut self) -> Task<Message> {
+    let title = self.strings.dialog_choose_file_sign();
     Task::perform(
-      async {
+      async move {
         Ok(
           rfd::AsyncFileDialog::new()
-            .set_title("Choisir un fichier à signer")
+            .set_title(title)
             .pick_file()
             .await
             .map(|h| h.path().to_path_buf()),
@@ -73,11 +74,12 @@ impl App {
   }
 
   pub(super) fn on_verify_pick_file(&mut self) -> Task<Message> {
+    let title = self.strings.dialog_choose_file_verify();
     Task::perform(
-      async {
+      async move {
         Ok(
           rfd::AsyncFileDialog::new()
-            .set_title("Choisir le fichier à vérifier")
+            .set_title(title)
             .pick_file()
             .await
             .map(|h| h.path().to_path_buf()),
@@ -104,11 +106,12 @@ impl App {
   }
 
   pub(super) fn on_verify_pick_sig(&mut self) -> Task<Message> {
+    let title = self.strings.dialog_choose_sig_file();
     Task::perform(
-      async {
+      async move {
         Ok(
           rfd::AsyncFileDialog::new()
-            .set_title("Choisir le fichier de signature (.sig)")
+            .set_title(title)
             .add_filter("Signature", &["sig", "asc"])
             .pick_file()
             .await

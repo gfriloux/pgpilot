@@ -6,11 +6,13 @@ use super::{blocking_task, truncate_error, App, Message, StatusKind};
 
 impl App {
   pub(super) fn on_decrypt_pick_files(&mut self) -> Task<Message> {
+    let title = self.strings.dialog_choose_files_decrypt();
+    let filter = self.strings.dialog_filter_gpg_files();
     Task::perform(
-      async {
+      async move {
         let handles = rfd::AsyncFileDialog::new()
-          .set_title("Choisir des fichiers à déchiffrer")
-          .add_filter("Fichiers GPG", &["gpg", "asc"])
+          .set_title(title)
+          .add_filter(filter, &["gpg", "asc"])
           .pick_files()
           .await
           .unwrap_or_default();

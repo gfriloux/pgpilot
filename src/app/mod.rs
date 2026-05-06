@@ -1,4 +1,5 @@
 mod card;
+mod chat;
 mod create;
 mod decrypt;
 mod encrypt;
@@ -17,7 +18,9 @@ use iced::widget::text_editor;
 use iced::Task;
 
 use crate::config::Config;
-use crate::gpg::{HealthCheck, KeyExpiry, KeyInfo, Keyserver, TrustLevel, VerifyResult};
+use crate::gpg::{
+  ExpiryWarning, HealthCheck, KeyExpiry, KeyInfo, Keyserver, TrustLevel, VerifyResult,
+};
 use crate::i18n::{self, Language, Strings};
 use crate::ui;
 use crate::ui::theme::ThemeVariant;
@@ -35,6 +38,57 @@ pub enum View {
   Sign,
   Verify,
   Settings,
+  // --- v0.6.0 Chat ---
+  /// Liste des salons de chat.
+  ChatList,
+  /// Conversation dans un salon (room_id UUID).
+  ChatRoom(String),
+  /// Formulaire de création d'un nouveau salon.
+  // UI à câbler dans l'axe 5.
+  #[allow(dead_code)]
+  ChatNewRoom,
+  /// Formulaire de jointure via code d'invitation.
+  // UI à câbler dans l'axe 5.
+  #[allow(dead_code)]
+  ChatJoinRoom,
+}
+
+// ---------------------------------------------------------------------------
+// Chat v0.6.0 — types d'état
+// ---------------------------------------------------------------------------
+
+/// État de connexion au broker MQTT.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub enum MqttState {
+  /// Pas de connexion établie (état initial).
+  #[default]
+  Disconnected,
+  /// Connexion en cours d'établissement.
+  Connecting,
+  /// Connexion active.
+  Connected,
+  /// Tentative de reconnexion en cours.
+  Reconnecting {
+    /// Numéro de la tentative (commence à 1).
+    attempt: u32,
+  },
+  /// Erreur non récupérable (URL malformée, auth refusée définitivement…).
+  Failed(String),
+}
+
+/// Formulaire de création / jointure d'un salon de chat.
+#[derive(Debug, Clone, Default)]
+pub struct ChatNewForm {
+  /// Nom local du salon en cours de création.
+  pub name: String,
+  /// URL du broker MQTT (pré-remplie depuis `Config.mqtt_default_relay`).
+  pub relay: String,
+  /// Fingerprints des participants sélectionnés depuis le keyring.
+  pub selected_participants: Vec<String>,
+  /// Identité locale choisie pour cette room (fingerprint de la clef privée).
+  pub my_fp: Option<String>,
+  /// Code d'invitation en cours de saisie pour rejoindre un salon.
+  pub join_code: String,
 }
 
 pub struct ImportForm {
@@ -105,6 +159,18 @@ pub enum PendingOp {
   Renewal(PendingRenewal),
   ExportPubMenu(String),
   Publish(Keyserver),
+  // --- v0.6.0 Chat ---
+  /// Sélection d'identité avant d'entrer dans un salon (multi-clefs privées).
+  // UI câblée dans l'axe 5 ; handlers dans les axes suivants.
+  #[allow(dead_code)]
+  IdentitySelection {
+    room_id: String,
+    selected_fp: Option<String>,
+  },
+  /// Confirmation de sortie d'un salon.
+  // UI câblée dans l'axe 5 ; handlers dans les axes suivants.
+  #[allow(dead_code)]
+  LeaveRoom(String),
 }
 
 #[derive(Debug, Clone)]
@@ -146,6 +212,30 @@ pub struct App {
   pub previous_view: Option<View>,
   pub config: Config,
   pub strings: &'static dyn Strings,
+  pub expiry_warnings: Vec<ExpiryWarning>,
+
+  // --- Chat (v0.6.0) ---
+  /// Salons persistés, chargés au démarrage depuis `~/.config/pgpilot/rooms.yaml`.
+  pub rooms: Vec<crate::chat::Room>,
+  /// Salon actif (room_id UUID). `None` hors section chat.
+  pub active_room: Option<String>,
+  /// Messages en RAM par room_id. Jamais persistés. Borné à 500/room (FIFO).
+  pub chat_messages:
+    std::collections::HashMap<String, std::collections::VecDeque<crate::chat::ChatMessage>>,
+  /// Tracker de présence agrégé pour tous les fingerprints connus.
+  pub presence: crate::chat::PresenceTracker,
+  /// État de connexion MQTT.
+  pub mqtt_state: MqttState,
+  /// Handle vers le client MQTT (None tant que pas démarré).
+  pub mqtt: Option<crate::chat::MqttHandle>,
+  /// Saisie courante dans la room active. Vidé à chaque changement de room.
+  pub chat_input: String,
+  /// Formulaire dédié pour création / jointure de salon.
+  pub chat_new_form: ChatNewForm,
+  /// Contexte crypto (Cert local + peers), chargé une fois par session.
+  pub chat_crypto: Option<std::sync::Arc<crate::chat::ChatCryptoCtx>>,
+  /// Fingerprint du signataire dont le panneau d'identité est affiché dans le chat.
+  pub chat_identity_popup: Option<String>,
 }
 
 #[derive(Debug, Clone)]
@@ -236,11 +326,83 @@ pub enum Message {
   VerifySigPicked(Result<Option<PathBuf>, String>),
   VerifyExecute,
   VerifyDone(Result<VerifyResult, String>),
+  ExportRevocationCert(String),
+  CopyRevocationCertPath(String),
+  GenerateRevocationCert(String),
+  RevocationCertGenerated(Result<String, String>),
   DismissStatus(u32),
   NavBack,
   ChangeLanguage(Language),
   ScaleFactorChanged(f64),
   ThemeChanged(ThemeVariant),
+
+  // --- Chat : navigation / création / jointure (UI câblée dans les axes 5–8) ---
+  /// Soumet le formulaire de création de salon.
+  #[allow(dead_code)]
+  ChatRoomCreate,
+  #[allow(dead_code)]
+  ChatRoomNameChanged(String),
+  #[allow(dead_code)]
+  ChatRoomRelayChanged(String),
+  /// Sélection de l'identité locale (my_fp) pour le salon en cours de création/jointure.
+  ChatRoomMyFpChanged(String),
+  /// Toggle d'un participant (fingerprint) dans la sélection du nouveau salon.
+  #[allow(dead_code)]
+  ChatRoomParticipantToggled(String),
+  ChatRoomCreated(Result<crate::chat::Room, String>),
+  #[allow(dead_code)]
+  ChatJoinCodeChanged(String),
+  /// Soumet le formulaire de jointure via join code.
+  #[allow(dead_code)]
+  ChatRoomJoin,
+  ChatRoomJoined(Result<crate::chat::Room, String>),
+  /// Clic sur un salon dans la liste.
+  #[allow(dead_code)]
+  ChatRoomSelected(String),
+  #[allow(dead_code)]
+  ChatRoomLeave(String),
+  /// room_id du salon quitté.
+  ChatRoomLeft(Result<String, String>),
+
+  // --- Chat : envoi / réception ---
+  #[allow(dead_code)]
+  ChatInputChanged(String),
+  /// Bouton "Envoyer" ou touche Entrée dans la saisie de message.
+  #[allow(dead_code)]
+  ChatSend,
+  ChatSent(Result<crate::chat::ChatMessage, String>),
+  /// Message déchiffré reçu : (room_id, message).
+  ChatReceived(String, crate::chat::ChatMessage),
+
+  // --- Chat : identité ---
+  /// Sélection d'une clef privée dans le modal IdentitySelection.
+  #[allow(dead_code)]
+  ChatIdentitySelected(String),
+  /// Confirmation de l'identité sélectionnée — sauvegarde en config et démarre le chat.
+  ChatIdentityConfirm,
+
+  // --- Chat : partage du join code ---
+  /// Encode et copie le join code du salon dans le presse-papier.
+  #[allow(dead_code)]
+  ChatJoinCodeCopy(String),
+  ChatJoinCodeCopied(Result<String, String>),
+
+  // --- MQTT infra ---
+  MqttEvent(crate::chat::MqttEvent),
+  MqttCryptoLoaded(Result<std::sync::Arc<crate::chat::ChatCryptoCtx>, String>),
+
+  // --- Présence ---
+  PresenceUpdated(crate::chat::PresenceUpdate),
+
+  // --- ACK applicatif ---
+  /// ACK reçu : (room_id, msg_id, sender_fp).
+  ChatAckReceived(String, String, String),
+  ChatAckSent(Result<(), String>),
+
+  /// Signal interne — opération de fond sans résultat pertinent pour l'UI.
+  ChatBackgroundDone,
+  /// Toggle le panneau d'identité inline pour un fingerprint de signataire.
+  ChatIdentityPopupToggle(String),
 }
 
 pub(crate) fn truncate_error(msg: String) -> String {
@@ -294,9 +456,10 @@ pub(crate) async fn export_key_to_file(fp: String, name: String) -> Result<Optio
 pub(crate) async fn backup_key_to_dir(
   fp: String,
   key_id: String,
+  title: &'static str,
 ) -> Result<Option<String>, String> {
   let handle = rfd::AsyncFileDialog::new()
-    .set_title("Choisir un dossier de sauvegarde")
+    .set_title(title)
     .pick_folder()
     .await;
   let dir = match handle {
@@ -323,6 +486,18 @@ impl App {
     // Initialise the theme from persisted config before first frame renders.
     crate::ui::theme::set_active(config.theme);
     let task = Task::perform(blocking_task(crate::gpg::list_keys), Message::KeysLoaded);
+
+    // Charger les salons persistés (rooms.yaml). Tolérer l'absence du fichier.
+    let rooms = crate::chat::RoomStore::load()
+      .map(|store| store.rooms)
+      .unwrap_or_default();
+
+    // Pré-remplir le relay dans le formulaire de création si configuré.
+    let default_relay = config
+      .mqtt_default_relay
+      .clone()
+      .unwrap_or_else(|| "mqtts://broker.hivemq.com:8883".to_string());
+
     (
       Self {
         view: View::MyKeys,
@@ -345,6 +520,21 @@ impl App {
         previous_view: None,
         config,
         strings,
+        expiry_warnings: Vec::new(),
+        // Chat v0.6.0
+        rooms,
+        active_room: None,
+        chat_messages: std::collections::HashMap::new(),
+        presence: crate::chat::PresenceTracker::new(),
+        mqtt_state: MqttState::Disconnected,
+        mqtt: None,
+        chat_input: String::new(),
+        chat_new_form: ChatNewForm {
+          relay: default_relay,
+          ..ChatNewForm::default()
+        },
+        chat_crypto: None,
+        chat_identity_popup: None,
       },
       task,
     )
@@ -557,6 +747,10 @@ impl App {
       Message::VerifySigPicked(r) => self.on_verify_sig_picked(r),
       Message::VerifyExecute => self.on_verify_execute(),
       Message::VerifyDone(r) => self.on_verify_done(r),
+      Message::ExportRevocationCert(fp) => self.on_export_revocation_cert(fp),
+      Message::CopyRevocationCertPath(path) => self.on_copy_revocation_cert_path(path),
+      Message::GenerateRevocationCert(fp) => self.on_generate_revocation_cert(fp),
+      Message::RevocationCertGenerated(result) => self.on_revocation_cert_generated(result),
       Message::DismissStatus(gen) => {
         if self.status_generation == gen {
           self.status = None;
@@ -585,16 +779,94 @@ impl App {
       Message::ChangeLanguage(lang) => self.on_language_changed(lang),
       Message::ScaleFactorChanged(v) => self.on_scale_factor_changed(v),
       Message::ThemeChanged(v) => self.on_theme_changed(v),
+
+      // --- Chat : trivial (inline) ---
+      Message::ChatInputChanged(v) => {
+        self.chat_input = v;
+        Task::none()
+      }
+      Message::ChatRoomNameChanged(v) => {
+        self.chat_new_form.name = v;
+        Task::none()
+      }
+      Message::ChatRoomRelayChanged(v) => {
+        self.chat_new_form.relay = v;
+        Task::none()
+      }
+      Message::ChatRoomMyFpChanged(fp) => {
+        self.chat_new_form.my_fp = Some(fp);
+        Task::none()
+      }
+      Message::ChatRoomParticipantToggled(fp) => {
+        let participants = &mut self.chat_new_form.selected_participants;
+        if let Some(pos) = participants.iter().position(|p| p == &fp) {
+          participants.remove(pos);
+        } else {
+          participants.push(fp);
+        }
+        Task::none()
+      }
+      Message::ChatJoinCodeChanged(v) => {
+        self.chat_new_form.join_code = v;
+        Task::none()
+      }
+
+      // --- Chat : délégués à app/chat.rs ---
+      Message::ChatIdentitySelected(fp) => {
+        if let Some(PendingOp::IdentitySelection {
+          ref mut selected_fp,
+          ..
+        }) = self.pending
+        {
+          *selected_fp = Some(fp);
+        }
+        Task::none()
+      }
+      Message::ChatIdentityConfirm => self.on_chat_identity_confirm(),
+      Message::ChatRoomCreate => self.on_chat_room_create(),
+      Message::ChatRoomCreated(r) => self.on_chat_room_created(r),
+      Message::ChatRoomJoin => self.on_chat_room_join(),
+      Message::ChatRoomJoined(r) => self.on_chat_room_joined(r),
+      Message::ChatRoomSelected(id) => self.on_chat_room_selected(id),
+      Message::ChatRoomLeave(id) => self.on_chat_room_leave(id),
+      Message::ChatRoomLeft(r) => self.on_chat_room_left(r),
+      Message::ChatSend => self.on_chat_send(),
+      Message::ChatSent(r) => self.on_chat_sent(r),
+      Message::ChatReceived(id, m) => self.on_chat_received(id, m),
+      Message::ChatJoinCodeCopy(id) => self.on_chat_join_code_copy(id),
+      Message::ChatJoinCodeCopied(r) => self.on_chat_join_code_copied(r),
+      Message::MqttEvent(e) => self.on_mqtt_event(e),
+      Message::MqttCryptoLoaded(r) => self.on_mqtt_crypto_loaded(r),
+      Message::PresenceUpdated(u) => self.on_presence_updated(u),
+      Message::ChatAckReceived(rid, mid, sfp) => self.on_chat_ack_received(rid, mid, sfp),
+      Message::ChatAckSent(r) => self.on_chat_ack_sent(r),
+      Message::ChatBackgroundDone => Task::none(),
+      Message::ChatIdentityPopupToggle(fp) => {
+        if self.chat_identity_popup.as_deref() == Some(&fp) {
+          self.chat_identity_popup = None;
+        } else {
+          self.chat_identity_popup = Some(fp);
+        }
+        Task::none()
+      }
     }
   }
 
   pub fn subscription(&self) -> iced::Subscription<Message> {
-    iced::event::listen_with(|event, _, _| match event {
+    let file_drop = iced::event::listen_with(|event, _, _| match event {
       iced::Event::Window(iced::window::Event::FileDropped(path)) => {
         Some(Message::FileDropped(path))
       }
       _ => None,
-    })
+    });
+
+    let mut subs = vec![file_drop];
+
+    if let Some(handle) = &self.mqtt {
+      subs.push(crate::chat::mqtt::subscription(handle.clone()));
+    }
+
+    iced::Subscription::batch(subs)
   }
 
   pub fn view(&self) -> iced::Element<'_, Message> {

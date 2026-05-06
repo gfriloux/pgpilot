@@ -645,8 +645,6 @@ fn export_pub_modal<'a>(
     })
   };
 
-  // These three labels are specific to this menu — not covered by generic btn_* methods.
-  // They describe sub-actions of the export menu. Using inline strings here is intentional.
   container(
     column![
       row![
@@ -663,17 +661,17 @@ fn export_pub_modal<'a>(
       .align_y(Alignment::Center),
       menu_btn(
         "\u{f0c7}",
-        "Enregistrer sur le disque",
+        s.export_menu_save_disk(),
         Message::ExportPublicKey(key.fingerprint.clone())
       ),
       menu_btn(
         "\u{f0c5}",
-        "Copier dans le presse-papier",
+        s.export_menu_copy_clipboard(),
         Message::ExportPublicKeyClipboard(key.fingerprint.clone())
       ),
       menu_btn(
         "\u{f0c1}",
-        "Obtenir un lien public (paste.rs)",
+        s.export_menu_paste_link(),
         Message::ExportPublicKeyUpload(key.fingerprint.clone())
       ),
       button(text(s.btn_cancel()).size(12))
@@ -711,6 +709,145 @@ fn export_pub_modal<'a>(
   .into()
 }
 
+fn revocation_cert_section<'a>(key: &'a KeyInfo, s: &'static dyn Strings) -> Element<'a, Message> {
+  let homedir = crate::gpg::gnupg_dir().unwrap_or_default();
+  let cert_path = crate::gpg::revocation_cert_path(&homedir, &key.fingerprint)
+    .ok()
+    .flatten();
+
+  let icon_btn = |icon: &'static str, label: &'static str| {
+    row![text(icon).font(theme::ICONS).size(12), text(label).size(12)]
+      .spacing(6)
+      .align_y(Alignment::Center)
+  };
+
+  let body: Element<Message> = match cert_path {
+    Some(ref path) => {
+      let path_str = crate::gpg::display_path(path);
+      let fp = key.fingerprint.clone();
+      let path_owned = path.to_string_lossy().into_owned();
+      column![
+        row![
+          text("\u{f058}")
+            .font(theme::ICONS)
+            .size(11)
+            .color(theme::success()),
+          text(s.revocation_cert_found())
+            .size(11)
+            .color(theme::success()),
+        ]
+        .spacing(5)
+        .align_y(Alignment::Center),
+        container(text(path_str).size(10).font(theme::MONO))
+          .padding([3, 6])
+          .style(|_: &iced::Theme| container::Style {
+            background: Some(Background::Color(theme::header_bg())),
+            text_color: Some(theme::text_secondary()),
+            border: Border {
+              color: theme::border(),
+              width: 1.0,
+              radius: 4.0.into(),
+            },
+            ..Default::default()
+          }),
+        row![
+          button(icon_btn("\u{f019}", s.revocation_cert_export()))
+            .on_press(Message::ExportRevocationCert(fp))
+            .style(|_: &iced::Theme, status: button::Status| button::Style {
+              background: Some(Background::Color(match status {
+                button::Status::Hovered | button::Status::Pressed => theme::accent_hover(),
+                _ => theme::accent(),
+              })),
+              text_color: theme::text_on_accent(),
+              border: Border {
+                color: Color::TRANSPARENT,
+                width: 0.0,
+                radius: 6.0.into(),
+              },
+              shadow: Default::default(),
+              snap: false,
+            }),
+          button(icon_btn("\u{f0c5}", s.revocation_cert_copy_path()))
+            .on_press(Message::CopyRevocationCertPath(path_owned))
+            .style(|_: &iced::Theme, status: button::Status| button::Style {
+              background: Some(Background::Color(match status {
+                button::Status::Hovered | button::Status::Pressed => theme::header_bg(),
+                _ => Color::TRANSPARENT,
+              })),
+              text_color: theme::text_secondary(),
+              border: Border {
+                color: theme::border(),
+                width: 1.0,
+                radius: 6.0.into(),
+              },
+              shadow: Default::default(),
+              snap: false,
+            }),
+        ]
+        .spacing(6),
+      ]
+      .spacing(6)
+      .into()
+    }
+    None => {
+      let fp = key.fingerprint.clone();
+      column![
+        row![
+          text("\u{f071}")
+            .font(theme::ICONS)
+            .size(11)
+            .color(theme::peach()),
+          text(s.revocation_cert_missing())
+            .size(11)
+            .color(theme::peach()),
+        ]
+        .spacing(5)
+        .align_y(Alignment::Center),
+        button(icon_btn("\u{f067}", s.revocation_cert_generate()))
+          .on_press(Message::GenerateRevocationCert(fp))
+          .style(|_: &iced::Theme, status: button::Status| button::Style {
+            background: Some(Background::Color(match status {
+              button::Status::Hovered | button::Status::Pressed => theme::accent_hover(),
+              _ => theme::accent(),
+            })),
+            text_color: theme::text_on_accent(),
+            border: Border {
+              color: Color::TRANSPARENT,
+              width: 0.0,
+              radius: 6.0.into(),
+            },
+            shadow: Default::default(),
+            snap: false,
+          }),
+      ]
+      .spacing(6)
+      .into()
+    }
+  };
+
+  container(
+    column![
+      text(s.revocation_cert_title())
+        .size(12)
+        .color(theme::text_secondary()),
+      body,
+    ]
+    .spacing(6),
+  )
+  .padding(10)
+  .width(Length::Fill)
+  .style(|_: &iced::Theme| container::Style {
+    background: Some(Background::Color(theme::card_bg())),
+    border: Border {
+      color: theme::border(),
+      width: 1.0,
+      radius: 8.0.into(),
+    },
+    ..Default::default()
+  })
+  .into()
+}
+
 #[allow(clippy::too_many_arguments)]
 fn left_column_items<'a>(
   key: &'a KeyInfo,
@@ -726,11 +863,11 @@ fn left_column_items<'a>(
 ) -> Column<'a, Message> {
   let expires = key.expires.as_deref().unwrap_or(s.key_never_expires());
   let key_type = if key.on_card {
-    "Sur YubiKey"
+    s.key_type_on_card()
   } else if key.has_secret {
-    "Publique + Privée"
+    s.key_type_public_private()
   } else {
-    "Publique"
+    s.key_type_public_only()
   };
 
   let mut items: Vec<Element<Message>> = vec![
@@ -905,6 +1042,10 @@ fn left_column_items<'a>(
     items.push(action_buttons(key, keyserver_status, card_connected, s));
   }
 
+  if key.has_secret && !key.on_card {
+    items.push(revocation_cert_section(key, s));
+  }
+
   Column::with_children(items)
     .spacing(10)
     .padding(16)
@@ -960,9 +1101,9 @@ fn subkey_renewal_form<'a>(
       .size(11)
       .color(theme::text_strong()),
     row![
-      expiry_btn("1 an", KeyExpiry::OneYear),
-      expiry_btn("2 ans", KeyExpiry::TwoYears),
-      expiry_btn("5 ans", KeyExpiry::FiveYears),
+      expiry_btn(s.subkey_expiry_1_year(), KeyExpiry::OneYear),
+      expiry_btn(s.subkey_expiry_2_years(), KeyExpiry::TwoYears),
+      expiry_btn(s.subkey_expiry_5_years(), KeyExpiry::FiveYears),
     ]
     .spacing(4),
     row![
@@ -1191,14 +1332,24 @@ fn subkey_column<'a>(
   s: &'static dyn Strings,
 ) -> Column<'a, Message> {
   let standard_types = [
-    (SubkeyType::Sign, "\u{f040}", "Signature", theme::accent()),
+    (
+      SubkeyType::Sign,
+      "\u{f040}",
+      s.subkey_type_signature(),
+      theme::accent(),
+    ),
     (
       SubkeyType::Encr,
       "\u{f023}",
-      "Chiffrement",
+      s.subkey_type_encryption(),
       theme::success(),
     ),
-    (SubkeyType::Auth, "\u{f084}", "Auth SSH", theme::peach()),
+    (
+      SubkeyType::Auth,
+      "\u{f084}",
+      s.subkey_type_ssh_auth(),
+      theme::peach(),
+    ),
   ];
 
   let find_subkey = |usage_char: char| -> Option<&SubkeyInfo> {

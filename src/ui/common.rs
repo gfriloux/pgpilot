@@ -1,6 +1,6 @@
 use iced::{
-  widget::{button, radio, row, scrollable, text},
-  Alignment, Background, Border, Color, Element,
+  widget::{button, container, radio, row, scrollable, text},
+  Alignment, Background, Border, Color, Element, Length,
 };
 
 use crate::app::Message;
@@ -123,4 +123,79 @@ pub fn action_btn<'a>(
   } else {
     btn.into()
   }
+}
+
+/// Wraps a card element in the standard full-page scrollable layout.
+///
+/// The outer container fills the window with `sidebar_bg()`. The inner
+/// scrollable centres the card horizontally with 24px vertical padding.
+/// Never use `center_y` — it looks wrong on tall windows.
+pub fn page_layout<'a, M: 'a>(card: impl Into<Element<'a, M>>) -> Element<'a, M> {
+  container(
+    scrollable(
+      container(card)
+        .center_x(Length::Fill)
+        .padding([24, 0])
+        .width(Length::Fill),
+    )
+    .style(scroll_style)
+    .height(Length::Fill)
+    .width(Length::Fill),
+  )
+  .height(Length::Fill)
+  .width(Length::Fill)
+  .style(|_| container::Style {
+    background: Some(Background::Color(theme::sidebar_bg())),
+    ..Default::default()
+  })
+  .into()
+}
+
+/// Card with a fixed 480px width — for simple forms (e.g. Settings).
+pub fn card_narrow<'a, M: 'a>(content: impl Into<Element<'a, M>>) -> Element<'a, M> {
+  container(content)
+    .padding(32)
+    .width(Length::Fixed(480.0))
+    .style(|_| container::Style {
+      background: Some(Background::Color(theme::card_bg())),
+      border: Border {
+        radius: 12.0.into(),
+        ..Default::default()
+      },
+      ..Default::default()
+    })
+    .into()
+}
+
+/// Card with a fixed 560px width — for extended forms (e.g. Import, CreateKey, Health).
+pub fn card_medium<'a, M: 'a>(content: impl Into<Element<'a, M>>) -> Element<'a, M> {
+  container(content)
+    .padding(32)
+    .width(Length::Fixed(560.0))
+    .style(|_| container::Style {
+      background: Some(Background::Color(theme::card_bg())),
+      border: Border {
+        radius: 12.0.into(),
+        ..Default::default()
+      },
+      ..Default::default()
+    })
+    .into()
+}
+
+/// Card that fills up to 760px — for complex views (e.g. Encrypt, Sign, Verify).
+pub fn card_wide<'a, M: 'a>(content: impl Into<Element<'a, M>>) -> Element<'a, M> {
+  container(content)
+    .padding(32)
+    .width(Length::Fill)
+    .max_width(760)
+    .style(|_| container::Style {
+      background: Some(Background::Color(theme::card_bg())),
+      border: Border {
+        radius: 12.0.into(),
+        ..Default::default()
+      },
+      ..Default::default()
+    })
+    .into()
 }

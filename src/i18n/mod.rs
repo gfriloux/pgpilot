@@ -8,6 +8,7 @@ pub enum Language {
   French,
 }
 
+// Methods are called from UI views; some appear unused to rustc because views use dynamic dispatch.
 #[allow(dead_code)]
 pub trait Strings: Send + Sync {
   // Navigation
@@ -235,6 +236,191 @@ pub trait Strings: Send + Sync {
   fn status_files_decrypted(&self) -> &'static str;
   fn err_decrypt_failed(&self) -> &'static str;
   fn err_no_decryptable_file(&self) -> &'static str;
+
+  // key_list.rs
+  fn key_list_error(&self, err: &str) -> String;
+  fn key_list_header_name(&self) -> &'static str;
+  fn key_list_header_expires(&self) -> &'static str;
+  fn key_list_header_status(&self) -> &'static str;
+  fn key_list_select_hint(&self) -> &'static str;
+
+  // key_detail.rs
+  fn key_type_on_card(&self) -> &'static str;
+  fn key_type_public_private(&self) -> &'static str;
+  fn key_type_public_only(&self) -> &'static str;
+  fn subkey_type_signature(&self) -> &'static str;
+  fn subkey_type_encryption(&self) -> &'static str;
+  fn subkey_type_ssh_auth(&self) -> &'static str;
+  fn export_menu_save_disk(&self) -> &'static str;
+  fn export_menu_copy_clipboard(&self) -> &'static str;
+  fn export_menu_paste_link(&self) -> &'static str;
+  fn subkey_expiry_1_year(&self) -> &'static str;
+  fn subkey_expiry_2_years(&self) -> &'static str;
+  fn subkey_expiry_5_years(&self) -> &'static str;
+
+  // create_key.rs
+  fn create_key_generating(&self) -> &'static str;
+  fn create_key_title(&self) -> &'static str;
+  fn create_key_subtitle(&self) -> &'static str;
+  fn create_key_section_identity(&self) -> &'static str;
+  fn create_key_field_name(&self) -> &'static str;
+  fn create_key_field_email(&self) -> &'static str;
+  fn create_key_section_subkeys(&self) -> &'static str;
+  fn create_key_section_expiration(&self) -> &'static str;
+  fn create_key_include_ssh(&self) -> &'static str;
+  fn create_key_about_master(&self) -> &'static str;
+  fn create_key_hint_expiry(&self) -> &'static str;
+  fn create_key_hint_ssh(&self) -> &'static str;
+  fn create_key_hint_master(&self) -> &'static str;
+
+  // encrypt.rs
+  fn encrypt_tab_my_keys(&self) -> &'static str;
+  fn encrypt_tab_public_keys(&self) -> &'static str;
+  fn encrypt_no_keys(&self) -> &'static str;
+  fn encrypt_choose_files(&self) -> &'static str;
+  fn encrypt_drop_hint(&self) -> &'static str;
+  fn encrypt_format_ascii_desc(&self) -> &'static str;
+  fn encrypt_format_binary_desc(&self) -> &'static str;
+  fn encrypt_multi_recipient_hint(&self) -> &'static str;
+  fn encrypt_select_hint(&self) -> &'static str;
+
+  // sign.rs
+  fn sign_no_keys(&self) -> &'static str;
+  fn sign_about(&self) -> &'static str;
+
+  // verify.rs
+  fn verify_sig_file_placeholder(&self) -> &'static str;
+  fn verify_trust_warning(&self) -> &'static str;
+  fn verify_fingerprint_label(&self) -> &'static str;
+  fn verify_bad_sig_desc(&self) -> &'static str;
+  fn verify_unknown_key_desc(&self) -> &'static str;
+  fn verify_expired_key_desc(&self) -> &'static str;
+  fn verify_revoked_key_desc(&self) -> &'static str;
+  fn verify_about(&self) -> &'static str;
+  fn verify_sig_auto_hint_with_name(&self, auto_name: &str) -> String;
+
+  // import.rs
+  fn import_source_from_file(&self) -> &'static str;
+  fn import_select_source(&self) -> &'static str;
+  fn import_url_hint(&self) -> &'static str;
+  fn import_url_button(&self) -> &'static str;
+  fn import_keyserver_hint(&self) -> &'static str;
+  fn import_keyserver_button(&self) -> &'static str;
+  fn import_paste_hint(&self) -> &'static str;
+  fn import_paste_button(&self) -> &'static str;
+
+  // health.rs
+  fn health_category_installation(&self) -> &'static str;
+  fn health_category_agent(&self) -> &'static str;
+  fn health_category_security(&self) -> &'static str;
+
+  // decrypt.rs
+  fn decrypt_auto_key_hint(&self) -> &'static str;
+  fn decrypt_drop_hint(&self) -> &'static str;
+  fn decrypt_key_available(&self) -> &'static str;
+  fn decrypt_key_missing(&self) -> &'static str;
+  fn decrypt_key_checking(&self) -> &'static str;
+  fn decrypt_no_key_warning(&self) -> &'static str;
+  fn decrypt_about(&self) -> &'static str;
+
+  // Expiry warning banner
+  fn expiry_warning_title(&self) -> &'static str;
+  fn expiry_warning_renew(&self) -> &'static str;
+
+  // File dialog titles
+  fn dialog_choose_files_encrypt(&self) -> &'static str;
+  fn dialog_choose_files_decrypt(&self) -> &'static str;
+  fn dialog_filter_gpg_files(&self) -> &'static str;
+  fn dialog_choose_file_sign(&self) -> &'static str;
+  fn dialog_choose_file_verify(&self) -> &'static str;
+  fn dialog_choose_sig_file(&self) -> &'static str;
+  fn dialog_choose_backup_folder(&self) -> &'static str;
+
+  // Revocation certificate section
+  fn revocation_cert_title(&self) -> &'static str;
+  fn revocation_cert_found(&self) -> &'static str;
+  fn revocation_cert_missing(&self) -> &'static str;
+  fn revocation_cert_export(&self) -> &'static str;
+  fn revocation_cert_generate(&self) -> &'static str;
+  fn revocation_cert_copy_path(&self) -> &'static str;
+  fn status_revocation_cert_generated(&self) -> &'static str;
+
+  // --- Chat v0.6.0 ---
+
+  // Navigation / sidebar
+  fn nav_section_chat(&self) -> &'static str;
+  fn nav_chat_rooms(&self) -> &'static str;
+  fn nav_chat_rooms_ussr(&self) -> &'static str;
+
+  // Room list
+  fn chat_no_rooms(&self) -> &'static str;
+  fn chat_no_rooms_ussr(&self) -> &'static str;
+  fn chat_create_room(&self) -> &'static str;
+  fn chat_join_room(&self) -> &'static str;
+
+  // MQTT state
+  fn chat_mqtt_connected(&self) -> &'static str;
+  fn chat_mqtt_connecting(&self) -> &'static str;
+  fn chat_mqtt_reconnecting(&self) -> &'static str;
+  fn chat_mqtt_disconnected(&self) -> &'static str;
+  fn chat_mqtt_failed(&self) -> &'static str;
+  fn chat_mqtt_disconnected_banner(&self) -> &'static str;
+
+  // Conversation header
+  fn chat_copy_invite(&self) -> &'static str;
+  fn chat_leave_room(&self) -> &'static str;
+
+  // Message area
+  fn chat_decrypt_failed(&self) -> &'static str;
+  fn chat_type_message(&self) -> &'static str;
+  fn chat_select_room(&self) -> &'static str;
+
+  // Compose bar
+  fn chat_send(&self) -> &'static str;
+
+  // Modal — create room
+  fn chat_create_room_title(&self) -> &'static str;
+  fn chat_create_room_title_ussr(&self) -> &'static str;
+  fn chat_room_name_label(&self) -> &'static str;
+  fn chat_room_name_placeholder(&self) -> &'static str;
+  fn chat_relay_label(&self) -> &'static str;
+  fn chat_relay_placeholder(&self) -> &'static str;
+  fn chat_relay_hint(&self) -> &'static str;
+  fn chat_participants_label(&self) -> &'static str;
+  fn chat_participants_hint(&self) -> &'static str;
+  fn chat_create_room_btn(&self) -> &'static str;
+
+  // Modal — join room
+  fn chat_join_room_title(&self) -> &'static str;
+  fn chat_join_code_label(&self) -> &'static str;
+  fn chat_join_code_placeholder(&self) -> &'static str;
+  fn chat_join_code_hint(&self) -> &'static str;
+  fn chat_join_btn(&self) -> &'static str;
+
+  // Modal — identity selection
+  fn chat_choose_identity_title(&self) -> &'static str;
+  fn chat_choose_identity_hint(&self) -> &'static str;
+  fn chat_enter_room_btn(&self) -> &'static str;
+  fn chat_confirm_identity_btn(&self) -> &'static str;
+
+  // Modal — leave room
+  fn chat_leave_confirm_title(&self) -> &'static str;
+  fn chat_leave_confirm_body_with_name(&self, name: &str) -> String;
+  fn chat_leave_room_btn(&self) -> &'static str;
+
+  // Status messages — chat
+  fn status_chat_room_created(&self) -> &'static str;
+  fn status_chat_room_joined(&self) -> &'static str;
+  fn status_chat_room_left(&self) -> &'static str;
+  fn status_chat_invite_copied(&self) -> &'static str;
+  fn status_chat_message_sent(&self) -> &'static str;
+
+  // Error messages — chat
+  fn err_chat_room_create_failed(&self) -> &'static str;
+  fn err_chat_room_join_failed(&self) -> &'static str;
+  fn err_chat_room_leave_failed(&self) -> &'static str;
+  fn err_chat_send_failed(&self) -> &'static str;
+  fn err_chat_invite_copy_failed(&self) -> &'static str;
 }
 
 pub fn strings_for(lang: Language) -> &'static dyn Strings {

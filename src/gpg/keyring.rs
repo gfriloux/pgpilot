@@ -51,7 +51,7 @@ fn expiry_to_str(expiry: &KeyExpiry) -> &'static str {
   }
 }
 
-pub(super) fn validate_fp(fp: &str) -> Result<()> {
+pub(crate) fn validate_fp(fp: &str) -> Result<()> {
   if fp.len() != 40 || !fp.chars().all(|c| c.is_ascii_hexdigit()) {
     anyhow::bail!("Fingerprint invalide : doit être 40 caractères hexadécimaux");
   }
@@ -1125,6 +1125,44 @@ pub fn inspect_decrypt(file: &std::path::Path) -> Result<super::types::DecryptSt
     Ok(DecryptStatus::CanDecrypt)
   } else {
     Ok(DecryptStatus::Unknown)
+  }
+}
+
+/// Returns the path to the revocation certificate if it exists.
+pub fn revocation_cert_path(homedir: &str, fp: &str) -> Result<Option<std::path::PathBuf>> {
+  validate_fp(fp)?;
+  let path = std::path::PathBuf::from(homedir)
+    .join("openpgp-revocs.d")
+    .join(format!("{fp}.rev"));
+  Ok(if path.exists() { Some(path) } else { None })
+}
+
+/// Generates a revocation certificate via `gpg --gen-revoke`.
+///
+/// Returns the path of the generated certificate.
+pub fn generate_revocation_cert(homedir: &str, fp: &str) -> Result<std::path::PathBuf> {
+  validate_fp(fp)?;
+  let out_path = std::path::PathBuf::from(homedir)
+    .join("openpgp-revocs.d")
+    .join(format!("{fp}.rev"));
+
+  let output = gpg_command(homedir)
+    .args([
+      "--batch",
+      "--yes",
+      "--gen-revoke",
+      "--output",
+      out_path.to_str().unwrap_or(""),
+      fp,
+    ])
+    .output()
+    .context("gpg spawn error")?;
+
+  if output.status.success() || out_path.exists() {
+    Ok(out_path)
+  } else {
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    Err(anyhow::anyhow!("{}", sanitize_gpg_stderr(&stderr)))
   }
 }
 

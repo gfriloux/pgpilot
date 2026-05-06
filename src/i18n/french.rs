@@ -541,4 +541,458 @@ impl Strings for FrenchStrings {
   fn err_no_decryptable_file(&self) -> &'static str {
     "Aucun fichier dechiffrable selectionne."
   }
+
+  // key_list.rs
+  fn key_list_error(&self, err: &str) -> String {
+    format!("Erreur : {err}")
+  }
+  fn key_list_header_name(&self) -> &'static str {
+    "Nom / Email"
+  }
+  fn key_list_header_expires(&self) -> &'static str {
+    "Expire"
+  }
+  fn key_list_header_status(&self) -> &'static str {
+    "Etat"
+  }
+  fn key_list_select_hint(&self) -> &'static str {
+    "Selectionnez une clef pour voir les details."
+  }
+
+  // key_detail.rs
+  fn key_type_on_card(&self) -> &'static str {
+    "Sur YubiKey"
+  }
+  fn key_type_public_private(&self) -> &'static str {
+    "Publique + Privee"
+  }
+  fn key_type_public_only(&self) -> &'static str {
+    "Publique"
+  }
+  fn subkey_type_signature(&self) -> &'static str {
+    "Signature"
+  }
+  fn subkey_type_encryption(&self) -> &'static str {
+    "Chiffrement"
+  }
+  fn subkey_type_ssh_auth(&self) -> &'static str {
+    "Auth SSH"
+  }
+  fn export_menu_save_disk(&self) -> &'static str {
+    "Enregistrer sur le disque"
+  }
+  fn export_menu_copy_clipboard(&self) -> &'static str {
+    "Copier dans le presse-papier"
+  }
+  fn export_menu_paste_link(&self) -> &'static str {
+    "Obtenir un lien public (paste.rs)"
+  }
+  fn subkey_expiry_1_year(&self) -> &'static str {
+    "1 an"
+  }
+  fn subkey_expiry_2_years(&self) -> &'static str {
+    "2 ans"
+  }
+  fn subkey_expiry_5_years(&self) -> &'static str {
+    "5 ans"
+  }
+
+  // create_key.rs
+  fn create_key_generating(&self) -> &'static str {
+    "Generation..."
+  }
+  fn create_key_title(&self) -> &'static str {
+    "Nouvelle clef PGP"
+  }
+  fn create_key_subtitle(&self) -> &'static str {
+    "Genere une clef maitre et ses sous-clefs dediees."
+  }
+  fn create_key_section_identity(&self) -> &'static str {
+    "Identite"
+  }
+  fn create_key_field_name(&self) -> &'static str {
+    "Nom"
+  }
+  fn create_key_field_email(&self) -> &'static str {
+    "Email"
+  }
+  fn create_key_section_subkeys(&self) -> &'static str {
+    "Sous-clefs"
+  }
+  fn create_key_section_expiration(&self) -> &'static str {
+    "Expiration"
+  }
+  fn create_key_include_ssh(&self) -> &'static str {
+    "Inclure une clef d'authentification SSH"
+  }
+  fn create_key_about_master(&self) -> &'static str {
+    "A propos de la clef maitre"
+  }
+  fn create_key_hint_expiry(&self) -> &'static str {
+    "Les sous-clefs expirent automatiquement. Une courte duree limite les degats en cas de compromission — vous pourrez les renouveler avant echeance."
+  }
+  fn create_key_hint_ssh(&self) -> &'static str {
+    "Permet de vous authentifier sur des serveurs distants sans mot de passe, en utilisant votre clef PGP comme clef SSH."
+  }
+  fn create_key_hint_master(&self) -> &'static str {
+    "La clef maitre definit votre identite PGP a long terme — elle ne sert qu'a certifier vos sous-clefs. Elle n'expire jamais. Conservez-la hors ligne avec son certificat de revocation."
+  }
+
+  // encrypt.rs
+  fn encrypt_tab_my_keys(&self) -> &'static str {
+    "Mes clefs"
+  }
+  fn encrypt_tab_public_keys(&self) -> &'static str {
+    "Clefs publiques"
+  }
+  fn encrypt_no_keys(&self) -> &'static str {
+    "Aucune clef avec capacite de chiffrement."
+  }
+  fn encrypt_choose_files(&self) -> &'static str {
+    "Choisir des fichiers..."
+  }
+  fn encrypt_drop_hint(&self) -> &'static str {
+    "Glissez des fichiers ici"
+  }
+  fn encrypt_format_ascii_desc(&self) -> &'static str {
+    "Texte ASCII — pour coller dans un email ou un message."
+  }
+  fn encrypt_format_binary_desc(&self) -> &'static str {
+    "Binaire compact — pour pieces jointes et stockage."
+  }
+  fn encrypt_multi_recipient_hint(&self) -> &'static str {
+    "Chaque destinataire peut dechiffrer le fichier independamment avec sa propre clef. \
+     Pensez a vous ajouter pour conserver un acces au fichier chiffre."
+  }
+  fn encrypt_select_hint(&self) -> &'static str {
+    "Selectionnez les destinataires et les fichiers."
+  }
+
+  // sign.rs
+  fn sign_no_keys(&self) -> &'static str {
+    "Aucune clef privee avec capacite de signature."
+  }
+  fn sign_about(&self) -> &'static str {
+    "Signer un fichier cree une preuve cryptographique que vous en etes l'auteur. \
+     Le fichier original n'est pas modifie — la signature est enregistree dans un fichier .sig separe."
+  }
+
+  // verify.rs
+  fn verify_sig_file_placeholder(&self) -> &'static str {
+    "Fichier .sig..."
+  }
+  fn verify_trust_warning(&self) -> &'static str {
+    "L'identite affichee n'est pas verifiee par votre toile de confiance."
+  }
+  fn verify_fingerprint_label(&self) -> &'static str {
+    "Fingerprint :"
+  }
+  fn verify_bad_sig_desc(&self) -> &'static str {
+    "La signature ne correspond pas a ce fichier. \
+     Verifiez que vous avez selectionne le bon fichier et la bonne signature."
+  }
+  fn verify_unknown_key_desc(&self) -> &'static str {
+    "La clef publique du signataire n'est pas dans votre trousseau. \
+     Importez-la pour verifier l'identite du signataire."
+  }
+  fn verify_expired_key_desc(&self) -> &'static str {
+    "La signature est mathematiquement valide, mais la clef du signataire \
+     etait expiree au moment de la verification."
+  }
+  fn verify_revoked_key_desc(&self) -> &'static str {
+    "La clef ayant signe ce fichier a ete revoquee. \
+     La signature n'est plus consideree comme fiable."
+  }
+  fn verify_about(&self) -> &'static str {
+    "Verifier une signature confirme que le fichier n'a pas ete modifie et identifie son auteur."
+  }
+  fn verify_sig_auto_hint_with_name(&self, auto_name: &str) -> String {
+    format!("Optionnel — cherchera automatiquement {auto_name}")
+  }
+
+  // import.rs
+  fn import_source_from_file(&self) -> &'static str {
+    "Depuis un fichier"
+  }
+  fn import_select_source(&self) -> &'static str {
+    "Choisissez la source de la clef a importer."
+  }
+  fn import_url_hint(&self) -> &'static str {
+    "Collez une URL pointant vers une clef armored (paste.rs, page web, etc.)."
+  }
+  fn import_url_button(&self) -> &'static str {
+    "Importer depuis l'URL"
+  }
+  fn import_keyserver_hint(&self) -> &'static str {
+    "Fingerprint complet (40 hex), ID long (16 hex) ou adresse email."
+  }
+  fn import_keyserver_button(&self) -> &'static str {
+    "Importer depuis le keyserver"
+  }
+  fn import_paste_hint(&self) -> &'static str {
+    "Collez directement le contenu d'une clef PGP armored (-----BEGIN PGP...)."
+  }
+  fn import_paste_button(&self) -> &'static str {
+    "Importer la clef collee"
+  }
+
+  // health.rs
+  fn health_category_installation(&self) -> &'static str {
+    "Installation"
+  }
+  fn health_category_agent(&self) -> &'static str {
+    "Agent GPG"
+  }
+  fn health_category_security(&self) -> &'static str {
+    "Securite"
+  }
+
+  // decrypt.rs
+  fn decrypt_auto_key_hint(&self) -> &'static str {
+    "GPG utilisera automatiquement votre clef privee. \
+     Si elle est protegee par un mot de passe, une fenetre s'ouvrira pour vous le demander."
+  }
+  fn decrypt_drop_hint(&self) -> &'static str {
+    "Glissez des fichiers .gpg ou .asc ici, ou utilisez le bouton ci-dessous."
+  }
+  fn decrypt_key_available(&self) -> &'static str {
+    "Clef disponible"
+  }
+  fn decrypt_key_missing(&self) -> &'static str {
+    "Clef manquante"
+  }
+  fn decrypt_key_checking(&self) -> &'static str {
+    "Verification..."
+  }
+  fn decrypt_no_key_warning(&self) -> &'static str {
+    "Certains fichiers ne peuvent pas etre dechiffres — vous ne possedez pas \
+     la clef privee correspondante. Ces fichiers seront ignores."
+  }
+  fn decrypt_about(&self) -> &'static str {
+    "Dechiffrez des fichiers chiffres avec GPG."
+  }
+
+  // Expiry warning banner
+  fn expiry_warning_title(&self) -> &'static str {
+    "Sous-clef(s) expirant dans 90 jours"
+  }
+  fn expiry_warning_renew(&self) -> &'static str {
+    "Renouveler"
+  }
+
+  // File dialog titles
+  fn dialog_choose_files_encrypt(&self) -> &'static str {
+    "Choisir des fichiers a chiffrer"
+  }
+  fn dialog_choose_files_decrypt(&self) -> &'static str {
+    "Choisir des fichiers a dechiffrer"
+  }
+  fn dialog_filter_gpg_files(&self) -> &'static str {
+    "Fichiers GPG"
+  }
+  fn dialog_choose_file_sign(&self) -> &'static str {
+    "Choisir un fichier a signer"
+  }
+  fn dialog_choose_file_verify(&self) -> &'static str {
+    "Choisir le fichier a verifier"
+  }
+  fn dialog_choose_sig_file(&self) -> &'static str {
+    "Choisir le fichier de signature (.sig)"
+  }
+  fn dialog_choose_backup_folder(&self) -> &'static str {
+    "Choisir un dossier de sauvegarde"
+  }
+
+  // Revocation certificate section
+  fn revocation_cert_title(&self) -> &'static str {
+    "Certificat de revocation"
+  }
+  fn revocation_cert_found(&self) -> &'static str {
+    "Certificat present"
+  }
+  fn revocation_cert_missing(&self) -> &'static str {
+    "Certificat absent"
+  }
+  fn revocation_cert_export(&self) -> &'static str {
+    "Exporter .rev"
+  }
+  fn revocation_cert_generate(&self) -> &'static str {
+    "Generer"
+  }
+  fn revocation_cert_copy_path(&self) -> &'static str {
+    "Copier le chemin"
+  }
+  fn status_revocation_cert_generated(&self) -> &'static str {
+    "Certificat de revocation genere"
+  }
+
+  // --- Chat v0.6.0 ---
+
+  fn nav_section_chat(&self) -> &'static str {
+    "CHAT"
+  }
+  fn nav_chat_rooms(&self) -> &'static str {
+    "Salons"
+  }
+  fn nav_chat_rooms_ussr(&self) -> &'static str {
+    "TRANSMISSIONS"
+  }
+
+  fn chat_no_rooms(&self) -> &'static str {
+    "Aucune conversation."
+  }
+  fn chat_no_rooms_ussr(&self) -> &'static str {
+    "Pas encore de camarades. Etablissez des communications securisees."
+  }
+  fn chat_create_room(&self) -> &'static str {
+    "+ Nouveau"
+  }
+  fn chat_join_room(&self) -> &'static str {
+    "Rejoindre"
+  }
+
+  fn chat_mqtt_connected(&self) -> &'static str {
+    "Connecte"
+  }
+  fn chat_mqtt_connecting(&self) -> &'static str {
+    "Connexion..."
+  }
+  fn chat_mqtt_reconnecting(&self) -> &'static str {
+    "Reconnexion..."
+  }
+  fn chat_mqtt_disconnected(&self) -> &'static str {
+    "Deconnecte"
+  }
+  fn chat_mqtt_failed(&self) -> &'static str {
+    "Echec de connexion"
+  }
+  fn chat_mqtt_disconnected_banner(&self) -> &'static str {
+    "Deconnecte — reconnexion en cours..."
+  }
+
+  fn chat_copy_invite(&self) -> &'static str {
+    "Copier l'invitation"
+  }
+  fn chat_leave_room(&self) -> &'static str {
+    "Quitter"
+  }
+
+  fn chat_decrypt_failed(&self) -> &'static str {
+    "Impossible de dechiffrer ce message"
+  }
+  fn chat_type_message(&self) -> &'static str {
+    "Ecrire un message..."
+  }
+  fn chat_select_room(&self) -> &'static str {
+    "Selectionnez un salon pour discuter."
+  }
+
+  fn chat_send(&self) -> &'static str {
+    "Envoyer"
+  }
+
+  fn chat_create_room_title(&self) -> &'static str {
+    "Creer un salon"
+  }
+  fn chat_create_room_title_ussr(&self) -> &'static str {
+    "ETABLIR UN CANAL SECURISE"
+  }
+  fn chat_room_name_label(&self) -> &'static str {
+    "Nom du salon"
+  }
+  fn chat_room_name_placeholder(&self) -> &'static str {
+    "ex. Equipe ops"
+  }
+  fn chat_relay_label(&self) -> &'static str {
+    "Relais MQTT"
+  }
+  fn chat_relay_placeholder(&self) -> &'static str {
+    "mqtts://host:8883"
+  }
+  fn chat_relay_hint(&self) -> &'static str {
+    "TLS requis. Utilisez votre propre broker pour une confidentialite maximale."
+  }
+  fn chat_participants_label(&self) -> &'static str {
+    "Participants (un fingerprint par ligne)"
+  }
+  fn chat_participants_hint(&self) -> &'static str {
+    "Ajoutez les fingerprints PGP des participants, un par ligne."
+  }
+  fn chat_create_room_btn(&self) -> &'static str {
+    "Creer le salon"
+  }
+
+  fn chat_join_room_title(&self) -> &'static str {
+    "Rejoindre un salon"
+  }
+  fn chat_join_code_label(&self) -> &'static str {
+    "Code d'invitation"
+  }
+  fn chat_join_code_placeholder(&self) -> &'static str {
+    "pgpilot:join:..."
+  }
+  fn chat_join_code_hint(&self) -> &'static str {
+    "Collez le code d'invitation que vous avez recu."
+  }
+  fn chat_join_btn(&self) -> &'static str {
+    "Rejoindre le salon"
+  }
+
+  fn chat_choose_identity_title(&self) -> &'static str {
+    "Choisissez votre identite"
+  }
+  fn chat_choose_identity_hint(&self) -> &'static str {
+    "Vous avez plusieurs clefs privees. Selectionnez celle a utiliser dans ce salon :"
+  }
+  fn chat_enter_room_btn(&self) -> &'static str {
+    "Entrer dans le salon"
+  }
+  fn chat_confirm_identity_btn(&self) -> &'static str {
+    "Utiliser cette identité"
+  }
+
+  fn chat_leave_confirm_title(&self) -> &'static str {
+    "Quitter le salon ?"
+  }
+  fn chat_leave_confirm_body_with_name(&self, name: &str) -> String {
+    format!(
+      "Vous ne recevrez plus les messages de \"{name}\". \
+       Cette action est irreversible — vous auriez besoin d'une nouvelle invitation pour rejoindre."
+    )
+  }
+  fn chat_leave_room_btn(&self) -> &'static str {
+    "Quitter le salon"
+  }
+
+  fn status_chat_room_created(&self) -> &'static str {
+    "Salon cree."
+  }
+  fn status_chat_room_joined(&self) -> &'static str {
+    "Salon rejoint."
+  }
+  fn status_chat_room_left(&self) -> &'static str {
+    "Vous avez quitte le salon."
+  }
+  fn status_chat_invite_copied(&self) -> &'static str {
+    "Code d'invitation copie."
+  }
+  fn status_chat_message_sent(&self) -> &'static str {
+    "Message envoye."
+  }
+
+  fn err_chat_room_create_failed(&self) -> &'static str {
+    "Echec de creation du salon."
+  }
+  fn err_chat_room_join_failed(&self) -> &'static str {
+    "Echec de rejoindre le salon."
+  }
+  fn err_chat_room_leave_failed(&self) -> &'static str {
+    "Echec de quitter le salon."
+  }
+  fn err_chat_send_failed(&self) -> &'static str {
+    "Echec d'envoi du message."
+  }
+  fn err_chat_invite_copy_failed(&self) -> &'static str {
+    "Echec de copie du code d'invitation."
+  }
 }

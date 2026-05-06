@@ -276,6 +276,50 @@ GnuPG enforces these standards, preventing weak keys.
 
 ---
 
+## PGP Chat — Security Model
+
+### What the relay sees
+
+The MQTT broker sees only:
+- An opaque topic (`SHA256(room_id)` truncated to 16 hex chars)
+- Encrypted blobs (OpenPGP — unreadable without the recipient's private key)
+- Sender fingerprint and Unix timestamp in the wire message JSON
+- Presence status (`online`/`offline`) per fingerprint prefix
+
+The broker cannot read message content, resolve sender identity beyond the
+fingerprint, or determine room membership.
+
+### Identity proof
+
+Every message is encrypted with `gpg --encrypt --sign`. Upon receipt,
+PGPilot calls `gpg --decrypt --status-fd 2` and requires `[GNUPG:] VALIDSIG
+<fp40>` in the status output. If the verified fingerprint does not match the
+declared sender, the message is silently discarded. Spoofing requires the
+victim's private key.
+
+Invitation codes (`pgpilot:join:...`) are signed by the inviter's private
+key. PGPilot verifies the signature via `gpg --verify` before accepting any
+invitation.
+
+### Ephemeral messages
+
+Messages exist only in RAM. Closing PGPilot deletes them permanently.
+Only `~/.config/pgpilot/rooms.yaml` persists (room IDs and participant
+fingerprints — no message content). The file is capped at 1 MiB.
+
+### Known limitations
+
+| Limitation | Impact | Mitigation |
+|---|---|---|
+| No forward secrecy | A compromised private key decrypts past messages captured by an attacker | Use a private relay; rotate keys periodically |
+| Presence not signed | A malicious relay could publish false online/offline status | Use a trusted private relay |
+| Metadata visible | Relay sees who is online and when | Use a private relay; presence fingerprints are truncated to 16 hex |
+| Public relay (default) | `broker.hivemq.com` has no SLA | Self-host Mosquitto or HiveMQ for production |
+| No offline delivery | Messages sent while offline are lost | Accept the tradeoff; future: NATS JetStream |
+| YubiKey touch policy | A touch-per-operation card requires a touch for each message sent/received | Use a "touch once per session" policy, or a software key |
+
+---
+
 ## Questions?
 
 See [FAQ](7-faq.md) or [Troubleshooting](8-troubleshooting.md) for answers to common questions.
