@@ -1,0 +1,81 @@
+# PGP Chat
+
+PGPilot includes an end-to-end encrypted chat, built on OpenPGP and MQTT.
+Messages are ephemeral — closing PGPilot deletes them permanently.
+
+## Security model in one sentence
+
+Every message is encrypted with the recipients' public keys and signed with
+your private key. The relay server sees only encrypted blobs.
+
+## Prerequisites
+
+- Your contacts' public keys must be in your local keyring.
+  Import them from a keyserver or file before creating a room.
+- A working private key (not on YubiKey for v0.6.0).
+
+## Creating a room
+
+1. Click **Rooms** in the sidebar.
+2. Click **+ New**.
+3. Select **Your identity** in this room (your private key).
+4. Enter a **Room name** (local only — not shared).
+5. Enter the **Relay** URL (default: `mqtts://broker.hivemq.com:8883`).
+6. Select **Participants** from your keyring.
+7. Click **Create room**.
+
+## Sharing an invitation
+
+1. Open the room.
+2. Click **Copy invite** in the header.
+3. Share the `pgpilot:join:...` code out-of-band (email, Signal, in person).
+   The code is signed with your private key — recipients verify it is from you.
+
+## Joining a room
+
+1. Click **Rooms → Join**.
+2. Select **Your identity** in this room.
+3. Paste the `pgpilot:join:...` code.
+4. Click **Join**.
+   PGPilot verifies the invitation signature before connecting.
+
+## Sending a message
+
+Type in the compose bar and press **Enter** (or click **►**).
+Messages are encrypted for all participants before being published.
+
+## Presence indicators
+
+- **●** Online — participant is connected to the relay.
+- **○** Offline — participant has disconnected or not yet joined.
+
+## Delivery receipts (ACK)
+
+Below each sent message:
+- **✓ Name** — the participant decrypted your message.
+- **⏳ Name** — the participant is offline; receipt pending.
+
+## Security
+
+**Messages are ephemeral.** Closing PGPilot permanently deletes all messages.
+No chat log is written to disk. Only `rooms.yaml` persists (room IDs and
+participant fingerprints — no message content).
+
+**The relay is blind.** The MQTT broker sees only encrypted blobs, an opaque
+room identifier (`SHA256(room_id)` truncated), and presence status.
+
+**Identity is cryptographic.** Every message carries a GPG signature.
+PGPilot verifies the signature before displaying any content. Spoofing your
+identity requires your private key.
+
+**Change the relay.** You can use any MQTT broker supporting TLS (port 8883).
+Self-host [Mosquitto](https://mosquitto.org/) or [HiveMQ](https://www.hivemq.com/)
+for production use.
+
+## Limitations
+
+- **No offline delivery.** Messages sent while you are offline are lost.
+- **No persistence.** Restarting PGPilot clears all message history.
+- **Public relay (default).** `broker.hivemq.com:8883` has no SLA. Use a
+  private broker for sensitive communications.
+- **YubiKey not supported** for chat in v0.6.0 (key must be exportable).
