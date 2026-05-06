@@ -48,6 +48,14 @@ jobs:
         env:
           GNUPGHOME: /tmp/pgpilot-test-${{ github.run_id }}
 
+      - name: Prepare GNUPGHOME for integration tests
+        run: |
+          mkdir -p /tmp/pgpilot-test-slow-${{ github.run_id }}
+          chmod 700 /tmp/pgpilot-test-slow-${{ github.run_id }}
+          gpg-agent --homedir /tmp/pgpilot-test-slow-${{ github.run_id }} --daemon --no-default-config || true
+        env:
+          GNUPGHOME: /tmp/pgpilot-test-slow-${{ github.run_id }}
+
       - name: cargo test (integration)
         run: nix develop --command cargo test -- --ignored
         timeout-minutes: 10
