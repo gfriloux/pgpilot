@@ -251,7 +251,7 @@ Les éléments suivants sont reconnus mais ne font pas partie du périmètre de 
 
 - **Forward secrecy** : pas de Double Ratchet, X3DH ou per-message ephemeral keys. La compromission ultérieure d'une clef privée permet de déchiffrer les messages capturés en temps réel.
 - **Signature des payloads de présence** : les statuts Online/Offline ne sont pas signés. Un broker malveillant peut publier de faux statuts.
-- **Support YubiKey pour le chat** : la clef privée d'une YubiKey n'étant pas exportable, l'utilisation d'une clef sur smartcard pour le chat est refusée (`ChatError::SignFailed`). L'utilisateur doit créer ou importer une clef logicielle dédiée.
+- **YubiKey et touch policy** : les opérations chat (chiffrement, signature, déchiffrement) passent par des subprocesses `gpg` qui délèguent au `gpg-agent` — les clefs YubiKey fonctionnent donc normalement. Limitation pratique : une carte configurée en "touch requis par opération" demandera un toucher physique pour chaque message envoyé et chaque message reçu. Recommandation : utiliser la politique "touch une fois par session" ou une clef logicielle dédiée au chat.
 - **Persistance chiffrée des messages** : conformément à l'exigence "éphémère par conception". Aucun message n'est jamais écrit sur disque. Reporté à v0.7+ avec chiffrement local SQLite + sequoia.
 - **Authentification broker** : pas de support `user`/`password` ni de mTLS client cert dans `MqttConfig`. La v0.6.0 cible des brokers publics ou privés sans authentification.
 - **Multi-device** : un même utilisateur ne peut pas synchroniser ses salons et ses messages entre deux instances pgpilot.
