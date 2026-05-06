@@ -493,7 +493,10 @@ impl App {
       .unwrap_or_default();
 
     // Pré-remplir le relay dans le formulaire de création si configuré.
-    let default_relay = config.mqtt_default_relay.clone().unwrap_or_default();
+    let default_relay = config
+      .mqtt_default_relay
+      .clone()
+      .unwrap_or_else(|| "mqtts://broker.hivemq.com:8883".to_string());
 
     (
       Self {
