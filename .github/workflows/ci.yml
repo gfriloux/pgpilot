@@ -50,9 +50,15 @@ jobs:
 
       - name: Prepare GNUPGHOME for integration tests
         run: |
-          mkdir -p /tmp/pgpilot-test-slow-${{ github.run_id }}
-          chmod 700 /tmp/pgpilot-test-slow-${{ github.run_id }}
-          gpg-agent --homedir /tmp/pgpilot-test-slow-${{ github.run_id }} --daemon --no-default-config || true
+          GNUPGHOME=/tmp/pgpilot-test-slow-${{ github.run_id }}
+          mkdir -p "$GNUPGHOME"
+          chmod 700 "$GNUPGHOME"
+          # Allow loopback pinentry so gpg --batch can create keys without
+          # a physical pinentry in headless CI. Does NOT remove passphrase
+          # from production key creation — only affects this test GNUPGHOME.
+          echo "allow-loopback-pinentry" > "$GNUPGHOME/gpg-agent.conf"
+          echo "pinentry-mode loopback" > "$GNUPGHOME/gpg.conf"
+          gpg-agent --homedir "$GNUPGHOME" --daemon || true
         env:
           GNUPGHOME: /tmp/pgpilot-test-slow-${{ github.run_id }}
 
