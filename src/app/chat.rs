@@ -734,9 +734,42 @@ impl App {
           signature_armored: wire.signature.clone(),
         };
 
-        let verified = crypto
-          .decrypt_message(&chat_payload)
-          .map_err(|e| anyhow::anyhow!("{e}"))?;
+        let now = Utc::now();
+        let msg_ts = chrono::DateTime::from_timestamp(wire.ts, 0).unwrap_or(now);
+
+        // Tenter le déchiffrement. Sur erreur, pousser un message placeholder visible
+        // dans l'UI plutôt que de rejeter silencieusement.
+        let verified = match crypto.decrypt_message(&chat_payload) {
+          Ok(v) => v,
+          Err(crate::chat::ChatError::UnknownSender(_)) => {
+            // Déchiffrement OK mais clef publique du signataire absente.
+            // Afficher le message comme "[DECRYPT_FAILED]" avec un hint d'import.
+            let placeholder = ChatMessage {
+              id: wire.id,
+              sender_fp: wire.sender,
+              text: "[DECRYPT_FAILED: sender's public key not in keyring — import it to verify]"
+                .to_string(),
+              ts: msg_ts,
+              received_at: now,
+              direction: MessageDirection::Received,
+              acks: std::collections::HashMap::new(),
+            };
+            return Ok(Some((room_id, placeholder)));
+          }
+          Err(e) => {
+            // Autre erreur (déchiffrement impossible, signature invalide, etc.).
+            let placeholder = ChatMessage {
+              id: wire.id,
+              sender_fp: wire.sender,
+              text: format!("[DECRYPT_FAILED: {e}]"),
+              ts: msg_ts,
+              received_at: now,
+              direction: MessageDirection::Received,
+              acks: std::collections::HashMap::new(),
+            };
+            return Ok(Some((room_id, placeholder)));
+          }
+        };
 
         // Correction 3a : vérifier que le signataire correspond à l'émetteur déclaré.
         if !verified.signer_fp.eq_ignore_ascii_case(&wire.sender) {
@@ -762,9 +795,6 @@ impl App {
           );
           return Ok(None);
         }
-
-        let now = Utc::now();
-        let msg_ts = chrono::DateTime::from_timestamp(wire.ts, 0).unwrap_or(now);
 
         // Correction 3c : utiliser verified.signer_fp (pas wire.sender) comme sender_fp.
         let msg = ChatMessage {

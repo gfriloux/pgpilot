@@ -132,23 +132,35 @@ impl ChatCryptoCtx {
       .wait_with_output()
       .map_err(|e| ChatError::DecryptFailed(format!("gpg wait: {e}")))?;
 
+    let stderr_str = String::from_utf8_lossy(&output.stderr);
+    let decryption_ok = stderr_str.contains("[GNUPG:] DECRYPTION_OKAY");
+
     if !output.status.success() {
-      return Err(ChatError::DecryptFailed(sanitize_gpg_stderr(
-        &String::from_utf8_lossy(&output.stderr),
-      )));
+      // Distinguer "clef publique du signataire absente" de "déchiffrement échoué".
+      // Si le déchiffrement a réussi mais la signature ne peut pas être vérifiée
+      // (clef publique manquante), on retourne UnknownSender — le message EST lisible
+      // mais l'identité de l'expéditeur ne peut pas être prouvée.
+      if decryption_ok
+        && (stderr_str.contains("[GNUPG:] NO_PUBKEY") || stderr_str.contains("[GNUPG:] ERRSIG"))
+      {
+        return Err(ChatError::UnknownSender(
+          "public key not in keyring — import sender's key to verify".to_string(),
+        ));
+      }
+      return Err(ChatError::DecryptFailed(sanitize_gpg_stderr(&stderr_str)));
     }
 
     let plaintext = String::from_utf8(output.stdout)
       .map_err(|e| ChatError::DecryptFailed(format!("utf8: {e}")))?;
 
-    // Extraire le fingerprint 40-hex du signataire depuis le status fd.
-    // On exige VALIDSIG (pas GOODSIG) car VALIDSIG contient le fingerprint
-    // 40-hex complet, ce qui permet la vérification stricte de l'identité.
-    let stderr_str = String::from_utf8_lossy(&output.stderr);
+    // Extraire le fingerprint 40-hex de la CLEF MAÎTRE depuis VALIDSIG.
+    // Format : [GNUPG:] VALIDSIG <subkey_fp> <date> <ts> ... <primary_fp>
+    // Le dernier champ est la clef maître — c'est ce qu'on compare avec wire.sender
+    // (les participants sont identifiés par leur clef maître, pas leur sous-clef).
     let signer_fp = stderr_str
       .lines()
       .find(|l| l.contains("[GNUPG:] VALIDSIG"))
-      .and_then(|l| l.split_whitespace().nth(2))
+      .and_then(|l| l.split_whitespace().last())
       .filter(|fp| fp.len() == 40 && fp.chars().all(|c| c.is_ascii_hexdigit()))
       .map(|fp| fp.to_string())
       .ok_or(ChatError::SignatureInvalid)?;
