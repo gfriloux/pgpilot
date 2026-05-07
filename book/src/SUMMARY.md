@@ -11,4 +11,5 @@
 - [FAQ](8-faq.md)
 - [Troubleshooting](9-troubleshooting.md)
 - [Security](10-security.md)
+  - [Remediation Plan](10-security-plan.md)
 - [Settings](11-settings.md)
