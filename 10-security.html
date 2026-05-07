@@ -35,10 +35,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-2f8bd295.js";
+            window.path_to_searchindex_js = "searchindex-ff1e9e42.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-002d9d84.js"></script>
+        <script src="toc-9876385f.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -181,6 +181,149 @@
                 <div id="mdbook-content" class="content">
                     <main>
                         <h1 id="security"><a class="header" href="#security">Security</a></h1>
+<p>pgpilot is designed around one principle: <strong>delegate all cryptography to GnuPG</strong>.
+pgpilot itself never reads, holds, or manipulates private key material — that always
+stays inside <code>gpg-agent</code>, protected by the passphrase or hardware PIN you set up.</p>
+<h2 id="security-model"><a class="header" href="#security-model">Security model</a></h2>
+<pre><code>You ──► pgpilot ──► gpg subprocess ──► gpg-agent ──► private key
+                         │
+                    env_clear()
+                    --homedir
+                    HTTPS only
+                    1 MiB cap
+</code></pre>
+<p>pgpilot acts as a UI shell. Every cryptographic operation is a <code>gpg</code> subprocess call
+with a clean environment (<code>env_clear()</code>). Private keys never cross the pgpilot process
+boundary.</p>
+<h2 id="assets-protected"><a class="header" href="#assets-protected">Assets protected</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Asset</th><th>Where it lives</th><th>pgpilot’s role</th></tr>
+</thead>
+<tbody>
+<tr><td>Private keys</td><td><code>gpg-agent</code> (encrypted)</td><td>Never read — fully delegated</td></tr>
+<tr><td>Public keyring</td><td><code>~/.gnupg/pubring.gpg</code></td><td>Import / export via <code>gpg</code> subprocess</td></tr>
+<tr><td>Trust database</td><td><code>~/.gnupg/trustdb.gpg</code></td><td>Set via <code>gpg --import-ownertrust</code></td></tr>
+<tr><td>Chat rooms</td><td><code>~/.config/pgpilot/rooms.yaml</code></td><td>Room IDs and participant fingerprints only — no messages</td></tr>
+<tr><td>Chat messages</td><td>RAM only (500 per room, FIFO)</td><td>Encrypted blobs, lost on exit</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="threat-model"><a class="header" href="#threat-model">Threat model</a></h2>
+<h3 id="1-malicious-key-import"><a class="header" href="#1-malicious-key-import">1. Malicious key import</a></h3>
+<p>An attacker controls the UID displayed in pgpilot. The <code>signer_name</code> field comes from
+GnuPG’s <code>GOODSIG</code> token — it reflects what is stored in the key, not a cryptographic
+guarantee of identity.</p>
+<p><strong>Mitigation</strong>: every key shows a trust badge (<code>Undefined</code> / <code>Marginal</code> / <code>Full</code> /
+<code>Ultimate</code>). <code>Undefined</code> keys never show a green badge, even when a signature is
+mathematically valid. The user is responsible for verifying fingerprints out-of-band
+before elevating trust.</p>
+<hr>
+<h3 id="2-mitm-on-keyserver-http"><a class="header" href="#2-mitm-on-keyserver-http">2. MitM on keyserver HTTP</a></h3>
+<p>A network attacker intercepts a key import and substitutes a different key.</p>
+<p><strong>Mitigation</strong>: HTTPS only on all outbound requests (<code>safe_get</code> rejects <code>http://</code>).
+TLS certificates are validated against the system trust store. The full 40-character
+fingerprint is always shown after import.</p>
+<hr>
+<h3 id="3-oom-via-oversized-server-response"><a class="header" href="#3-oom-via-oversized-server-response">3. OOM via oversized server response</a></h3>
+<p>A malicious or compromised keyserver returns gigabytes of data.</p>
+<p><strong>Mitigation</strong>: all network reads are capped at 1 MiB (<code>MAX_RESPONSE_BYTES</code>). Beyond
+that limit, the read is interrupted and a user-visible error is returned.</p>
+<hr>
+<h3 id="4-hkp-parameter-injection"><a class="header" href="#4-hkp-parameter-injection">4. HKP parameter injection</a></h3>
+<p>A keyserver query built from unvalidated input could inject extra URL parameters.</p>
+<p><strong>Mitigation</strong>: strict input validation — only 40-hex fingerprints, 16-hex long key IDs,
+or well-formed email addresses are accepted. All query values are percent-encoded before
+URL construction.</p>
+<hr>
+<h3 id="5-evil32-fingerprint-collision"><a class="header" href="#5-evil32-fingerprint-collision">5. Evil32 fingerprint collision</a></h3>
+<p>Short 8-character IDs (32 bits) are trivially collisible — an attacker can generate a
+key matching any target’s short ID.</p>
+<p><strong>Mitigation</strong>: <code>validate_fp()</code> enforces exactly 40 hexadecimal characters (160-bit
+fingerprint) on every gpg function that accepts a fingerprint. Short IDs are not accepted
+for any cryptographic operation.</p>
+<hr>
+<h3 id="6-drag-and-drop-of-a-crafted-file"><a class="header" href="#6-drag-and-drop-of-a-crafted-file">6. Drag-and-drop of a crafted file</a></h3>
+<p>A malicious file is dropped into the encryption view.</p>
+<p><strong>Residual risk</strong>: pgpilot encrypts whatever the user explicitly drops — it does not
+inspect file contents. GnuPG does not decompress or execute content. The risk is limited
+to the user encrypting data they did not intend to.</p>
+<hr>
+<h3 id="7-clipboard-exposure"><a class="header" href="#7-clipboard-exposure">7. Clipboard exposure</a></h3>
+<p>A copied public key armour or <code>paste.rs</code> URL remains on the clipboard until replaced.</p>
+<p><strong>Residual risk</strong>: pgpilot never copies private key material or passphrases to the
+clipboard. On Wayland, clipboard lifetime is tied to window focus. Automatic clearing is
+not reliably implementable without compositor-level support.</p>
+<hr>
+<h3 id="8-screen-recording"><a class="header" href="#8-screen-recording">8. Screen recording</a></h3>
+<p>A screen recorder captures fingerprints, UIDs, and trust statuses.</p>
+<p><strong>Out of scope</strong>: pgpilot never displays private key material. Screen protection is an
+OS/compositor responsibility.</p>
+<hr>
+<h3 id="9-ld_preload--environment-injection"><a class="header" href="#9-ld_preload--environment-injection">9. LD_PRELOAD / environment injection</a></h3>
+<p>A malicious library injected via <code>LD_PRELOAD</code> could intercept gpg operations.</p>
+<p><strong>Mitigation</strong>: every <code>gpg</code> subprocess is spawned with <code>env_clear()</code>. Only the required
+variables (<code>HOME</code>, <code>GNUPGHOME</code>, <code>PATH</code>, <code>DISPLAY</code>, <code>WAYLAND_DISPLAY</code>, <code>XDG_RUNTIME_DIR</code>,
+<code>DBUS_SESSION_BUS_ADDRESS</code>, <code>GPG_TTY</code>, <code>PINENTRY_USER_DATA</code>) are re-injected explicitly.</p>
+<hr>
+<h3 id="10-gnupghome-undefined-or-unexpected"><a class="header" href="#10-gnupghome-undefined-or-unexpected">10. GNUPGHOME undefined or unexpected</a></h3>
+<p>If <code>GNUPGHOME</code> is unset, GnuPG silently falls back to <code>~/.gnupg</code>. In test or CI
+environments this can cause operations on the wrong keyring.</p>
+<p><strong>Mitigation</strong>: <code>gnupg_dir()</code> is called at the start of every gpg operation and returns
+an explicit error if neither <code>GNUPGHOME</code> nor <code>HOME</code> is set. No silent fallback.</p>
+<hr>
+<h2 id="chat-specific-threats-v060"><a class="header" href="#chat-specific-threats-v060">Chat-specific threats (v0.6.0)</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Threat</th><th>Mitigation</th><th>Residual</th></tr>
+</thead>
+<tbody>
+<tr><td>Relay reads messages</td><td>E2E PGP encryption (<code>gpg --encrypt --sign --armor</code>)</td><td>Relay sees timestamps, topics, participant count</td></tr>
+<tr><td>Sender impersonation</td><td><code>VALIDSIG</code> primary-key fingerprint matched against <code>wire.sender</code> and <code>room.participants</code></td><td>Only keys in local keyring are trusted</td></tr>
+<tr><td>Third-party message injection</td><td>Signer fingerprint verified against room participant list before display</td><td>Anyone who knows the topic can publish; only listed recipients can decrypt</td></tr>
+<tr><td>Forged join code</td><td><code>JoinCode::verify()</code> checks PGP signature over <code>room_id ‖ relay ‖ invited_by</code>; relay must be <code>mqtts://</code></td><td>Inviter’s key must already be in local keyring</td></tr>
+<tr><td>Fake presence status</td><td><em>None in v0.6.0</em> — presence is not signed</td><td>Malicious broker can publish false Online/Offline</td></tr>
+<tr><td>Message replay</td><td><code>|wire.ts − now| ≤ 86400 s</code>; signature covers <code>id ‖ sender ‖ ts ‖ payload</code></td><td>Replay within 24 h window if msg_id not already seen</td></tr>
+<tr><td>Oversized payload DoS</td><td>Payloads &gt; 64 KiB rejected before decryption</td><td>Broker may accept larger; client drops them</td></tr>
+<tr><td>Topic fingerprinting</td><td>Topic = <code>sha256(room_id)[0..8]</code> (opaque)</td><td>64-bit hash exposed; timing and cardinality observable</td></tr>
+<tr><td>Metadata surveillance</td><td>Opaque topics, truncated fingerprints in presence/ACK topics</td><td>Relay sees timing and room cardinality</td></tr>
+<tr><td>rooms.yaml DoS</td><td>File rejected if &gt; 1 MiB; fields validated after deserialization</td><td>Partial corruption fails the whole load</td></tr>
+<tr><td>No forward secrecy</td><td><em>Out of scope v0.6.0</em> — documented limitation</td><td>Key compromise allows retrospective decryption of captured traffic</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="out-of-scope"><a class="header" href="#out-of-scope">Out of scope</a></h2>
+<p>The following are acknowledged but outside pgpilot’s threat boundary:</p>
+<ul>
+<li><strong>Local machine compromise</strong> — rootkits, keyloggers, memory inspection</li>
+<li><strong>Physical attacks on YubiKey</strong> — side-channel extraction, decapsulation</li>
+<li><strong>Compromised TLS chain</strong> — rogue CA, HTTPS stripping at scale</li>
+<li><strong>Hardware side channels</strong> — timing, power, EM</li>
+<li><strong>Compromised GnuPG binary or gpg-agent</strong></li>
+<li><strong>Malicious pinentry</strong> — passphrase interception</li>
+</ul>
+<h2 id="security-assumptions"><a class="header" href="#security-assumptions">Security assumptions</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Assumption</th><th>Why it matters</th></tr>
+</thead>
+<tbody>
+<tr><td>The <code>gpg</code> binary in <code>PATH</code> is trustworthy</td><td>pgpilot delegates all cryptography to GnuPG</td></tr>
+<tr><td><code>gpg-agent</code> is not compromised</td><td>Private keys reside there</td></tr>
+<tr><td><code>pinentry</code> works correctly and is not replaced</td><td>Passphrase entry must be isolated</td></tr>
+<tr><td>The OS is not compromised at runtime</td><td>Memory, process, and filesystem primitives must be reliable</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="see-also"><a class="header" href="#see-also">See also</a></h2>
+<ul>
+<li><a href="10-security-plan.html">Remediation Plan</a> — status of all security fixes (14 items across 4 phases)</li>
+<li><a href="https://github.com/gfriloux/pgpilot/blob/main/THREAT_MODEL.md"><code>THREAT_MODEL.md</code></a> — source document (French)</li>
+<li><a href="https://github.com/gfriloux/pgpilot/blob/main/SECURITY_PLAN.md"><code>SECURITY_PLAN.md</code></a> — implementation guide with code references (French)</li>
+</ul>
 
                     </main>
 
@@ -190,7 +333,7 @@
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                             </a>
 
-                            <a rel="next prefetch" href="11-settings.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="10-security-plan.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                             </a>
 
@@ -204,7 +347,7 @@
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                     </a>
 
-                    <a rel="next prefetch" href="11-settings.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="10-security-plan.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                     </a>
             </nav>
