@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-ff1e9e42.js";
+            window.path_to_searchindex_js = "searchindex-a5fbf968.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-9876385f.js"></script>
@@ -488,6 +488,7 @@ rm -rf ~/.gnupg/
 <li>Trust level picker</li>
 </ul>
 <p>Click a key in the list to select it and view details on the right.</p>
+<p><strong>Theme note</strong>: In the USSR theme, status indicators (keyserver published, YubiKey, trust level) appear as circular SVG badges instead of text icons, providing a distinctive Soviet aesthetic while maintaining clarity.</p>
 <hr>
 <h2 id="managing-trust-levels"><a class="header" href="#managing-trust-levels">Managing Trust Levels</a></h2>
 <p><strong>Trust levels</strong> tell pgpilot how much you trust a key. When encrypting, only keys at sufficient trust (Full or Ultimate) are recommended without warning.</p>
@@ -959,10 +960,17 @@ rm -rf ~/.gnupg/
 <li>Files appear in a list below</li>
 </ul>
 </li>
-<li>Select <strong>Recipients</strong> — check the boxes for people who should be able to decrypt:
+<li>Select <strong>Recipients</strong> — click on key chips to toggle recipients:
 <ul>
+<li>Keys are displayed as toggleable chips arranged in a 2-column grid</li>
 <li>Only keys with Encryption subkeys can be selected</li>
-<li>Trust level shown as a badge next to each key</li>
+<li>Each chip shows the key name and email, plus a trust icon:
+<ul>
+<li><strong>✓</strong> (green) — Full or Ultimate trust (recommended)</li>
+<li><strong>⚠️</strong> (amber/peach) — Marginal or Undefined trust (warning)</li>
+</ul>
+</li>
+<li>Selected chips highlight with the theme accent color</li>
 </ul>
 </li>
 <li>Choose format:
@@ -2499,12 +2507,14 @@ out-of-scope items, and security assumptions.</p>
 <li>Soviet-inspired theme with cream content areas and near-black sidebar</li>
 <li>Red accent color, Bebas Neue font for navigation, Russo One for content</li>
 <li>Page titles display humorous Soviet-flavored text (“Chiffrer pour le Peuple”, “Rapport au Commissariat”…)</li>
+<li>Propaganda banners in each view (USSR-themed images)</li>
+<li>Circular SVG badges for key status (keyserver, YubiKey, trust levels)</li>
 <li>Best experienced as a fun easter egg</li>
 </ul>
 <p>To change the theme:</p>
 <ol>
 <li>Open <strong>Settings</strong></li>
-<li>Under <strong>Theme</strong>, select <strong>Catppuccin Frappé</strong> or <strong>USSR</strong></li>
+<li>Under <strong>Theme</strong>, click the card for <strong>Catppuccin Frappé</strong> or <strong>USSR</strong> to preview</li>
 <li>The theme applies immediately — no restart required</li>
 </ol>
 <hr>
@@ -2518,7 +2528,7 @@ out-of-scope items, and security assumptions.</p>
 <p>To change the scale:</p>
 <ol>
 <li>Open <strong>Settings</strong></li>
-<li>Under <strong>UI Scale</strong>, select the desired percentage</li>
+<li>Under <strong>UI Scale</strong>, use the slider with tick marks to select the desired percentage</li>
 <li>The change applies immediately</li>
 </ol>
 <blockquote>
@@ -2531,7 +2541,7 @@ out-of-scope items, and security assumptions.</p>
 <p>To change the language:</p>
 <ol>
 <li>Open <strong>Settings</strong></li>
-<li>Under <strong>Language</strong>, select <strong>English</strong> or <strong>French</strong></li>
+<li>Under <strong>Language</strong>, click the <strong>English</strong> or <strong>French</strong> button</li>
 <li>The interface updates immediately</li>
 </ol>
 <hr>

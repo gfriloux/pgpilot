@@ -35,7 +35,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-ff1e9e42.js";
+            window.path_to_searchindex_js = "searchindex-a5fbf968.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-9876385f.js"></script>
@@ -193,10 +193,17 @@
 <li>Files appear in a list below</li>
 </ul>
 </li>
-<li>Select <strong>Recipients</strong> — check the boxes for people who should be able to decrypt:
+<li>Select <strong>Recipients</strong> — click on key chips to toggle recipients:
 <ul>
+<li>Keys are displayed as toggleable chips arranged in a 2-column grid</li>
 <li>Only keys with Encryption subkeys can be selected</li>
-<li>Trust level shown as a badge next to each key</li>
+<li>Each chip shows the key name and email, plus a trust icon:
+<ul>
+<li><strong>✓</strong> (green) — Full or Ultimate trust (recommended)</li>
+<li><strong>⚠️</strong> (amber/peach) — Marginal or Undefined trust (warning)</li>
+</ul>
+</li>
+<li>Selected chips highlight with the theme accent color</li>
 </ul>
 </li>
 <li>Choose format:
