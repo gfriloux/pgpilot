@@ -7,7 +7,7 @@ use iced::{
 use crate::app::Message;
 use crate::gpg::{CheckStatus, HealthCheck};
 use crate::i18n::Strings;
-use crate::ui::{common, theme};
+use crate::ui::{common, theme, ussr_assets};
 
 pub fn view<'a>(
   checks: &'a [HealthCheck],
@@ -160,5 +160,8 @@ pub fn view<'a>(
   let card_content =
     column![title_section, Column::with_children(sections).spacing(24),].spacing(24);
 
-  common::page_layout(common::card_medium(card_content))
+  common::page_layout(common::card_medium_with_banner(
+    card_content,
+    ussr_assets::banner(12),
+  ))
 }

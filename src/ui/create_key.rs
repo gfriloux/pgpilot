@@ -1,13 +1,13 @@
 use iced::{
   font,
   widget::{button, checkbox, column, container, pick_list, row, rule, text, text_input},
-  Background, Border, Color, Element, Font, Length,
+  Alignment, Background, Border, Color, Element, Font, Length,
 };
 
 use crate::app::{CreateKeyForm, Message};
 use crate::gpg::KeyExpiry;
 use crate::i18n::Strings;
-use crate::ui::{common, theme};
+use crate::ui::{common, theme, ussr_assets};
 
 pub fn view<'a>(form: &'a CreateKeyForm, s: &'static dyn Strings) -> Element<'a, Message> {
   let bold = Font {
@@ -147,11 +147,12 @@ pub fn view<'a>(form: &'a CreateKeyForm, s: &'static dyn Strings) -> Element<'a,
     separator(),
     column![
       text(s.create_key_section_identity()).size(12).font(bold),
-      column![
-        text(s.create_key_field_name()).size(12),
+      // Label + input sur la même ligne
+      row![
+        text(s.create_key_field_name()).size(12).width(60),
         text_input("Alice Martin", &form.name)
           .on_input(Message::CreateKeyNameChanged)
-          .size(14)
+          .size(13)
           .width(Length::Fill)
           .style(|_: &iced::Theme, status| {
             let border = match status {
@@ -173,12 +174,13 @@ pub fn view<'a>(form: &'a CreateKeyForm, s: &'static dyn Strings) -> Element<'a,
             }
           }),
       ]
-      .spacing(4),
-      column![
-        text(s.create_key_field_email()).size(12),
+      .spacing(12)
+      .align_y(Alignment::Center),
+      row![
+        text(s.create_key_field_email()).size(12).width(60),
         text_input("alice@example.com", &form.email)
           .on_input(Message::CreateKeyEmailChanged)
-          .size(14)
+          .size(13)
           .width(Length::Fill)
           .style(|_: &iced::Theme, status| {
             let border = match status {
@@ -200,7 +202,8 @@ pub fn view<'a>(form: &'a CreateKeyForm, s: &'static dyn Strings) -> Element<'a,
             }
           }),
       ]
-      .spacing(4),
+      .spacing(12)
+      .align_y(Alignment::Center),
     ]
     .spacing(10),
     separator(),
@@ -264,5 +267,8 @@ pub fn view<'a>(form: &'a CreateKeyForm, s: &'static dyn Strings) -> Element<'a,
   ]
   .spacing(20);
 
-  common::page_layout(common::card_medium(card_content))
+  common::page_layout(common::card_medium_with_banner(
+    card_content,
+    ussr_assets::banner(27),
+  ))
 }

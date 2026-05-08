@@ -9,7 +9,7 @@ use crate::app::{KeyserverStatus, Message};
 use crate::gpg::types::SubkeyInfo;
 use crate::gpg::{KeyExpiry, KeyInfo, Keyserver, SubkeyType, TrustLevel};
 use crate::i18n::Strings;
-use crate::ui::theme;
+use crate::ui::{common, theme};
 
 pub struct ViewCtx {
   pub card_connected: bool,
@@ -1030,6 +1030,8 @@ fn left_column_items<'a>(
     );
   }
 
+  items.push(common::star_separator());
+
   if confirming {
     items.push(migration_modal(key, bold, s));
   } else if delete_confirming {
@@ -1043,6 +1045,7 @@ fn left_column_items<'a>(
   }
 
   if key.has_secret && !key.on_card {
+    items.push(common::star_separator());
     items.push(revocation_cert_section(key, s));
   }
 

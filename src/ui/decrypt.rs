@@ -7,7 +7,7 @@ use iced::{
 use crate::app::{DecryptForm, Message};
 use crate::gpg::DecryptStatus;
 use crate::i18n::Strings;
-use crate::ui::{common, theme};
+use crate::ui::{common, theme, ussr_assets};
 
 pub fn view<'a>(form: &'a DecryptForm, s: &'static dyn Strings) -> Element<'a, Message> {
   let bold = Font {
@@ -266,5 +266,5 @@ pub fn view<'a>(form: &'a DecryptForm, s: &'static dyn Strings) -> Element<'a, M
   ]
   .spacing(16);
 
-  common::page_layout(common::card_wide(card))
+  common::page_layout(common::card_wide_with_banner(card, ussr_assets::banner(19)))
 }

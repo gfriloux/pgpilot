@@ -7,69 +7,70 @@ use iced::{
 use crate::app::{EncryptForm, Message};
 use crate::gpg::KeyInfo;
 use crate::i18n::Strings;
-use crate::ui::{common, theme};
+use crate::ui::{common, theme, ussr_assets};
 
-fn key_row(key: &KeyInfo, selected: bool) -> Element<'static, Message> {
+fn recipient_chip(key: &KeyInfo, selected: bool) -> Element<'static, Message> {
   let fp = key.fingerprint.clone();
-  let label = format!("{} <{}>", key.name, key.email);
-  let short_id = key.key_id[key.key_id.len().saturating_sub(8)..].to_string();
+  let name = key.name.clone();
+  let email = key.email.clone();
   let trusted = key.trust.is_sufficient();
 
-  let trust_icon = text(if trusted { "\u{f058}" } else { "\u{f071}" })
-    .font(theme::ICONS)
-    .size(12)
-    .style(move |_: &iced::Theme| iced::widget::text::Style {
-      color: Some(if trusted {
-        theme::success()
-      } else {
-        theme::peach()
-      }),
-    });
-
   button(
-    row![
-      text(if selected { "\u{f046}" } else { "\u{f096}" })
-        .font(theme::ICONS)
-        .size(14),
-      column![
-        text(label).size(13),
-        container(text(short_id).size(11)).style(|_: &iced::Theme| container::Style {
-          text_color: Some(theme::text_muted()),
-          ..Default::default()
-        }),
+    column![
+      row![
+        text(name).size(12).width(Length::Fill),
+        text(if trusted { "\u{f058}" } else { "\u{f071}" })
+          .font(theme::ICONS)
+          .size(11)
+          .style(move |_: &iced::Theme| iced::widget::text::Style {
+            color: Some(if selected {
+              theme::text_on_accent()
+            } else if trusted {
+              theme::success()
+            } else {
+              theme::peach()
+            }),
+          }),
       ]
-      .spacing(1)
-      .width(Length::Fill),
-      trust_icon,
+      .spacing(4)
+      .align_y(Alignment::Center),
+      text(email)
+        .size(10)
+        .style(move |_: &iced::Theme| iced::widget::text::Style {
+          color: Some(if selected {
+            theme::text_on_accent()
+          } else {
+            theme::text_muted()
+          }),
+        }),
     ]
-    .spacing(8)
-    .align_y(Alignment::Center),
+    .spacing(2),
   )
   .on_press(Message::EncryptToggleRecipient(fp))
-  .padding([6, 8])
+  .padding([8, 10])
   .width(Length::Fill)
   .style(move |_: &iced::Theme, status| button::Style {
     background: Some(Background::Color(if selected {
-      theme::accent_subtle()
+      theme::accent()
     } else {
       match status {
-        button::Status::Hovered | button::Status::Pressed => theme::header_bg(),
-        _ => Color::TRANSPARENT,
+        button::Status::Hovered | button::Status::Pressed => theme::accent_subtle(),
+        _ => theme::header_bg(),
       }
     })),
     text_color: if selected {
-      theme::accent()
+      theme::text_on_accent()
     } else {
       theme::text_strong()
     },
     border: Border {
       color: if selected {
-        theme::accent_border()
-      } else {
         Color::TRANSPARENT
+      } else {
+        theme::border()
       },
-      width: if selected { 1.0 } else { 0.0 },
-      radius: 6.0.into(),
+      width: 1.0,
+      radius: 8.0.into(),
     },
     shadow: Shadow::default(),
     snap: false,
@@ -118,47 +119,56 @@ pub fn view<'a>(
     }
   }
 
-  // Build recipient list
-  let mut recipient_items: Vec<Element<'static, Message>> = Vec::new();
+  // Build recipient chips grid (2 per row)
+  let chips_grid = |keys_slice: &[&KeyInfo]| -> Vec<Element<'_, Message>> {
+    let mut rows: Vec<Element<'_, Message>> = Vec::new();
+    let mut i = 0;
+    while i < keys_slice.len() {
+      let chip_a = recipient_chip(
+        keys_slice[i],
+        form.recipients.contains(&keys_slice[i].fingerprint),
+      );
+      if i + 1 < keys_slice.len() {
+        let chip_b = recipient_chip(
+          keys_slice[i + 1],
+          form.recipients.contains(&keys_slice[i + 1].fingerprint),
+        );
+        rows.push(row![chip_a, chip_b].spacing(8).into());
+      } else {
+        rows.push(chip_a);
+      }
+      i += 2;
+    }
+    rows
+  };
+
+  let mut recipient_items: Vec<Element<'_, Message>> = Vec::new();
 
   if !own_keys.is_empty() {
     recipient_items.push(
       section_header(s.encrypt_tab_my_keys())
-        .padding([2, 8])
+        .padding([2, 0])
         .into(),
     );
-    for key in &own_keys {
-      recipient_items.push(key_row(key, form.recipients.contains(&key.fingerprint)));
-    }
+    recipient_items.extend(chips_grid(&own_keys));
   }
 
   if !public_keys.is_empty() {
     if !own_keys.is_empty() {
-      recipient_items.push(
-        container(rule::horizontal(1).style(|_: &iced::Theme| rule::Style {
-          color: theme::border(),
-          radius: 0.0.into(),
-          fill_mode: rule::FillMode::Full,
-          snap: false,
-        }))
-        .padding([4, 0])
-        .into(),
-      );
+      recipient_items.push(separator().into());
     }
     recipient_items.push(
       section_header(s.encrypt_tab_public_keys())
-        .padding([2, 8])
+        .padding([2, 0])
         .into(),
     );
-    for key in &public_keys {
-      recipient_items.push(key_row(key, form.recipients.contains(&key.fingerprint)));
-    }
+    recipient_items.extend(chips_grid(&public_keys));
   }
 
   if encr_keys.is_empty() {
     recipient_items.push(
       container(text(s.encrypt_no_keys()).size(12))
-        .padding([8, 8])
+        .padding([8, 0])
         .style(|_: &iced::Theme| container::Style {
           text_color: Some(theme::text_muted()),
           ..Default::default()
@@ -174,12 +184,10 @@ pub fn view<'a>(
         ..Default::default()
       }
     }),
-    scrollable(column(recipient_items).spacing(2).padding([0, 4]))
-      .height(280)
-      .style(common::scroll_style),
+    column(recipient_items).spacing(8),
   ]
   .spacing(8)
-  .width(Length::FillPortion(45))
+  .width(Length::Fill)
   .into();
 
   // Build file list
@@ -316,18 +324,18 @@ pub fn view<'a>(
 
     column![header_label, drop_zone,]
       .spacing(8)
-      .width(Length::FillPortion(55))
+      .width(Length::Fill)
       .into()
   } else {
     column![
       header_label,
       scrollable(column(file_items).spacing(2).padding([0, 4]))
-        .height(232)
+        .height(160)
         .style(common::scroll_style),
       add_files_btn,
     ]
     .spacing(8)
-    .width(Length::FillPortion(55))
+    .width(Length::Fill)
     .into()
   };
 
@@ -565,13 +573,6 @@ pub fn view<'a>(
   })
   .into();
 
-  let vsep = rule::vertical(1).style(|_: &iced::Theme| rule::Style {
-    color: theme::border(),
-    radius: 0.0.into(),
-    fill_mode: rule::FillMode::Full,
-    snap: false,
-  });
-
   let card_content = column![
     column![
       text(theme::flavor(s.encrypt_title(), "Encrypt for the People"))
@@ -588,11 +589,16 @@ pub fn view<'a>(
     separator(),
     info_banner,
     separator(),
-    row![recipients_col, container(vsep).padding([0, 8]), files_col,],
+    recipients_col,
+    separator(),
+    files_col,
     separator(),
     bottom_section,
   ]
   .spacing(16);
 
-  common::page_layout(common::card_wide(card_content))
+  common::page_layout(common::card_wide_with_banner(
+    card_content,
+    ussr_assets::banner(16),
+  ))
 }

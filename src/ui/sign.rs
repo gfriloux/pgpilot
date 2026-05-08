@@ -7,7 +7,7 @@ use iced::{
 use crate::app::{Message, SignForm};
 use crate::gpg::KeyInfo;
 use crate::i18n::Strings;
-use crate::ui::{common, theme};
+use crate::ui::{common, theme, ussr_assets};
 
 pub fn view<'a>(
   form: &'a SignForm,
@@ -252,5 +252,8 @@ pub fn view<'a>(
   ]
   .spacing(16);
 
-  common::page_layout(common::card_wide(card_content))
+  common::page_layout(common::card_wide_with_banner(
+    card_content,
+    ussr_assets::banner(20),
+  ))
 }
