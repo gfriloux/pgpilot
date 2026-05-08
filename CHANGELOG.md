@@ -3,6 +3,16 @@
 All notable changes to pgpilot are documented here.
 Releases follow [Semantic Versioning](https://semver.org/).
 
+## [0.7.0] — 2026-05-08
+
+### Documentation
+
+- **book**: populate security chapter and add remediation plan ([`0a7091d`](https://github.com/gfriloux/pgpilot/commit/0a7091d1fddc6ce1f641f7d8cfe1614012b9f3d2))
+- **all**: updates related to ussr theme ([`4943eba`](https://github.com/gfriloux/pgpilot/commit/4943eba10132c71bfa27ec0c13beb988ab3ad008))
+
+### Features
+
+- **ui**: rework ussr theme ([`424be9b`](https://github.com/gfriloux/pgpilot/commit/424be9b6d6a27f09aa1bf66fe1a1cecdf9ed692b))
 ## [0.6.0] — 2026-05-06
 
 ### Bug Fixes
