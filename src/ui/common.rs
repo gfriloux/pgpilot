@@ -1,5 +1,5 @@
 use iced::{
-  widget::{button, container, radio, row, scrollable, text},
+  widget::{button, column, container, image, radio, row, rule, scrollable, text, Space},
   Alignment, Background, Border, Color, Element, Length,
 };
 
@@ -151,50 +151,127 @@ pub fn page_layout<'a, M: 'a>(card: impl Into<Element<'a, M>>) -> Element<'a, M>
   .into()
 }
 
-/// Card with a fixed 480px width — for simple forms (e.g. Settings).
-pub fn card_narrow<'a, M: 'a>(content: impl Into<Element<'a, M>>) -> Element<'a, M> {
-  container(content)
-    .padding(32)
-    .width(Length::Fixed(480.0))
-    .style(|_| container::Style {
-      background: Some(Background::Color(theme::card_bg())),
-      border: Border {
-        radius: 12.0.into(),
-        ..Default::default()
-      },
-      ..Default::default()
-    })
-    .into()
-}
-
-/// Card with a fixed 560px width — for extended forms (e.g. Import, CreateKey, Health).
+/// Card with a fixed 700px width — for extended forms (e.g. Import, CreateKey, Health).
 pub fn card_medium<'a, M: 'a>(content: impl Into<Element<'a, M>>) -> Element<'a, M> {
   container(content)
-    .padding(32)
-    .width(Length::Fixed(560.0))
-    .style(|_| container::Style {
-      background: Some(Background::Color(theme::card_bg())),
-      border: Border {
-        radius: 12.0.into(),
-        ..Default::default()
-      },
-      ..Default::default()
+    .padding(iced::Padding {
+      top: 32.0,
+      right: 32.0,
+      bottom: 32.0,
+      left: 32.0,
     })
+    .width(Length::Fixed(700.0))
+    .style(card_style)
     .into()
 }
 
-/// Card that fills up to 760px — for complex views (e.g. Encrypt, Sign, Verify).
+/// Card that fills up to 700px — for complex views (e.g. Encrypt, Sign, Verify).
 pub fn card_wide<'a, M: 'a>(content: impl Into<Element<'a, M>>) -> Element<'a, M> {
   container(content)
-    .padding(32)
+    .padding(iced::Padding {
+      top: 32.0,
+      right: 32.0,
+      bottom: 32.0,
+      left: 32.0,
+    })
     .width(Length::Fill)
-    .max_width(760)
-    .style(|_| container::Style {
-      background: Some(Background::Color(theme::card_bg())),
-      border: Border {
-        radius: 12.0.into(),
-        ..Default::default()
-      },
+    .max_width(700)
+    .style(card_style)
+    .into()
+}
+
+fn card_style(_: &iced::Theme) -> container::Style {
+  container::Style {
+    background: Some(Background::Color(theme::card_bg())),
+    border: Border {
+      radius: 12.0.into(),
+      ..Default::default()
+    },
+    ..Default::default()
+  }
+}
+
+/// Medium card (700px) with a propaganda banner flush at the bottom edge (full card width).
+/// The banner PNG has pre-baked transparent bottom corners (radius 13 image-px ≈ 12 screen-px)
+/// so the card's background shows through, creating natural rounded corners.
+/// In Catppuccin, falls back to `card_medium` — no banner, standard padding.
+pub fn card_medium_with_banner<'a, M: 'a>(
+  content: impl Into<Element<'a, M>>,
+  handle: image::Handle,
+) -> Element<'a, M> {
+  if !matches!(theme::active(), theme::ThemeVariant::Ussr) {
+    return card_medium(content);
+  }
+  let inner = container(content)
+    .padding(iced::Padding {
+      top: 32.0,
+      right: 32.0,
+      bottom: 32.0,
+      left: 32.0,
+    })
+    .width(Length::Fill);
+  container(column![inner, image(handle).width(Length::Fill)].spacing(0))
+    .width(Length::Fixed(700.0))
+    .style(card_style)
+    .into()
+}
+
+/// Wide card (max 700px) with a propaganda banner flush at the bottom edge (full card width).
+/// In Catppuccin, falls back to `card_wide`.
+pub fn card_wide_with_banner<'a, M: 'a>(
+  content: impl Into<Element<'a, M>>,
+  handle: image::Handle,
+) -> Element<'a, M> {
+  if !matches!(theme::active(), theme::ThemeVariant::Ussr) {
+    return card_wide(content);
+  }
+  let inner = container(content)
+    .padding(iced::Padding {
+      top: 32.0,
+      right: 32.0,
+      bottom: 32.0,
+      left: 32.0,
+    })
+    .width(Length::Fill);
+  container(column![inner, image(handle).width(Length::Fill)].spacing(0))
+    .width(Length::Fill)
+    .max_width(700)
+    .style(card_style)
+    .into()
+}
+
+/// Séparateur ─────★───── avec étoile rouge FA4 centrée.
+/// Les règles horizontales remplissent l'espace disponible de chaque côté.
+pub fn star_separator<'a, M: 'a>() -> Element<'a, M> {
+  let rule_style = |_: &iced::Theme| rule::Style {
+    color: theme::border(),
+    radius: 0.0.into(),
+    fill_mode: rule::FillMode::Full,
+    snap: false,
+  };
+  row![
+    container(rule::horizontal(1).style(rule_style)).width(Length::Fill),
+    Space::new().width(8),
+    text("\u{f005}")
+      .font(theme::ICONS)
+      .size(10)
+      .color(theme::accent()),
+    Space::new().width(8),
+    container(rule::horizontal(1).style(rule_style)).width(Length::Fill),
+  ]
+  .align_y(Alignment::Center)
+  .into()
+}
+
+/// Bannière pleine largeur pour les panels liste/rooms — visible uniquement en thème USSR.
+pub fn panel_banner<'a, M: 'a>(handle: image::Handle, bg: Color) -> Element<'a, M> {
+  if !matches!(theme::active(), theme::ThemeVariant::Ussr) {
+    return Space::new().into();
+  }
+  container(image(handle).width(Length::Fill))
+    .width(Length::Fill)
+    .style(move |_| container::Style {
+      background: Some(Background::Color(bg)),
       ..Default::default()
     })
     .into()

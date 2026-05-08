@@ -255,28 +255,30 @@ const USSR_TEXT_HEADER: Color = Color {
   b: 0.251,
   a: 1.0,
 };
+// #cc3333 — rouge soviétique (validé dans les mockups)
 const USSR_ACCENT: Color = Color {
   r: 0.800,
-  g: 0.133,
-  b: 0.000,
+  g: 0.200,
+  b: 0.200,
   a: 1.0,
 };
+// #e03c3c — hover
 const USSR_ACCENT_HOVER: Color = Color {
-  r: 0.667,
-  g: 0.102,
-  b: 0.000,
+  r: 0.878,
+  g: 0.235,
+  b: 0.235,
   a: 1.0,
 };
 const USSR_ACCENT_SUBTLE: Color = Color {
   r: 0.800,
-  g: 0.133,
-  b: 0.000,
+  g: 0.200,
+  b: 0.200,
   a: 0.15,
 };
 const USSR_ACCENT_BORDER: Color = Color {
   r: 0.800,
-  g: 0.133,
-  b: 0.000,
+  g: 0.200,
+  b: 0.200,
   a: 0.45,
 };
 const USSR_TEXT_ON_ACCENT: Color = Color {
@@ -327,16 +329,25 @@ const USSR_HEADER_BG: Color = Color {
   b: 0.627,
   a: 1.0,
 };
+// #eee6d9 — fond contenu principal (validé dans les mockups)
 const USSR_DETAIL_BG: Color = Color {
-  r: 0.929,
-  g: 0.878,
-  b: 0.769,
+  r: 0.933,
+  g: 0.902,
+  b: 0.851,
   a: 1.0,
 };
+// #f2ead8 — fond des cards
 const USSR_CARD_BG: Color = Color {
-  r: 0.961,
-  g: 0.929,
-  b: 0.831,
+  r: 0.949,
+  g: 0.918,
+  b: 0.847,
+  a: 1.0,
+};
+// #e8ddc8 — fond panel liste (légèrement plus sombre que detail_bg)
+const USSR_LIST_PANEL_BG: Color = Color {
+  r: 0.910,
+  g: 0.867,
+  b: 0.784,
   a: 1.0,
 };
 const USSR_DESTRUCTIVE: Color = Color {
@@ -518,6 +529,15 @@ pub fn card_bg() -> Color {
   match active() {
     ThemeVariant::Catppuccin => CARD_BG,
     ThemeVariant::Ussr => USSR_CARD_BG,
+  }
+}
+
+/// Fond du panel liste (320px) — légèrement plus sombre que `detail_bg()`.
+/// Utilisé dans key_list, public_keys, et le panel rooms du chat.
+pub fn list_panel_bg() -> Color {
+  match active() {
+    ThemeVariant::Catppuccin => HEADER_BG,
+    ThemeVariant::Ussr => USSR_LIST_PANEL_BG,
   }
 }
 

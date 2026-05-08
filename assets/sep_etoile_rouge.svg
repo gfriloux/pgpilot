@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 24" width="400" height="24">
+  <!-- Ligne gauche -->
+  <line x1="0" y1="12" x2="183" y2="12" stroke="#3a2010" stroke-width="1.2" stroke-linecap="round"/>
+  <!-- Étoile rouge pleine, centrée en (200, 12), outer=10, inner=4 -->
+  <polygon
+    points="200,2 202.35,8.76 209.51,8.91 203.80,13.24 205.88,20.09 200,16 194.12,20.09 196.20,13.24 190.49,8.91 197.65,8.76"
+    fill="#cc3333"
+  />
+  <!-- Ligne droite -->
+  <line x1="217" y1="12" x2="400" y2="12" stroke="#3a2010" stroke-width="1.2" stroke-linecap="round"/>
+</svg>

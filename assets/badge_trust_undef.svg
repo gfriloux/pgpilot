@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <!-- Cercle gris sombre — confiance indéfinie -->
+  <circle cx="12" cy="12" r="11" fill="#4a4040"/>
+  <!-- Point d'interrogation crème -->
+  <text x="12" y="17" text-anchor="middle"
+        font-family="serif" font-size="14" font-weight="bold" fill="#c9b99a">?</text>
+</svg>

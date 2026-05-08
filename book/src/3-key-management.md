@@ -32,6 +32,8 @@ The **My Keys** view displays your secret keys in a 2-column layout:
 
 Click a key in the list to select it and view details on the right.
 
+**Theme note**: In the USSR theme, status indicators (keyserver published, YubiKey, trust level) appear as circular SVG badges instead of text icons, providing a distinctive Soviet aesthetic while maintaining clarity.
+
 ---
 
 ## Managing Trust Levels

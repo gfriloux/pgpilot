@@ -7,7 +7,7 @@ use iced::{
 use crate::app::{ImportForm, Message};
 use crate::gpg::Keyserver;
 use crate::i18n::Strings;
-use crate::ui::{common, theme};
+use crate::ui::{common, theme, ussr_assets};
 
 pub fn view<'a>(form: &'a ImportForm, s: &'static dyn Strings) -> Element<'a, Message> {
   let bold = Font {
@@ -264,5 +264,8 @@ pub fn view<'a>(form: &'a ImportForm, s: &'static dyn Strings) -> Element<'a, Me
   ]
   .spacing(20);
 
-  common::page_layout(common::card_medium(card_content))
+  common::page_layout(common::card_medium_with_banner(
+    card_content,
+    ussr_assets::banner(24),
+  ))
 }

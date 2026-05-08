@@ -12,12 +12,13 @@ pub mod key_list;
 pub mod settings;
 pub mod sign;
 pub mod theme;
+pub mod ussr_assets;
 pub mod verify;
 
 use iced::{
-  font,
+  font, gradient,
   widget::{button, column, container, row, rule, text, Space},
-  Alignment, Background, Border, Color, Element, Font, Length, Shadow,
+  Alignment, Background, Border, Color, Element, Font, Gradient, Length, Shadow,
 };
 
 use crate::app::{App, Message, StatusKind, View};
@@ -118,6 +119,8 @@ fn sidebar(app: &App) -> Element<'_, Message> {
 
   // Nav button with explicit active state (supports multi-view highlight).
   let nav_btn_ex = |icon: &'static str, label: &'static str, view: View, active: bool| {
+    let is_ussr = matches!(theme::active(), theme::ThemeVariant::Ussr);
+
     button(
       row![
         text(icon).font(theme::ICONS).size(14),
@@ -128,32 +131,82 @@ fn sidebar(app: &App) -> Element<'_, Message> {
     )
     .on_press(Message::NavChanged(view))
     .width(Length::Fill)
-    .style(
-      move |_: &iced::Theme, status: button::Status| button::Style {
-        background: if active {
-          Some(Background::Color(theme::accent()))
-        } else {
-          match status {
+    .style(move |_: &iced::Theme, status: button::Status| {
+      if active && is_ussr {
+        // USSR selected: thin red "bar" at the far-left edge, then dark gradient
+        // fading to transparent (stop 0 = full red, stop 0.04 ≈ 7 px dark, stop 1 = clear).
+        button::Style {
+          background: Some(Background::Gradient(Gradient::Linear(
+            gradient::Linear::new(std::f32::consts::FRAC_PI_2)
+              .add_stop(
+                0.0,
+                Color {
+                  r: 0.800,
+                  g: 0.200,
+                  b: 0.200,
+                  a: 1.0,
+                },
+              )
+              .add_stop(
+                0.04,
+                Color {
+                  r: 0.165,
+                  g: 0.063,
+                  b: 0.063,
+                  a: 1.0,
+                },
+              )
+              .add_stop(
+                1.0,
+                Color {
+                  r: 0.165,
+                  g: 0.063,
+                  b: 0.063,
+                  a: 0.0,
+                },
+              ),
+          ))),
+          text_color: theme::sidebar_text(),
+          border: Border {
+            color: Color::TRANSPARENT,
+            width: 0.0,
+            radius: 0.0.into(),
+          },
+          shadow: Default::default(),
+          snap: false,
+        }
+      } else if active {
+        // Catppuccin selected: solid accent bubble.
+        button::Style {
+          background: Some(Background::Color(theme::accent())),
+          text_color: theme::text_on_accent(),
+          border: Border {
+            color: Color::TRANSPARENT,
+            width: 0.0,
+            radius: 6.0.into(),
+          },
+          shadow: Default::default(),
+          snap: false,
+        }
+      } else {
+        button::Style {
+          background: match status {
             button::Status::Hovered | button::Status::Pressed => {
               Some(Background::Color(theme::sidebar_hover_bg()))
             }
             _ => None,
-          }
-        },
-        text_color: if active {
-          theme::text_on_accent()
-        } else {
-          theme::sidebar_text()
-        },
-        border: Border {
-          color: Color::TRANSPARENT,
-          width: 0.0,
-          radius: 6.0.into(),
-        },
-        shadow: Default::default(),
-        snap: false,
-      },
-    )
+          },
+          text_color: theme::sidebar_text(),
+          border: Border {
+            color: Color::TRANSPARENT,
+            width: 0.0,
+            radius: 6.0.into(),
+          },
+          shadow: Default::default(),
+          snap: false,
+        }
+      }
+    })
   };
 
   let nav_btn = |icon: &'static str, label: &'static str, view: View| {

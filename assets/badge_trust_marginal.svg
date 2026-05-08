@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <!-- Cercle or/brun — confiance marginale -->
+  <circle cx="12" cy="12" r="11" fill="#7a5a1a"/>
+  <!-- Demi-étoile crème (étoile outline = confiance partielle) -->
+  <polygon
+    points="12,4.5 13.76,9.32 18.88,9.16 14.94,12.18 16.36,17.18 12,14.25 7.64,17.18 9.06,12.18 5.12,9.16 10.24,9.32"
+    fill="none" stroke="#eee6d9" stroke-width="1.2"/>
+</svg>

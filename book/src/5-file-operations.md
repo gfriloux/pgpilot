@@ -12,9 +12,13 @@ Encrypt files so only your chosen recipients can read them.
 2. In the **Encrypt** view:
    - Click **Add Files** to select one or more files
    - Files appear in a list below
-3. Select **Recipients** — check the boxes for people who should be able to decrypt:
+3. Select **Recipients** — click on key chips to toggle recipients:
+   - Keys are displayed as toggleable chips arranged in a 2-column grid
    - Only keys with Encryption subkeys can be selected
-   - Trust level shown as a badge next to each key
+   - Each chip shows the key name and email, plus a trust icon:
+     - **✓** (green) — Full or Ultimate trust (recommended)
+     - **⚠️** (amber/peach) — Marginal or Undefined trust (warning)
+   - Selected chips highlight with the theme accent color
 4. Choose format:
    - **Binary** (`.gpg`) — compressed, smaller, binary
    - **Armored** (`.asc`) — text-based, readable, larger, ASCII-only

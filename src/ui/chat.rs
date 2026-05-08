@@ -8,7 +8,7 @@ use iced::{
 use crate::app::{App, Message, MqttState, PendingOp, View};
 use crate::chat::rooms::{Room, RoomParticipant};
 use crate::chat::{AckStatus, ChatMessage, PresenceStatus, PresenceTracker};
-use crate::ui::{button_styles, common, theme};
+use crate::ui::{button_styles, common, theme, ussr_assets};
 
 // ---------------------------------------------------------------------------
 // Public entry point
@@ -132,7 +132,9 @@ fn room_list_panel(app: &App) -> Element<'_, Message> {
 
   let footer = mqtt_status_bar(&app.mqtt_state, s);
 
-  column![header, body, footer]
+  let banner = common::panel_banner(ussr_assets::banner(26), theme::list_panel_bg());
+
+  column![header, banner, body, footer]
     .width(Length::Fixed(280.0))
     .height(Length::Fill)
     .into()
