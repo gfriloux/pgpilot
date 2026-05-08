@@ -21,11 +21,13 @@ pgpilot offers two visual themes:
 - Soviet-inspired theme with cream content areas and near-black sidebar
 - Red accent color, Bebas Neue font for navigation, Russo One for content
 - Page titles display humorous Soviet-flavored text ("Chiffrer pour le Peuple", "Rapport au Commissariat"…)
+- Propaganda banners in each view (USSR-themed images)
+- Circular SVG badges for key status (keyserver, YubiKey, trust levels)
 - Best experienced as a fun easter egg
 
 To change the theme:
 1. Open **Settings**
-2. Under **Theme**, select **Catppuccin Frappé** or **USSR**
+2. Under **Theme**, click the card for **Catppuccin Frappé** or **USSR** to preview
 3. The theme applies immediately — no restart required
 
 ---
@@ -40,7 +42,7 @@ Available values: 50%, 75%, **100% (default)**, 125%, 150%, 175%, 200%
 
 To change the scale:
 1. Open **Settings**
-2. Under **UI Scale**, select the desired percentage
+2. Under **UI Scale**, use the slider with tick marks to select the desired percentage
 3. The change applies immediately
 
 > **Note**: The scale factor is stored in your preferences and restored on next launch. If the interface becomes unusable after a scale change, delete `~/.config/pgpilot/config.yaml` to reset to defaults.
@@ -55,7 +57,7 @@ On first launch, the language is auto-detected from your system locale (`$LANG` 
 
 To change the language:
 1. Open **Settings**
-2. Under **Language**, select **English** or **French**
+2. Under **Language**, click the **English** or **French** button
 3. The interface updates immediately
 
 ---
