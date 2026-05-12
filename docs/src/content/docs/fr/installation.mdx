@@ -1,17 +1,17 @@
 ---
 title: Installation
-description: Installez PGPilot sur Linux — à partir des versions GitHub ou en compilant à partir de la source.
+description: Installer pgpilot sur Linux — depuis les releases GitHub, via NixOS/home-manager, ou en compilant depuis les sources.
 ---
 
-PGPilot est un gestionnaire de clés graphique pour GPG. Ce guide couvre l'installation à partir des versions GitHub et la compilation à partir de la source.
+pgpilot est un gestionnaire de clés graphique pour GPG. Ce guide couvre l'installation depuis les releases GitHub, via NixOS home-manager, et la compilation depuis les sources.
 
-## Conditions préalables
+## Prérequis
 
-PGPilot nécessite :
+pgpilot nécessite :
 
-- **GnuPG** ≥ 2.2 (la commande `gpg` doit être dans `PATH`)
-- **gpg-agent** (généralement fourni avec GnuPG)
-- **pinentry** — un programme pinentry pour les invites de mot de passe (ex: `pinentry-tty`, `pinentry-gtk2` ou `pinentry-qt`)
+- **GnuPG** ≥ 2.2 (la commande `gpg` doit être dans le `PATH`)
+- **gpg-agent** (généralement inclus avec GnuPG)
+- **pinentry** — un programme pinentry pour les invites de mot de passe (ex. `pinentry-tty`, `pinentry-gtk2`, ou `pinentry-qt`)
 
 ### Vérifier les prérequis (Linux)
 
@@ -20,50 +20,108 @@ gpg --version
 # La sortie doit afficher GnuPG version ≥ 2.2
 
 gpg-agent --version
-# Confirmez que l'agent est disponible
+# Confirme que l'agent est disponible
 
 which pinentry
-# Devrait trouver un binaire pinentry (ou vérifier : gpg-conf --list-dirs | grep pinentry)
+# Doit trouver un binaire pinentry
 ```
 
-Si `gpg` est manquant :
+Si `gpg` est absent :
 
 - **Ubuntu / Debian** : `sudo apt install gpg gnupg-agent pinentry`
 - **Fedora / RHEL** : `sudo dnf install gnupg pinentry`
 - **Arch** : `sudo pacman -S gnupg pinentry`
-- **NixOS** : Utilisez `nix-shell -p gnupg gpg-agent pinentry` ou ajoutez à `flake.nix`/`shell.nix`
+- **NixOS** : voir la [section NixOS](#nixos--home-manager) ci-dessous
 
 ---
 
-## Installation à partir des versions GitHub
+## Installation depuis les releases GitHub
 
-1. Visitez [versions PGPilot](https://github.com/gfriloux/pgpilot/releases)
-2. Téléchargez le dernier binaire `pgpilot` pour votre distribution Linux (amd64, arm64, etc.)
-3. Rendez-le exécutable :
-   ```bash
-   chmod +x pgpilot
-   ```
-4. Exécutez-le :
-   ```bash
-   ./pgpilot
-   ```
-
-Pour installer au niveau du système :
+1. Visitez les [releases pgpilot](https://github.com/gfriloux/pgpilot/releases)
+2. Téléchargez le paquet `.deb` ou l'`.AppImage` pour votre architecture
+3. Installez :
 
 ```bash
-sudo mv pgpilot /usr/local/bin/
-pgpilot  # fonctionne maintenant de n'importe où
+# Debian / Ubuntu
+sudo dpkg -i PGPilot_x.y.z_amd64.deb
+
+# AppImage (toute distribution)
+chmod +x PGPilot_x.y.z_amd64.AppImage
+./PGPilot_x.y.z_amd64.AppImage
 ```
 
 ---
 
-## Compilation à partir de la source
+## NixOS / home-manager
 
-### Exigences
+pgpilot fournit un flake Nix avec un module home-manager. C'est la méthode d'installation recommandée sur NixOS.
 
-- **Rust** ≥ 1.80 (installez à partir de [rustup.rs](https://rustup.rs) si nécessaire)
-- **Nix** (optionnel mais recommandé sur NixOS) — voir [nix.dev](https://nix.dev)
-- **clang** et **en-têtes de développement** pour le support Wayland/X11
+### 1. Ajouter pgpilot aux inputs du flake
+
+```nix
+# flake.nix
+{
+  inputs = {
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+    home-manager = {
+      url = "github:nix-community/home-manager";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    pgpilot = {
+      url = "github:gfriloux/pgpilot/v0.8.0";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+  };
+  # ...
+}
+```
+
+### 2. Importer le module home-manager
+
+Passez `inputs` à votre configuration home-manager et importez le module :
+
+```nix
+# Dans votre configuration home-manager
+{ inputs, ... }:
+{
+  imports = [ inputs.pgpilot.homeModules.pgpilot ];
+
+  pgpilot.pgpilot.enable = true;
+}
+```
+
+Cela installe le binaire `pgpilot-app` et enregistre le fichier `.desktop` pour votre environnement de bureau.
+
+### 3. Rebuilder
+
+```bash
+sudo nixos-rebuild switch
+```
+
+Si le lanceur d'applications n'affiche pas pgpilot immédiatement après le rebuild, exécutez :
+
+```bash
+kbuildsycoca6 --noincremental   # KDE
+```
+
+Ou déconnectez-vous puis reconnectez-vous.
+
+### GnuPG sur NixOS
+
+Assurez-vous que GnuPG et un pinentry sont dans votre environnement :
+
+```nix
+home.packages = with pkgs; [ gnupg pinentry-qt ];
+```
+
+---
+
+## Compilation depuis les sources
+
+### Prérequis
+
+- **Nix** avec flakes activés (recommandé) — le dev shell fournit toutes les dépendances
+- **Rust** ≥ 1.80, **Node.js** 22, **npm**, **cargo-tauri**, **webkit2gtk** si vous compilez sans Nix
 
 ### Cloner le dépôt
 
@@ -72,90 +130,55 @@ git clone https://github.com/gfriloux/pgpilot.git
 cd pgpilot
 ```
 
-### Compiler dans le shell dev Nix (recommandé)
-
-Si vous avez `nix` installé :
+### Compiler dans le dev shell Nix (recommandé)
 
 ```bash
 nix develop
-cargo build --release
+just build     # produit .deb et .rpm dans target/release/bundle/
+just dev       # démarre Tauri + Vite en mode hot-reload
 ```
-
-Le shell dev configure `LIBCLANG_PATH` et `LD_LIBRARY_PATH` pour toutes les dépendances (sequoia-openpgp, iced/Wayland, dbus, etc.).
 
 ### Compiler sans Nix
 
-```bash
-cargo build --release
-./target/release/pgpilot
-```
+Installez les dépendances système de votre distribution (webkit2gtk, gtk3, libsoup3, pkg-config, clang, Node.js 22), puis :
 
-**Remarque** : Sur les systèmes sans environnement préconfigré, vous devrez peut-être installer des packages supplémentaires (clang, libssl-dev, libdbus-1-dev, libwayland-dev, etc.). Consultez la documentation de votre distribution si la compilation échoue.
+```bash
+cd app && npm install
+cargo-tauri build
+```
 
 ---
 
 ## Vérification
 
-Une fois installé, vérifiez que PGPilot fonctionne :
+Une fois installé, lancez pgpilot :
 
-1. Lancez PGPilot :
-   ```bash
-   pgpilot
-   ```
+```bash
+pgpilot-app
+```
 
-2. Une fenêtre doit apparaître. Sinon, vérifiez que votre serveur d'affichage (X11 ou Wayland) est en cours d'exécution :
-   ```bash
-   echo $DISPLAY     # X11
-   echo $WAYLAND_DISPLAY  # Wayland
-   ```
-
-3. Ouvrez la page **Diagnostic** (barre latérale, bouton "Diagnostic") :
-   - Tous les contrôles doivent afficher « OK » ou « Info » (icônes vertes/bleues)
-   - Si vous voyez « Erreur » en rouge, suivez le guide de dépannage (voir [Dépannage](/pgpilot/fr/troubleshooting/))
+Une fenêtre doit apparaître. Ouvrez la page **Diagnostic** depuis la barre latérale — tous les contrôles doivent afficher OK ou Info. En cas d'erreur, consultez [Dépannage](/pgpilot/fr/troubleshooting/).
 
 ---
 
 ## Désinstallation
 
-Pour supprimer PGPilot :
-
 ```bash
-# Si installé via /usr/local/bin/
-sudo rm /usr/local/bin/pgpilot
+# .deb
+sudo dpkg -r pgpilot
 
-# Pour aussi supprimer la config et les données en cache :
-rm ~/.config/pgpilot/config.yaml
+# home-manager — mettez enable = false et rebuildez, ou supprimez l'option
+
+# Pour aussi supprimer la configuration :
+rm -rf ~/.config/pgpilot/
 ```
 
-**Remarque** : PGPilot ne modifie pas directement votre trousseau GPG — toutes les opérations déléguées au binaire `gpg`. Vos clés restent dans `~/.gnupg/` et sont sûres de être sauvegardées indépendamment.
-
----
-
-## Supprimer les données du trousseau GnuPG
-
-> **Avertissement : Ceci ne fait PAS partie de la désinstallation de PGPilot.**
->
-> `~/.gnupg/` est le répertoire de données propre à GnuPG. Il contient **toutes vos clés GPG**, y compris les clés d'autres applications, les clés que vous avez importées au fil des ans et vos clés privées. La supprimer est **permanente et irréversible** à moins que vous ayez une sauvegarde.
->
-> PGPilot ne possède ni ne modifie ce répertoire — il délègue toutes les opérations au binaire `gpg` qui lit depuis `~/.gnupg/`.
-
-Ne procédez que si vous avez l'intention de **détruire complètement votre trousseau GPG** et avez vérifié vos sauvegardes.
-
-**Conditions préalables avant de continuer :**
-
-1. Exportez et stockez de manière sécurisée toutes les clés privées que vous souhaitez conserver
-2. Sauvegardez vos certificats de révocation
-3. Vérifiez que vos sauvegardes peuvent être restaurées
-
-```bash
-# IRRÉVERSIBLE — détruit toutes les clés GPG
-rm -rf ~/.gnupg/
-```
+pgpilot ne modifie pas votre trousseau GPG. Vos clés restent dans `~/.gnupg/` et ne sont pas affectées par la désinstallation de pgpilot.
 
 ---
 
 ## Prochaines étapes
 
 - Lisez [Démarrage rapide](/pgpilot/fr/quickstart/) pour créer votre première clé
-- Voir [Gestion des clés](/pgpilot/fr/key-management/) pour les workflows détaillés
-- Consultez [Dépannage](/pgpilot/fr/troubleshooting/) si vous rencontrez des problèmes
+- Consultez [Gestion des clés](/pgpilot/fr/key-management/) pour les workflows détaillés
+- Voir [Dépannage](/pgpilot/fr/troubleshooting/) si vous rencontrez des problèmes
