@@ -1,0 +1,92 @@
+---
+title: Chat PGP
+description: Chat chiffré de bout en bout construit sur OpenPGP et MQTT.
+---
+
+PGPilot inclut un chat chiffré de bout en bout, construit sur OpenPGP et MQTT.
+Les messages sont éphémères — fermer PGPilot les supprime définitivement.
+
+![Vue Chat — thème Catppuccin](/pgpilot/screenshots/chat--catppuccin.png)
+
+## Modèle de sécurité en une phrase
+
+Chaque message est chiffré avec les clés publiques des destinataires et signé avec votre clé privée. Le serveur relais voit uniquement des blobs chiffrés.
+
+## Conditions préalables
+
+- Les clés publiques de vos contacts doivent être dans votre trousseau local
+- Une clé privée fonctionnelle (clé logicielle ou YubiKey — gpg-agent gère les deux)
+
+## Créer une salle
+
+1. Cliquez sur **Rooms** dans la barre latérale
+2. Cliquez sur **+ Nouveau**
+3. Sélectionnez **Votre identité** dans cette salle (votre clé privée)
+4. Entrez un **nom de salle** (local uniquement — non partagé)
+5. Entrez l'**URL de relais** (par défaut : `mqtts://broker.hivemq.com:8883`)
+6. Sélectionnez **Participants** dans votre trousseau
+7. Cliquez sur **Créer une salle**
+
+## Partager une invitation
+
+1. Ouvrez la salle
+2. Cliquez sur **Copier l'invitation** dans l'en-tête
+3. Partagez le code `pgpilot:join:...` hors ligne (email, Signal, en personne)
+   - Le code est signé avec votre clé privée — les destinataires le vérifient
+
+## Rejoindre une salle
+
+1. Cliquez sur **Rooms → Rejoindre**
+2. Sélectionnez **Votre identité** dans cette salle
+3. Collez le code `pgpilot:join:...`
+4. Cliquez sur **Rejoindre**
+   - PGPilot vérifie la signature de l'invitation avant de se connecter
+
+## Envoyer un message
+
+Tapez dans la barre de composition et appuyez sur **Entrée** (ou cliquez sur **►**).
+Les messages sont chiffrés pour tous les participants avant d'être publiés.
+
+## Vérifier l'identité de l'expéditeur
+
+Chaque message affiche une **icône de verrou** à côté du nom de l'expéditeur quand la signature GPG a été vérifiée.
+
+Cliquez sur l'icône de verrou (ou le nom de l'expéditeur) pour développer un panneau d'identité affichant :
+
+- **Signature vérifiée** — GPG a confirmé que le message a été signé avec cette clé
+- **Nom et email** — des métadonnées de la clé
+- **Empreinte complète** — l'identifiant cryptographique 40 caractères
+- **Niveau de confiance** — votre évaluation locale de cette clé
+
+Si vous voyez **⚠** au lieu d'une icône de verrou, la clé publique de l'expéditeur n'est pas dans votre trousseau.
+
+## Indicateurs de présence
+
+- **●** En ligne — le participant est connecté au relais
+- **○** Hors ligne — le participant s'est déconnecté ou n'a pas encore rejoint
+
+## Accusés de réception (ACK)
+
+Sous chaque message envoyé :
+
+- **✓ Nom** — le participant a déchiffré votre message
+- **⏳ Nom** — le participant est hors ligne ; accusé de réception en attente
+
+## Sécurité
+
+**Les messages sont éphémères.** Fermer PGPilot supprime définitivement tous les messages.
+Aucun log de chat n'est écrit sur le disque. Seul `rooms.yaml` persiste (IDs de salle et empreintes de participants — pas de contenu de messages).
+
+**Le relais est aveugle.** Le broker MQTT voit uniquement des blobs chiffrés, un identificateur opaque de salle et le statut de présence.
+
+**L'identité est cryptographique.** Chaque message porte une signature GPG.
+PGPilot vérifie la signature avant d'afficher du contenu. L'usurpation d'identité nécessite votre clé privée.
+
+**Changez le relais.** Vous pouvez utiliser n'importe quel broker MQTT supportant TLS (port 8883).
+
+## Limitations
+
+- **Pas de livraison hors ligne** — Les messages envoyés pendant que vous êtes hors ligne sont perdus
+- **Pas de persistance** — Le redémarrage de PGPilot efface tout l'historique des messages
+- **Relais public (par défaut)** — `broker.hivemq.com:8883` (broker public HiveMQ, pas de SLA)
+- **YubiKey avec touch policy** — Si votre carte nécessite une touche physique par opération, vous devrez la toucher pour chaque message

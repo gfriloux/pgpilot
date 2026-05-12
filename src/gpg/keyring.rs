@@ -19,6 +19,22 @@ use super::{display_path, gnupg_dir, gpg_command, sanitize_gpg_stderr};
 
 const MAX_RESPONSE_BYTES: u64 = 1 << 20; // 1 MiB
 
+const ALLOWED_KEYSERVERS: &[&str] = &["https://keys.openpgp.org", "https://keyserver.ubuntu.com"];
+
+fn validate_keyserver_url(url: &str) -> Result<String> {
+  let url = url.trim().trim_end_matches('/');
+  if !url.starts_with("https://") {
+    anyhow::bail!("Keyserver URL must use https://");
+  }
+  if !ALLOWED_KEYSERVERS.contains(&url) {
+    anyhow::bail!(
+      "Keyserver not allowed: {url}. Permitted: {}",
+      ALLOWED_KEYSERVERS.join(", ")
+    );
+  }
+  Ok(url.to_string())
+}
+
 fn safe_get(url: &str) -> Result<String> {
   if !url.starts_with("https://") {
     anyhow::bail!("URL non sécurisée : seul https:// est autorisé");
@@ -51,7 +67,7 @@ fn expiry_to_str(expiry: &KeyExpiry) -> &'static str {
   }
 }
 
-pub(crate) fn validate_fp(fp: &str) -> Result<()> {
+pub fn validate_fp(fp: &str) -> Result<()> {
   if fp.len() != 40 || !fp.chars().all(|c| c.is_ascii_hexdigit()) {
     anyhow::bail!("Fingerprint invalide : doit être 40 caractères hexadécimaux");
   }
@@ -105,6 +121,34 @@ pub fn create_key(
   subkey_expiry: &KeyExpiry,
   include_auth: bool,
 ) -> Result<()> {
+  // Bound lengths
+  if name.is_empty() || name.len() > 64 {
+    anyhow::bail!("Name must be 1–64 characters");
+  }
+  if email.is_empty() || email.len() > 254 {
+    anyhow::bail!("Email must be 1–254 characters");
+  }
+
+  // Reject control bytes and dangerous characters in the UID
+  let forbidden: &[char] = &['\n', '\r', '\0', '<', '>'];
+  if name
+    .chars()
+    .any(|c| forbidden.contains(&c) || c.is_control())
+  {
+    anyhow::bail!("Name contains forbidden characters");
+  }
+  if email
+    .chars()
+    .any(|c| forbidden.contains(&c) || c.is_control())
+  {
+    anyhow::bail!("Email contains forbidden characters");
+  }
+
+  // Basic email format validation
+  if !email.contains('@') || !email.contains('.') {
+    anyhow::bail!("Invalid email format");
+  }
+
   let homedir = gnupg_dir()?;
   let user_id = format!("{name} <{email}>");
   let sub_expire = expiry_to_str(subkey_expiry);
@@ -234,7 +278,20 @@ pub fn export_public_key(fingerprint: &str, path: &std::path::Path) -> Result<()
     return Err(anyhow::anyhow!("Aucune clef trouvée pour ce fingerprint"));
   }
 
-  std::fs::write(path, &output.stdout).context("failed to write key file")
+  use std::io::Write as _;
+  let mut f = std::fs::OpenOptions::new()
+    .write(true)
+    .create_new(true)
+    .open(path)
+    .map_err(|e| {
+      if e.kind() == std::io::ErrorKind::AlreadyExists {
+        anyhow::anyhow!("File already exists: {}", display_path(path))
+      } else {
+        anyhow::anyhow!("Cannot create file: {e}")
+      }
+    })?;
+  f.write_all(&output.stdout)
+    .context("failed to write key file")
 }
 
 fn export_secret_key(fingerprint: &str, path: &std::path::Path) -> Result<()> {
@@ -265,7 +322,19 @@ pub fn backup_key(
 ) -> Result<(String, Option<String>)> {
   validate_fp(fingerprint)?;
   let key_filename = format!("{key_id}_secret.asc");
-  export_secret_key(fingerprint, &dir.join(&key_filename))?;
+  let secret_path = dir.join(&key_filename);
+  export_secret_key(fingerprint, &secret_path)?;
+
+  // Restrict permissions on the exported secret key to owner-read/write only
+  #[cfg(unix)]
+  {
+    use std::os::unix::fs::PermissionsExt;
+    if let Ok(meta) = std::fs::metadata(&secret_path) {
+      let mut perms = meta.permissions();
+      perms.set_mode(0o600);
+      let _ = std::fs::set_permissions(&secret_path, perms);
+    }
+  }
 
   let homedir = gnupg_dir()?;
   let rev_src = format!(
@@ -298,16 +367,17 @@ pub fn check_keyserver(fingerprint: &str) -> Result<(String, bool)> {
 
 pub fn publish_key(fingerprint: &str, keyserver_url: &str) -> Result<String> {
   validate_fp(fingerprint)?;
+  let keyserver_url = validate_keyserver_url(keyserver_url)?;
   let homedir = gnupg_dir()?;
   let status = gpg_command(&homedir)
-    .args(["--keyserver", keyserver_url, "--send-keys", fingerprint])
+    .args(["--keyserver", &keyserver_url, "--send-keys", fingerprint])
     .status()
     .context("failed to run gpg --send-keys")?;
 
   if !status.success() {
     return Err(anyhow::anyhow!("L'envoi de la clef a échoué"));
   }
-  Ok(keyserver_url.to_string())
+  Ok(keyserver_url)
 }
 
 fn subkey_position(master_fp: &str, subkey_fp: &str) -> Result<usize> {
@@ -582,16 +652,17 @@ pub fn import_key_from_url(url: &str) -> Result<()> {
 
 pub fn import_key_from_keyserver(query: &str, keyserver_url: &str) -> Result<()> {
   validate_keyserver_query(query)?;
+  let keyserver_url = validate_keyserver_url(keyserver_url)?;
   if query.contains('@') {
     let encoded = utf8_percent_encode(query, NON_ALPHANUMERIC).to_string();
-    let url = format!("https://{keyserver_url}/pks/lookup?op=get&search={encoded}");
+    let url = format!("{keyserver_url}/pks/lookup?op=get&search={encoded}");
     let content =
       safe_get(&url).map_err(|e| anyhow::anyhow!("Impossible de joindre le keyserver : {e}"))?;
     import_key_from_text(&content)
   } else {
     let homedir = gnupg_dir()?;
     let output = gpg_command(&homedir)
-      .args(["--keyserver", keyserver_url, "--recv-keys", query])
+      .args(["--keyserver", &keyserver_url, "--recv-keys", query])
       .output()
       .context("failed to run gpg --recv-keys")?;
     if !output.status.success() {

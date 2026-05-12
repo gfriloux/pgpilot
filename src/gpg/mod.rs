@@ -3,6 +3,11 @@ pub mod health;
 pub mod keyring;
 pub mod types;
 
+#[allow(dead_code)]
+pub fn gnupg_homedir() -> anyhow::Result<String> {
+  gnupg_dir()
+}
+
 pub(crate) fn gnupg_dir() -> anyhow::Result<String> {
   let dir = std::env::var("GNUPGHOME")
     .unwrap_or_else(|_| format!("{}/.gnupg", std::env::var("HOME").unwrap_or_default()));
@@ -59,6 +64,7 @@ pub(crate) fn sanitize_gpg_stderr(stderr: &str) -> String {
 
 pub use card::move_key_to_card;
 pub use health::{run_all_checks, CheckStatus, HealthCheck};
+#[cfg(any(feature = "ui", feature = "chat"))]
 pub(crate) use keyring::validate_fp;
 pub use keyring::{
   add_subkey, backup_key, check_keyserver, create_key, decrypt_files, delete_key, encrypt_files,

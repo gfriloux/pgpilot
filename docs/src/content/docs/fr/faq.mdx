@@ -1,0 +1,280 @@
+---
+title: FAQ
+description: Questions fréquemment posées sur PGPilot et OpenPGP.
+---
+
+Questions fréquemment posées sur PGPilot et OpenPGP.
+
+## Général
+
+### Quelle est la différence entre une clé publique et une clé privée ?
+
+- **Clé publique** : Sûre à partager. Utilisée pour chiffrer les messages *vers* vous. N'importe qui peut l'avoir.
+- **Clé privée** : Secrète. Utilisée pour déchiffrer et signer. **Ne partagez jamais.**
+
+Pensez : clé publique = boîte aux lettres (anyone peut y mettre des lettres) ; clé privée = clé de votre boîte (seulement vous).
+
+### Pourquoi mes clés n'expirent pas ?
+
+PGPilot crée des clés qui **n'expirent jamais par conception**. Les sous-clés expirent (après 1, 2 ou 5 ans), mais la clé maître est permanente.
+
+**Pourquoi ?** L'expiration de la clé maître est plus complexe et rare. La rotation de sous-clé (Remplacer) est la meilleure pratique moderne.
+
+Si vous avez besoin de clés qui expirent, utilisez `gpg` directement : `gpg --quick-gen-key "Nom" ed25519 cert 1y`.
+
+### Qu'est-ce qu'une empreinte ? Qu'est-ce qu'un ID de clé ?
+
+- **Empreinte** : 40 caractères hexadécimaux. Identifiant unique de votre clé.
+  - Exemple : `ABCD1234567890ABCD1234567890ABCD1234567890`
+  - Vérifiez toujours ceci en personne avant de faire confiance
+
+- **ID de clé** : 16 derniers caractères de l'empreinte (ID long) ou 8 derniers (ID court).
+  - ID long : `1234567890ABCDEF`
+  - ID court : `90ABCDEF` (⚠️ **Non recommandé** — facilement collisionnel)
+
+PGPilot utilise toujours des empreintes complètes 40 caractères.
+
+### Pourquoi des sous-clés séparées ?
+
+Trois sous-clés (Sign, Encryption, Auth) permettent :
+
+- **Rotation** : Rafraîchir les sous-clés sans changer votre identité
+- **Délégation** : Partager les sous-clés avec des services sans partager la clé maître
+- **Matériel** : Déplacer les sous-clés individuelles vers YubiKey
+- **Spécialisation** : Chaque clé optimisée pour son objectif
+
+C'est la meilleure pratique moderne.
+
+### Puis-je révoquer une clé ?
+
+**La révocation** marque une clé comme invalide (ex: compromise ou perdue).
+
+**Dans PGPilot** : Vous ne pouvez pas révoquer la clé maître. Pour les urgences, utilisez :
+
+```bash
+gpg --gen-revoke <fingerprint> > revocation.asc
+gpg --import revocation.asc
+gpg --keyserver keys.openpgp.org --send-keys <fingerprint>
+```
+
+**Sous-clés** : Utilisez **Remplacer** dans PGPilot pour révoquer les anciennes sous-clés.
+
+---
+
+## Clés et trousseaux
+
+### Où PGPilot stocke-t-il mes clés ?
+
+Dans le répertoire standard GnuPG :
+
+- Linux : `~/.gnupg/`
+- macOS : `~/.gnupg/` ou `/Users/<username>/.gnupg/`
+- Windows : `%APPDATA%\gnupg\`
+
+PGPilot ne crée pas son propre trousseau — il délègue à `gpg`.
+
+### Puis-je utiliser PGPilot avec les clés créées par `gpg` ?
+
+Oui ! PGPilot lit et gère n'importe quel trousseau GPG. Vous pouvez :
+
+- Créer des clés avec `gpg` et les gérer dans PGPilot
+- Créer des clés dans PGPilot et les utiliser avec `gpg`
+
+Elles sont entièrement compatibles.
+
+### Comment sauvegarde-je ma clé privée ?
+
+1. Dans PGPilot : Sélectionnez votre clé → Cliquez sur **Sauvegarde** → Choisissez un dossier
+2. PGPilot exporte :
+   - `<KeyID>_secret.asc` — votre clé privée (chiffrée)
+   - `<KeyID>_revocation.rev` — certificat de révocation
+
+Stockez la sauvegarde quelque part de sûr (hors ligne, disque externe chiffré, coffre).
+
+### Comment restaure-je une sauvegarde ?
+
+1. Copiez le fichier `_secret.asc` dans un endroit sûr
+2. Dans PGPilot : Cliquez sur **Importer** → **Fichier** → choisissez le fichier `.asc`
+3. PGPilot importe votre clé
+
+Votre phrase de passe de sauvegarde est requise pour réimporter.
+
+---
+
+## Confiance et vérification
+
+### Qu'est-ce que le « niveau de confiance » ?
+
+La confiance indique à PGPilot à quel point vous croyez à l'identité de quelqu'un :
+
+- **Non défini** : Vous n'avez pas vérifié (par défaut)
+- **Marginal** : Vous avez partiellement vérifié
+- **Complet** : Vous avez complètement vérifié (rencontré en personne, comparé les empreintes)
+- **Ultime** : Vous possédez cette clé
+
+PGPilot avertit avant de chiffrer aux clés Non définies.
+
+### Quand dois-je définir la confiance ?
+
+Après que vous :
+
+1. Rencontriez quelqu'un en personne
+2. Lui demandiez de dire son empreinte
+3. Vérifiez qu'elle correspond à sa clé dans PGPilot
+4. Définissez la confiance à Complet
+
+**Ne** définissez jamais la confiance à Complet basé sur email seul.
+
+### Comment vérifie-je une signature ?
+
+1. Récupérez le fichier (ex: `document.pdf`)
+2. Récupérez la signature (ex: `document.pdf.sig`)
+3. Dans PGPilot : Cliquez sur **Vérifier** → choisissez le fichier et la signature
+4. PGPilot affiche le résultat (Valide / Mauvaise signature / Clé inconnue / Expirée / Révoquée)
+
+Si Valide et la confiance du signataire est Complet/Ultime, le document est authentique.
+
+---
+
+## Partage et publication
+
+### Dois-je publier ma clé sur un serveur de clés ?
+
+**Oui**, si vous voulez que les gens vous trouvent par email. Une fois publiée :
+
+- D'autres peuvent chercher `votre@email.com`
+- Ils trouvent et téléchargent votre clé publique
+- Ils peuvent vous envoyer des messages chiffrés
+
+La publication est sûre — c'est de l'information publique.
+
+### Quel serveur de clés dois-je utiliser ?
+
+- **keys.openpgp.org** (recommandé) : Respectueux de la vie privée, nécessite vérification d'email
+- **keyserver.ubuntu.com** : Traditionnel, liste les emails publiquement
+
+La plupart utilisent keys.openpgp.org maintenant.
+
+### Que se passe-t-il quand je publie ?
+
+PGPilot appelle `gpg --send-keys <fingerprint>` pour :
+
+1. Télécharger votre **clé publique** (pas la privée !)
+2. Le serveur l'indexe par empreinte + email
+3. N'importe qui peut maintenant télécharger votre clé publique
+
+Votre clé privée **ne quitte jamais** votre ordinateur.
+
+### Puis-je supprimer ma clé d'un serveur de clés ?
+
+Une fois publiée, les clés persistent (ne peuvent pas être vraiment supprimées). Vous pouvez :
+
+1. Révoquer la clé (la marquer comme invalide)
+2. Définir les options de confidentialité
+
+Pour une suppression complète, contactez les admins du serveur.
+
+---
+
+## Sous-clés
+
+### Pourquoi les sous-clés expirent-elles ?
+
+Les sous-clés qui expirent vous forcent à les faire pivoter régulièrement. Si une sous-clé fuit, vous ne devez faire pivoter que cette sous-clé, pas votre identité.
+
+PGPilot par défaut 2 ans, mais vous pouvez choisir 1 ou 5 ans.
+
+### Quelle est la différence entre « Renouveler » et « Remplacer » ?
+
+- **Renouveler** : Prolonger la date d'expiration de la même sous-clé
+  - À utiliser si la sous-clé est encore bonne, juste vieille
+  - Opération rapide
+
+- **Remplacer** : Créer une nouvelle sous-clé et révoquer l'ancienne
+  - À utiliser si la sous-clé est compromise ou vous voulez la rafraîchir
+  - Crée une nouvelle clé avec des paramètres frais
+  - L'ancienne clé est marquée révoquée
+
+---
+
+## Chiffrement
+
+### Qui peut déchiffrer mes fichiers chiffrés ?
+
+Uniquement les destinataires que vous avez spécifiés. Chaque destinataire utilise sa **clé privée** pour déchiffrer.
+
+Vous ne pouvez pas déchiffrer les fichiers chiffrés pour d'autres (même si vous les avez créés).
+
+### Que se passe-t-il si je perds ma clé privée ?
+
+Sans la clé privée :
+
+- Vous ne pouvez pas déchiffrer les fichiers chiffrés pour vous
+- Vous ne pouvez pas signer les documents comme vous
+- Vous ne pouvez pas utiliser SSH avec votre clé Auth
+
+C'est pourquoi la sauvegarde est critique. Si perdue :
+
+1. Révoquez la clé
+2. Créez une nouvelle clé
+3. Dites à tous votre nouvelle clé
+
+**Prévention** : Sauvegardez maintenant.
+
+---
+
+## Sécurité
+
+### PGPilot est-il sûr ?
+
+PGPilot est un **wrapper GUI** autour de `gpg`. La sécurité dépend de :
+
+- **GnuPG** : Mature, bataille-testé (utilisé par des milliards)
+- **Votre système** : Protégez votre ordinateur, maintenez l'OS à jour
+- **Vos clés** : Utilisez des phrases de passe fortes, sauvegardez, faites pivoter les clés compromises
+- **Vos choix** : Vérifiez les empreintes avant de faire confiance
+
+PGPilot n'est pas pire qu'utiliser `gpg` directement.
+
+### Que se passe-t-il si mon ordinateur est piraté ?
+
+Le pirate accède à :
+
+- Vos clés privées (sur le disque, si pas sur YubiKey)
+- Vos phrases de passe (si tapées après infection)
+- Les fichiers déchiffrés (s'ils sont volés ou lus)
+
+**Mitigation** :
+
+- Utilisez une YubiKey (les clés ne quittent jamais le matériel)
+- Utilisez des phrases de passe fortes (ralentit la force brute)
+- Maintenez l'OS à jour (moins de zéro-days)
+- Révoquez les clés compromises immédiatement
+
+---
+
+## Dépannage
+
+### PGPilot ne démarre pas
+
+Voir [Installation](/pgpilot/fr/installation/) — vérifiez que GnuPG et `pinentry` sont installés.
+
+### L'invite de mot de passe n'apparaît pas
+
+Voir [Dépannage](/pgpilot/fr/troubleshooting/) — section pinentry.
+
+### Les clés ne s'importent pas
+
+Consultez [Dépannage](/pgpilot/fr/troubleshooting/) — section import.
+
+### YubiKey non détecté
+
+Voir [Dépannage](/pgpilot/fr/troubleshooting/) — section YubiKey.
+
+---
+
+## Plus de questions ?
+
+- Voir [Dépannage](/pgpilot/fr/troubleshooting/) pour les problèmes courants
+- Voir [Sécurité](/pgpilot/fr/security/) pour les modèles de menace
+- Email : guillaume+code@friloux.me

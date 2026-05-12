@@ -1,0 +1,441 @@
+/* ── Page shell ───────────────────────────────────────────────── */
+.page {
+  display: flex;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* ── List panel ───────────────────────────────────────────────── */
+.listPanel {
+  width: 320px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--border);
+  background: var(--card-bg);
+  overflow: hidden;
+}
+
+/* ── Detail panel ─────────────────────────────────────────────── */
+.detailPanel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--card-bg);
+}
+
+/* ── List panel header ────────────────────────────────────────── */
+.listHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px 6px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.listTitle {
+  font-family: var(--font-heading);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-header);
+}
+
+.listHeaderRight {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ── Scrollable room list ─────────────────────────────────────── */
+.roomList {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.roomListEmpty {
+  padding: 32px 16px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+
+/* ── Room row ─────────────────────────────────────────────────── */
+.roomRow {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.roomRow:hover {
+  background: var(--sidebar-hover-bg);
+}
+
+.roomRowSelected {
+  background: var(--accent-subtle);
+  border-left: 3px solid var(--accent);
+  padding-left: 9px;
+}
+
+.roomRowName {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-strong);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.roomRowSelected .roomRowName {
+  color: var(--accent);
+}
+
+.roomRowMeta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.roomRowRelay {
+  font-size: 0.6875rem;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+}
+
+.roomRowParticipants {
+  font-size: 0.6875rem;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+/* ── Connection indicator dots ────────────────────────────────── */
+.connectedDot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--success);
+  flex-shrink: 0;
+}
+
+.disconnectedDot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--error);
+  flex-shrink: 0;
+}
+
+.reconnectingDot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--warning);
+  flex-shrink: 0;
+}
+
+/* ── Create room form ─────────────────────────────────────────── */
+.createForm {
+  border-bottom: 1px solid var(--border);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex-shrink: 0;
+  background: var(--card-bg);
+}
+
+.createFormTitle {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-header);
+  margin-bottom: 4px;
+}
+
+.createFormActions {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+/* ── Detail placeholder ───────────────────────────────────────── */
+.detailPlaceholder {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  font-style: italic;
+}
+
+/* ── Conversation header ──────────────────────────────────────── */
+.convHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  gap: 8px;
+}
+
+.convHeaderLeft {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.convHeaderName {
+  font-family: var(--font-heading);
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--text-header);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.convHeaderStatus {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.6875rem;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+/* ── Status banners ───────────────────────────────────────────── */
+.bannerReconnecting {
+  padding: 6px 16px;
+  background: var(--warning-bg);
+  border-bottom: 1px solid var(--warning);
+  font-size: 0.75rem;
+  color: var(--warning);
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.bannerDisconnected {
+  padding: 6px 16px;
+  background: var(--error-bg);
+  border-bottom: 1px solid var(--error);
+  font-size: 0.75rem;
+  color: var(--error);
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+/* ── Message list ─────────────────────────────────────────────── */
+.messageList {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  padding: 12px 16px;
+  gap: 4px;
+}
+
+/* ── Date separator ───────────────────────────────────────────── */
+.dateSeparator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+  color: var(--text-muted);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.dateSeparator::before,
+.dateSeparator::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+/* ── Individual message bubble ────────────────────────────────── */
+.messageBubbleWrapper {
+  display: flex;
+  flex-direction: column;
+  max-width: 68%;
+  margin-bottom: 6px;
+}
+
+.messageBubbleWrapperMine {
+  align-self: flex-end;
+  align-items: flex-end;
+}
+
+.messageBubbleWrapperOther {
+  align-self: flex-start;
+  align-items: flex-start;
+}
+
+/* Unified card: header inside the bubble */
+.messageBubble {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color var(--transition-fast);
+}
+
+.messageBubble:hover {
+  border-color: var(--accent-border);
+}
+
+.messageBubbleMine {
+  background: var(--accent-subtle);
+  border-color: var(--accent-border);
+}
+
+/* Header row inside the card */
+.messageBubbleHeader {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px 4px;
+  border-bottom: 1px solid var(--border);
+  background: var(--input-bg);
+}
+
+/* Own messages: trust header color takes priority — no override needed */
+
+.messageLock {
+  font-size: 0.7rem;
+  flex-shrink: 0;
+  color: inherit;
+}
+
+/* Header background = trust indicator */
+.messageBubbleHeaderTrusted {
+  background: var(--success-bg);
+  border-bottom-color: var(--success);
+  color: var(--success);
+}
+
+.messageBubbleHeaderMarginal {
+  background: var(--warning-bg);
+  border-bottom-color: var(--warning);
+  color: var(--warning);
+}
+
+.messageBubbleHeaderUntrusted {
+  background: rgba(201, 168, 0, 0.12);
+  border-bottom-color: #c9a800;
+  color: #8a7200;
+}
+
+.messageBubbleHeaderUnknown {
+  background: var(--input-bg);
+  border-bottom-color: var(--border);
+  color: var(--text-muted);
+}
+
+.messageSender {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-strong);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.messageDot {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  flex-shrink: 0;
+}
+
+.messageTime {
+  font-size: 0.6875rem;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+/* Message body */
+.messageBubbleContent {
+  padding: 7px 10px 8px;
+  font-size: 0.875rem;
+  color: var(--text-strong);
+  line-height: 1.5;
+  word-break: break-word;
+  white-space: pre-wrap;
+}
+
+/* Legacy — kept for date separator alignment */
+.messageMeta { display: none; }
+
+/* ── Message input footer ─────────────────────────────────────── */
+.messageInput {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.messageInputField {
+  flex: 1;
+  background: var(--input-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  color: var(--text-strong);
+  outline: none;
+  transition: border-color var(--transition-fast);
+}
+
+.messageInputField:focus {
+  border-color: var(--accent);
+}
+
+.messageInputField::placeholder {
+  color: var(--text-muted);
+}
+
+.messageInputField:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── Message detail (click to expand) ────────────────────────────── */
+.messageDetail {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  color: var(--text-muted);
+  padding: 4px 8px;
+  background: var(--input-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  margin-top: 2px;
+  word-break: break-all;
+}

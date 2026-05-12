@@ -1,0 +1,282 @@
+---
+title: Sécurité
+description: Modèle de menace, meilleures pratiques et limitations.
+---
+
+Modèle de menace, meilleures pratiques et limitations.
+
+## Modèle de menace
+
+PGPilot est conçu pour protéger contre ces menaces :
+
+### Écoute des données
+
+**Menace** : Un attaquant intercepte vos fichiers en transit.
+
+**Protection** : Chiffrement des fichiers.
+
+- **Comment** : Utilisez PGPilot pour chiffrer les fichiers avant envoi.
+- **Résultat** : Seuls les destinataires avec des clés privées peuvent déchiffrer.
+
+### Messages falsifiés
+
+**Menace** : Un attaquant envoie un message en prétendant être vous.
+
+**Protection** : Signatures numériques.
+
+- **Comment** : Utilisez PGPilot pour signer les fichiers. Les destinataires vérifient avec votre clé publique.
+- **Résultat** : Seul vous pouviez avoir signé (prouve l'authenticité).
+
+### Vol de clés (disque)
+
+**Menace** : Un attaquant vole votre ordinateur ou disque.
+
+**Protection** : Clés matérielles (YubiKey) ou phrases de passe.
+
+- **Matériel** : Les clés privées ne quittent jamais la carte. L'attaquant n'obtient rien.
+- **Phrase de passe** : La clé privée est chiffrée sur disque. L'attaquant doit casser la phrase de passe.
+
+### Compromission de sous-clé
+
+**Menace** : Une sous-clé (ex: Encryption) est compromise.
+
+**Protection** : Rotation et révocation de sous-clé.
+
+- **Comment** : Utilisez PGPilot **Remplacer** pour créer une nouvelle sous-clé et révoquer l'ancienne.
+- **Résultat** : L'ancienne sous-clé est marquée révoquée ; la nouvelle est active.
+
+### Perte de clé
+
+**Menace** : Vous perdez l'accès à votre clé privée.
+
+**Protection** : Sauvegardes.
+
+- **Comment** : Utilisez PGPilot **Sauvegarde** pour exporter la clé secrète et le certificat de révocation.
+- **Résultat** : Si vous perdez la clé, vous pouvez restaurer à partir de la sauvegarde.
+
+---
+
+## Ce que PGPilot ne protège PAS contre
+
+### Ordinateur compromis
+
+**Menace** : Un malware installe sur votre ordinateur et lit les clés privées.
+
+**Limitations** :
+
+- PGPilot utilise `gpg` sur votre ordinateur. Si l'OS est compromis, l'attaquant peut intercepter.
+- Si vous utilisez une YubiKey, les clés elles-mêmes sont protégées, mais l'attaquant pourrait intercepter les commandes.
+- Les fichiers déchiffrés sur disque sont lisibles au malware.
+
+**Mitigation** :
+
+- Maintenez l'OS à jour (moins de vulnérabilités)
+- Utilisez un antivirus / scanner de malware
+- N'exécutez pas de binaires non fiables
+- Utilisez une clé matérielle (plus difficile à extraire les secrets)
+
+### Phrases de passe faibles
+
+**Menace** : Un attaquant force brute votre mot de passe de clé privée.
+
+**Limitations** :
+
+- Si la phrase de passe est faible (ex: "password123"), l'attaquant peut essayer toutes les possibilités.
+- Les GPUs 2024 peuvent tester des milliards de phrases de passe par seconde.
+
+**Mitigation** :
+
+- Utilisez des phrases de passe fortes : 15+ caractères, mélangés
+- Utilisez un gestionnaire de phrases de passe (Bitwarden, 1Password, KeePass)
+- Utilisez une clé matérielle (pas de phrase de passe, ne peut pas être forcée)
+
+### Erreurs de confiance
+
+**Menace** : Vous faites confiance à la mauvaise clé de quelqu'un.
+
+**Limitations** :
+
+- PGPilot vous demande de vérifier les empreintes en personne.
+- Si vous ignorez la vérification, vous pourriez chiffrer à la clé d'un attaquant.
+
+**Mitigation** :
+
+- **Toujours** vérifiez les empreintes en personne ou via un canal sécurisé.
+- Utilisez les niveaux de confiance de PGPilot pour marquer qui vous avez vérifié.
+- Chiffrez un fichier de test pour vous d'abord.
+
+### Écoute réseau (recherches de serveur de clés)
+
+**Menace** : Un attaquant voit quelles clés vous cherchez (fuite de vie privée).
+
+**Limitations** :
+
+- Quand vous cherchez un serveur de clés, votre requête est visible (sauf VPN/Tor).
+- L'attaquant peut déduire avec qui vous communiquez.
+
+**Mitigation** :
+
+- Utilisez VPN ou Tor pour les recherches de serveur de clés
+- Utilisez keys.openpgp.org (ne retourne pas les emails dans les recherches)
+- Évitez de chercher par email ; cherchez par empreinte
+
+### Bugs GPG
+
+**Menace** : Une vulnérabilité non découverte dans GnuPG pourrait fuir des clés.
+
+**Limitations** :
+
+- PGPilot délègue toute la crypto à `gpg`. Si `gpg` est cassé, PGPilot est cassé.
+
+**Mitigation** :
+
+- Maintenez GnuPG à jour
+- Surveillez les avis de sécurité : https://gnupg.org/security.html
+- Utilisez une clé matérielle (réduit la surface d'attaque)
+
+---
+
+## Meilleures pratiques
+
+### Création de clé
+
+1. **Créez via PGPilot ou `gpg --batch`** (évite les erreurs)
+2. **Pas d'expiration sur la clé maître** (conception correcte)
+3. **2 ans d'expiration sur les sous-clés** (équilibre fraîcheur + usabilité)
+4. **Utilisez ed25519 / cv25519** (moderne, sûr)
+
+### Phrases de passe
+
+1. **Forte** : 15+ caractères, mélangés
+2. **Unique** : Ne réutilisez pas
+3. **Sauvegardée** : Stockez dans un gestionnaire de phrases de passe
+4. **Vérifiée régulièrement** : Assurez-vous de vous en souvenir
+
+### Sauvegardes
+
+1. **Sauvegardez immédiatement après la création** de la clé
+2. **Stockez hors ligne** : Clé USB dans un coffre, pas sur votre ordinateur
+3. **Chiffrez la sauvegarde** (VeraCrypt, LUKS, BitLocker)
+4. **Testez la récupération annuellement** : Restaurez sur une machine temp
+5. **Documentez les phrases de passe** : Stockez séparément de la sauvegarde
+
+### Confiance et vérification
+
+1. **Vérifiez les empreintes en personne** (rencontrez face-à-face)
+2. **Ou via canal fiable** (appel vidéo, appel téléphonique)
+3. **Ne faites jamais confiance à email/SMS**
+4. **Définissez la confiance explicitement**
+5. **Passez en revue la confiance annuellement**
+
+### Rotation de clé
+
+1. **Renouvelez les sous-clés avant expiration** (1-2 mois avant)
+2. **Faites pivoter les sous-clés compromises immédiatement** (utilisez **Remplacer**)
+3. **Publiez les rotations sur le serveur de clés** (utilisez **Publier**)
+4. **Annoncez aux contacts** (email avec les détails de la nouvelle clé)
+
+### Clés matérielles (YubiKey)
+
+1. **Changez le PIN par défaut** (de `12345678` à un PIN fort)
+2. **Gardez la clé avec vous** (ne la laissez pas sans surveillance)
+3. **Sauvegardez la clé maître hors ligne** (YubiKey ne contient que les sous-clés)
+4. **Testez la récupération** : Si la carte est perdue, pouvez-vous restaurer de la sauvegarde ?
+5. **Documentez le numéro de série**
+
+### Chiffrement de fichier
+
+1. **Testez le chiffrement/déchiffrement** (chiffrez un fichier de test pour vous)
+2. **Utilisez le format blindé** (`.asc`) pour le texte brut / email
+3. **Utilisez le format binaire** (`.gpg`) pour les fichiers, archives
+4. **Gardez les signatures avec les fichiers**
+5. **Vérifiez les signatures avant de faire confiance**
+
+---
+
+## Limitations de PGPilot
+
+### Pas d'expiration de clé maître
+
+PGPilot ne vous permet pas de définir l'expiration de la clé maître. C'est intentionnel.
+
+### Pas d'extraction de clé SSH directe
+
+PGPilot n'exporte pas les sous-clés Auth comme clés SSH. Utilisez :
+
+```bash
+gpg --export-ssh-key <fingerprint> > ~/.ssh/id_pgp.pub
+```
+
+### Pas de gestion des ID utilisateur
+
+PGPilot ne peut pas ajouter/supprimer les IDs utilisateur (adresses email) des clés.
+
+### Pas de signature de clé
+
+PGPilot ne signe pas les autres clés (fêtes de signature de clé). Utilisez `gpg` directement.
+
+---
+
+## Signaler les problèmes de sécurité
+
+Si vous découvrez une vulnérabilité :
+
+1. **NE postez PAS sur GitHub issues**
+2. **Email** : guillaume+code@friloux.me
+3. **Incluez** :
+   - Description détaillée
+   - Étapes pour reproduire
+   - Impact potentiel
+   - Correction suggérée
+4. **Attendez** que les mainteneurs répondent et corrigent
+
+---
+
+## Standards OpenPGP
+
+PGPilot utilise :
+
+- **OpenPGP RFC 4880** (standard IETF)
+- **Algorithmes modernes** : ed25519 (sign), cv25519 (encrypt), SHA-256+
+- **Algorithmes dépréciés évités** : RSA 1024, SHA-1, MD5, IDEA, 3DES, etc.
+
+---
+
+## Chat PGP — Modèle de sécurité
+
+### Que voit le relais
+
+Le broker MQTT ne voit que :
+
+- Un topic opaque
+- Des blobs chiffrés OpenPGP (illisibles sans clé privée)
+- L'empreinte du signataire et l'horodatage Unix
+- Statut de présence (`en ligne`/`hors ligne`)
+
+Le broker ne peut pas lire le contenu des messages, résoudre l'identité du signataire au-delà de l'empreinte, ou déterminer l'appartenance à la salle.
+
+### Preuve d'identité
+
+Chaque message est chiffré avec `gpg --encrypt --sign`. À la réception, PGPilot appelle `gpg --decrypt --status-fd 2` et nécessite `[GNUPG:] VALIDSIG <fp40>` dans la sortie d'état. Si l'empreinte vérifiée ne correspond pas à l'expéditeur déclaré, le message est silencieusement rejeté. L'usurpation d'identité nécessite votre clé privée.
+
+### Messages éphémères
+
+Les messages existent uniquement en RAM. Fermer PGPilot les supprime définitivement.
+Seul `~/.config/pgpilot/rooms.yaml` persiste (IDs de salle et empreintes de participants — pas de contenu de messages).
+
+### Limitations connues
+
+| Limitation | Impact | Mitigation |
+|---|---|---|
+| Pas de forward secrecy | Une clé privée compromise déchiffre les messages passés | Utilisez un relais privé ; faites pivoter les clés régulièrement |
+| Présence non signée | Un relais malveillant pourrait publier un statut en ligne faux | Utilisez un relais fiable privé |
+| Métadonnées visibles | Le relais voit qui est en ligne et quand | Utilisez un relais privé |
+| Relais public (par défaut) | `broker.hivemq.com` sans SLA | Auto-hébergez Mosquitto ou HiveMQ |
+| Pas de livraison hors ligne | Les messages envoyés hors ligne sont perdus | Acceptez le compromis ; futur : NATS JetStream |
+| YubiKey touch policy | Une carte à touche par opération nécessite une touche par message | Utilisez une « touche une fois par session » ou une clé logicielle |
+
+---
+
+## Questions ?
+
+Voir [FAQ](/pgpilot/fr/faq/) ou [Dépannage](/pgpilot/fr/troubleshooting/) pour les réponses aux questions courants.

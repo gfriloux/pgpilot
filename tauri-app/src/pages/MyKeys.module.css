@@ -1,0 +1,167 @@
+/* ── Page shell ───────────────────────────────────────────────── */
+.page {
+  display: flex;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* ── List panel ───────────────────────────────────────────────── */
+.listPanel {
+  width: 320px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--border);
+  background: var(--card-bg);
+  overflow: hidden;
+}
+
+/* ── Detail panel ─────────────────────────────────────────────── */
+.detailPanel {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+  background: var(--card-bg);
+}
+
+/* ── List panel header row (title + add button) ───────────────── */
+.listHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px 6px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.listTitle {
+  font-family: var(--font-heading);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-header);
+}
+
+/* ── Expiry warning banner ────────────────────────────────────── */
+.expiryBanner {
+  background: var(--warning-bg);
+  border-bottom: 1px solid var(--warning);
+  padding: 6px 12px;
+  flex-shrink: 0;
+}
+
+.expiryBannerTitle {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--warning);
+  margin-bottom: 4px;
+}
+
+.expiryBannerRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 0.6875rem;
+  color: var(--warning);
+  padding: 2px 0;
+}
+
+.expiryBannerName {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+.expiryBannerDays {
+  flex-shrink: 0;
+  color: var(--text-secondary);
+  font-size: 0.6875rem;
+}
+
+/* ── Column header bar ────────────────────────────────────────── */
+.columnHeader {
+  display: flex;
+  align-items: center;
+  padding: 5px 12px;
+  background: var(--card-bg);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.columnHeaderName {
+  flex: 1;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-header);
+}
+
+.columnHeaderExpires {
+  width: 80px;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-header);
+  text-align: right;
+  padding-right: 4px;
+}
+
+.columnHeaderStatus {
+  width: 56px;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-header);
+  text-align: right;
+}
+
+/* ── Scrollable key list ──────────────────────────────────────── */
+.keyList {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.keyListEmpty {
+  padding: 32px 16px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+
+.keyListError {
+  padding: 16px 12px;
+  color: var(--error);
+  font-size: 0.8125rem;
+}
+
+.retryBtn {
+  background: none;
+  border: none;
+  color: var(--accent);
+  cursor: pointer;
+  text-decoration: underline;
+  font-size: inherit;
+  padding: 0;
+  margin-left: 6px;
+}
+
+/* ── Detail placeholder ───────────────────────────────────────── */
+.detailPlaceholder {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  font-style: italic;
+}

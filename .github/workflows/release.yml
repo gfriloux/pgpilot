@@ -13,10 +13,8 @@ jobs:
     name: Create GitHub Release
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
         with:
-          # Full history is required for git-cliff to build the complete
-          # changelog from all commits back to the previous tag.
           fetch-depth: 0
 
       - name: Install Nix
@@ -32,14 +30,23 @@ jobs:
             ~/.cargo/registry/index
             ~/.cargo/registry/cache
             ~/.cargo/git/db
-            target
-          key: cargo-release-${{ runner.os }}-${{ hashFiles('Cargo.lock') }}
+            tauri-app/src-tauri/target
+          key: cargo-release-${{ runner.os }}-${{ hashFiles('tauri-app/src-tauri/Cargo.lock') }}
           restore-keys: |
             cargo-release-${{ runner.os }}-
-            cargo-${{ runner.os }}-
 
-      - name: Build release binary
-        run: nix develop --command cargo build --release
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: tauri-app/package-lock.json
+
+      - name: Install frontend dependencies
+        run: cd tauri-app && npm ci
+
+      - name: Build Tauri app (Linux bundles)
+        run: nix develop --command sh -c 'cd tauri-app && cargo-tauri build'
 
       - name: Generate release notes for this tag
         run: nix develop --command git-cliff --current --output RELEASE_NOTES.md
@@ -58,5 +65,6 @@ jobs:
         with:
           body_path: RELEASE_NOTES.md
           files: |
-            target/release/pgpilot
+            tauri-app/src-tauri/target/release/bundle/deb/*.deb
+            tauri-app/src-tauri/target/release/bundle/appimage/*.AppImage
           fail_on_unmatched_files: true

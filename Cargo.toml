@@ -1,31 +1,52 @@
 [package]
 name = "pgpilot"
-version = "0.7.0"
+version = "0.8.0"
 edition = "2021"
 
+[features]
+default = ["ui"]
+ui = [
+  "iced",
+  "rfd",
+  "rumqttc",
+  "rustls",
+  "webpki-roots",
+  "futures",
+  "async-trait",
+  "chat",
+]
+chat = [
+  "rumqttc",
+  "rustls",
+  "webpki-roots",
+  "async-trait",
+]
+
 [dependencies]
-anyhow = "1"
-async-trait = "0.1"
-base64 = "0.22"
-chrono = { version = "0.4", features = ["serde"] }
-dirs = "5"
-futures = "0.3"
-iced = { version = "0.14", features = ["tokio", "image", "svg"] }
+anyhow           = "1"
+base64           = "0.22"
+chrono           = { version = "0.4", features = ["serde"] }
+dirs             = "5"
 percent-encoding = "2"
-rfd = "0.17"
-rumqttc     = { version = "0.24", features = ["use-rustls"] }
-rustls      = { version = "0.22", features = ["ring"] }
-webpki-roots = "0.26"
-serde = { version = "1", features = ["derive"] }
-serde_json = "1"
-serde_yaml = "0.9"
-sequoia-openpgp = { version = "2", default-features = false, features = ["crypto-nettle"] }
-sha2 = "0.10"
-tempfile = "3"
-thiserror = "1"
-tokio = { version = "1", features = ["full"] }
-ureq = "3"
-uuid = { version = "1", features = ["v4", "serde"] }
+serde            = { version = "1", features = ["derive"] }
+serde_json       = "1"
+serde_yaml       = "0.9"
+sequoia-openpgp  = { version = "2", default-features = false, features = ["crypto-nettle"] }
+sha2             = "0.10"
+tempfile         = "3"
+thiserror        = "1"
+tokio            = { version = "1", features = ["full"] }
+ureq             = "3"
+uuid             = { version = "1", features = ["v4", "serde"] }
+
+# Optionnels (UI seulement)
+async-trait  = { version = "0.1", optional = true }
+futures      = { version = "0.3", optional = true }
+iced         = { version = "0.14", features = ["tokio", "image", "svg"], optional = true }
+rfd          = { version = "0.17", optional = true }
+rumqttc      = { version = "0.24", features = ["use-rustls"], optional = true }
+rustls       = { version = "0.22", features = ["ring"], optional = true }
+webpki-roots = { version = "0.26", optional = true }
 
 [dev-dependencies]
 tempfile = "3"

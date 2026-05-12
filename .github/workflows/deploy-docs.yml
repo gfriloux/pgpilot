@@ -1,19 +1,13 @@
-name: Deploy docs
+name: Deploy docs (legacy mdbook — DISABLED)
+# This workflow is disabled. Documentation is now built with Astro via docs.yml.
 on:
-  push:
-    branches: [main]
-permissions:
-  contents: write
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: 'This workflow is disabled — use docs.yml instead'
+        required: false
 jobs:
-  deploy:
+  noop:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: peaceiris/actions-mdbook@v2
-        with:
-          mdbook-version: latest
-      - run: mdbook build book
-      - uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./book/book
+      - run: echo "This workflow is disabled. Use docs.yml."

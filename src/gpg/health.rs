@@ -2,10 +2,13 @@ use std::fs;
 use std::path::Path;
 use std::process::Command;
 
+use serde::{Deserialize, Serialize};
+
 use super::types::KeyInfo;
 use super::{gnupg_dir, gpg_command};
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum CheckStatus {
   Ok,
   Info,
@@ -13,7 +16,7 @@ pub enum CheckStatus {
   Error,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HealthCheck {
   pub category: &'static str,
   pub name: &'static str,

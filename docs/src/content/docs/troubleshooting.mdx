@@ -1,0 +1,356 @@
+---
+title: Troubleshooting
+description: Diagnose and fix common issues with pgpilot.
+---
+
+Diagnose and fix common issues with pgpilot.
+
+## Getting Help
+
+Before trying fixes, collect diagnostic info:
+
+1. Open pgpilot, click **Diagnostic** (sidebar)
+2. Take a screenshot of the results
+3. Note any red "Error" entries
+4. Include this info when reporting bugs
+
+---
+
+## Installation & Startup
+
+### "pgpilot: command not found"
+
+**Cause**: Binary not in PATH.
+
+**Fix**:
+
+- If downloaded: move to `/usr/local/bin/`:
+  ```bash
+  sudo mv /path/to/pgpilot /usr/local/bin/
+  pgpilot  # should work now
+  ```
+- If built from source: add to PATH:
+  ```bash
+  export PATH="$PATH:$(pwd)/target/release"
+  ```
+
+### "GPG not found" or "gpg: command not found"
+
+**Cause**: GnuPG not installed.
+
+**Fix**: Install GnuPG:
+
+- Ubuntu/Debian: `sudo apt install gnupg`
+- Fedora/RHEL: `sudo dnf install gnupg`
+- Arch: `sudo pacman -S gnupg`
+- macOS: `brew install gnupg`
+
+Then restart pgpilot.
+
+### pgpilot window won't appear on startup
+
+**Cause**: X11/Wayland display issue.
+
+**Fix**:
+
+1. Check display is running:
+   ```bash
+   echo $DISPLAY     # X11 should show :0 or similar
+   echo $WAYLAND_DISPLAY  # Wayland should show wayland-0 or similar
+   ```
+2. If empty, start a display server or SSH with display forwarding:
+   ```bash
+   ssh -X user@server  # X11 forward
+   ```
+3. Try running pgpilot again
+
+**Note**: Wayland + iced can be finicky; if stuck, try X11 or GNOME/KDE Plasma.
+
+---
+
+## GPG and Keys
+
+### "No keys found" / Empty My Keys list
+
+**Cause**: GnuPG keyring is empty or corrupted.
+
+**Fix**:
+
+1. List keys manually:
+   ```bash
+   gpg --list-keys
+   ```
+2. If empty, create your first key in pgpilot: **Create** → fill form → **Create Key**
+3. If `gpg --list-keys` shows keys but pgpilot doesn't:
+   - Check GNUPGHOME env var:
+     ```bash
+     echo $GNUPGHOME  # should be empty (uses ~/.gnupg) or set to custom dir
+     ```
+   - If custom dir set, make sure it exists and contains keys
+   - Restart pgpilot
+
+### "Invalid fingerprint" error during import
+
+**Cause**: File isn't a valid PGP key or is corrupted.
+
+**Fix**:
+
+1. Verify file is a valid key:
+   ```bash
+   gpg --import < /path/to/file.asc
+   ```
+2. If GnuPG rejects it, the file is invalid
+3. Ask the sender for a fresh export:
+   - Have them run: `gpg --export --armor <email>`
+   - Send you the output
+
+### "Passphrase required" prompt hangs
+
+**Cause**: `pinentry` (password UI) is not running or misconfigured.
+
+**Fix**:
+
+1. Check pinentry is installed:
+   ```bash
+   which pinentry
+   ```
+   If not found:
+   - Ubuntu/Debian: `sudo apt install pinentry` (or `pinentry-gtk2` for GUI)
+   - Fedora: `sudo dnf install pinentry`
+   - Arch: `sudo pacman -S pinentry`
+
+2. If `pinentry` exists but hangs:
+   - Kill stuck processes:
+     ```bash
+     pkill -f pinentry
+     pkill -f gpg-agent
+     ```
+   - Start fresh:
+     ```bash
+     gpg-agent --daemon
+     pgpilot
+     ```
+
+3. If using remote SSH, ensure X11/Wayland forwarding:
+   ```bash
+   ssh -X user@server  # Enable X11 forwarding
+   ```
+
+4. Last resort: use pinentry-tty (terminal-based, no GUI):
+   ```bash
+   echo "pinentry-program $(which pinentry-tty)" >> ~/.gnupg/gpg-agent.conf
+   pkill gpg-agent
+   pgpilot
+   ```
+
+### "Failed to encrypt" or "Trust level too low"
+
+**Cause**: Recipient's key has insufficient trust (Undefined/Marginal).
+
+**Fix**:
+
+1. Verify recipient's key:
+   - Select their key in pgpilot
+   - Check fingerprint (ask them for it in person)
+   - Click **Trust** badge → **Full**
+2. Try encrypting again
+
+Or override trust for one-off:
+
+- Click **Encrypt**
+- Check untrusted recipient
+- Click **Encrypt** again
+- If warning appears, click **Continue**
+
+---
+
+## YubiKey & Smartcard
+
+### "Card not detected"
+
+**Cause**: Hardware key not plugged in or scdaemon not running.
+
+**Fix**:
+
+1. Plug in the key (USB-A, USB-C, or NFC)
+2. Check card status:
+   ```bash
+   gpg --card-status
+   ```
+3. If error, restart scdaemon:
+   ```bash
+   pkill scdaemon
+   gpg --card-status
+   ```
+4. If still fails, check:
+   - USB port works (try different port)
+   - Permissions: `sudo usermod -a -G dialout $(whoami)` (then logout/login)
+
+### "Migration failed" or "keytocard rejected"
+
+**Cause**: Wrong admin PIN or card full.
+
+**Fix**:
+
+1. Verify card admin PIN:
+   ```bash
+   gpg --card-edit
+   admin
+   # Type your admin PIN (default: 12345678)
+   ```
+2. If PIN wrong, try again
+3. If card full (3 subkeys max per card):
+   - Reset card:
+     ```bash
+     gpg --card-edit
+     admin
+     factoryreset
+     quit
+     ```
+   - Then reinitialize and retry
+
+If migration partially failed, restore from backup:
+
+```bash
+gpg --import <backup-secret.asc>
+```
+
+---
+
+## Import & Export
+
+### "Import failed: Invalid format"
+
+**Cause**: File is not a valid PGP key.
+
+**Fix**:
+
+1. Check file starts with `-----BEGIN PGP`:
+   ```bash
+   head -1 /path/to/file.asc
+   ```
+2. If not, file is invalid (HTML, text, corrupted)
+3. Request a fresh export from sender
+
+### "Can't export to file: Permission denied"
+
+**Cause**: Folder not writable.
+
+**Fix**:
+
+1. Check folder permissions:
+   ```bash
+   ls -ld ~/Downloads  # example
+   ```
+2. If not writable:
+   ```bash
+   chmod u+w ~/Downloads
+   ```
+3. Or choose different folder in pgpilot
+
+---
+
+## Network & Keyserver
+
+### "Keyserver lookup failed"
+
+**Cause**: Network issue or keyserver down.
+
+**Fix**:
+
+1. Check internet:
+   ```bash
+   ping keys.openpgp.org
+   ```
+2. If no response:
+   - Check WiFi/ethernet connection
+   - Try different network
+3. If ping works, keyserver may be down:
+   - Wait a few minutes
+   - Try different keyserver (keyserver.ubuntu.com)
+
+### "HTTPS required" for keyserver URL
+
+**Cause**: HTTP (insecure) URL detected.
+
+**Fix**:
+
+- pgpilot only allows HTTPS for security
+- Change `http://` → `https://`
+- Example: `https://keys.openpgp.org/` instead of `http://...`
+
+---
+
+## File Operations
+
+### "File already exists — can't save"
+
+**Cause**: pgpilot won't overwrite without your consent.
+
+**Fix**:
+
+- pgpilot automatically adds counter suffix: `file_1.gpg`, `file_2.gpg`, etc.
+- Or delete the old file manually before re-encrypting
+
+### "Decrypt failed: No secret key"
+
+**Cause**: File was encrypted for someone else.
+
+**Fix**:
+
+1. Verify who encrypted it:
+   ```bash
+   gpg --list-keys | grep -i <sender-email>
+   ```
+2. If you don't have the sender's key, you can't decrypt
+3. Ask sender to decrypt and share unencrypted (or re-encrypt for you)
+
+### "Signature verification: Unknown key"
+
+**Cause**: Signer's key not in your keyring.
+
+**Fix**:
+
+1. Get the signer's fingerprint (from email, GitHub, website)
+2. In pgpilot: **Import** → **Keyserver** → enter fingerprint
+3. Re-verify the signature
+
+---
+
+## Performance & Stability
+
+### "pgpilot is slow" or "freezes"
+
+**Cause**: Large keyring or slow system.
+
+**Fix**:
+
+1. Reduce keys (delete unused keys)
+2. Reduce keyserver status checks (disable auto-refresh if enabled)
+3. Close other applications to free RAM
+4. Restart pgpilot
+
+### "pgpilot crashes on startup"
+
+**Cause**: Corrupted config or keyring.
+
+**Fix**:
+
+1. Reset config:
+   ```bash
+   rm ~/.config/pgpilot/config.yaml
+   pgpilot
+   ```
+2. If still crashes, check keyring:
+   ```bash
+   gpg --list-keys  # does this work?
+   ```
+3. If keyring broken, restore from backup or contact support
+
+---
+
+## More Help
+
+- See [FAQ](/pgpilot/faq/) for general questions
+- See [Security](/pgpilot/security/) for threat models
+- Report bugs: https://github.com/gfriloux/pgpilot/issues

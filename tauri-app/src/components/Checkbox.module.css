@@ -1,0 +1,58 @@
+.wrapper {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.wrapper.disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* visually hide native checkbox; keep it accessible */
+.native {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.box {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  border: 1.5px solid var(--border);
+  border-radius: 4px;
+  background: var(--detail-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    border-color var(--transition-fast),
+    background var(--transition-fast);
+}
+
+.native:focus-visible + .box {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.checked .box,
+.indeterminate .box {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.mark {
+  color: var(--text-on-accent);
+  font-size: 0.65rem;
+  line-height: 1;
+  font-weight: 700;
+}
+
+.label {
+  font-size: 0.875rem;
+  color: var(--text-strong);
+}

@@ -1,0 +1,60 @@
+---
+title: Introduction à PGPilot
+description: PGPilot est un gestionnaire de clés GPG graphique pour Linux qui rend OpenPGP accessible à tous.
+template: splash
+hero:
+  tagline: La gestion des clés PGP simplifiée
+  title: PGPilot
+  description: Un gestionnaire de clés GPG graphique pour Linux. Créez, importez, exportez, publiez et gérez les clés OpenPGP sans ligne de commande.
+  actions:
+    - text: Démarrer
+      link: /pgpilot/fr/installation/
+      icon: right-arrow
+      variant: primary
+    - text: Voir sur GitHub
+      link: https://github.com/gfriloux/pgpilot
+      icon: external
+---
+
+## Ce que PGPilot fait
+
+PGPilot est un gestionnaire de clés graphique pour GPG. Il offre une interface conviviale pour :
+
+- **Créer des clés** — Générer des clés primaires avec des sous-clés Sign, Encryption et SSH Auth (ed25519 / cv25519)
+- **Gérer les clés** — Afficher, exporter, importer, supprimer et organiser votre trousseau dans une vue intuitive avec liste et détails
+- **Gérer la confiance** — Définir les niveaux de confiance (Non défini / Marginal / Complet / Ultime) pour les clés de vos contacts
+- **Publier et partager** — Charger les clés sur les serveurs de clés (keys.openpgp.org, keyserver.ubuntu.com) avec suivi du statut et republication automatique
+- **Opérations sur fichiers** :
+  - **Chiffrer** des fichiers pour un ou plusieurs destinataires ; basculer entre les formats binaire `.gpg` et blindé `.asc`
+  - **Signer** des fichiers (crée des signatures détachées `.sig`)
+  - **Vérifier** les signatures avec retour de résultat en 5 états (valide / mauvaise signature / clé inconnue / expiré / révoqué)
+- **Gestion des sous-clés** — Ajouter, renouveler ou faire pivoter les sous-clés facilement
+- **Support YubiKey** — Migrer les sous-clés vers des clés de sécurité matérielle pour un stockage hors ligne
+- **Vérification matérielle** — Page de diagnostic pour valider la configuration GPG et détecter les problèmes
+- **Sauvegarde et récupération** — Exporter les clés privées et les certificats de révocation pour la récupération après sinistre
+- **Thèmes et personnalisation** — Deux thèmes visuels (Catppuccin Frappé et URSS), facteur d'échelle configurable, interface en anglais/français
+
+## Ce que PGPilot ne fait pas
+
+PGPilot **n'est pas un remplacement pour la ligne de commande GPG**. C'est un **wrapper GUI** qui délègue toutes les opérations cryptographiques au binaire `gpg`. Vous ne pouvez pas :
+
+- Modifier les propriétés des clés (nom, email, expiration) après la création
+- Modifier l'expiration de la clé primaire (par conception — les clés créées par PGPilot n'expirent jamais)
+- Utiliser des algorithmes non standard (PGPilot crée uniquement des clés ed25519)
+- Accéder aux fonctions avancées de `gpg` non exposées dans l'interface utilisateur
+
+Pour les utilisateurs expérimentés ayant besoin d'un contrôle complet, utilisez `gpg` directement dans un terminal.
+
+## Principes clés
+
+- **Confidentialité d'abord** — Toutes les opérations se font localement ; les clés ne quittent jamais votre machine
+- **Sécurité** — PGPilot valide les entrées, protège contre les écrasements silencieux et empêche les opérations dangereuses
+- **Simplicité** — Aucun jargon dans l'interface utilisateur ; la terminologie est localisée et conviviale pour les débutants
+- **Confiance au premier usage** — Les clés sont par défaut avec un niveau de confiance « Non défini » ; vous devez activement définir la confiance avant de vous y fier
+
+## Démarrer
+
+- [Installation](/pgpilot/fr/installation/) — Installez PGPilot sur votre système
+- [Démarrage rapide](/pgpilot/fr/quickstart/) — Créez votre première clé en 5 minutes
+- [Gestion des clés](/pgpilot/fr/key-management/) — Workflows détaillés pour toutes les opérations
+- [Sécurité](/pgpilot/fr/security/) — En savoir plus sur les modèles de menace et les meilleures pratiques

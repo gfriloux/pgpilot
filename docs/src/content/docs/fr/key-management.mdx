@@ -1,0 +1,352 @@
+---
+title: Gestion des clés
+description: Créez, importez, exportez et gérez vos clés PGP dans PGPilot.
+---
+
+Workflows détaillés pour gérer les clés GPG avec PGPilot.
+
+![Vue Mes Clefs — thème Catppuccin](/pgpilot/screenshots/my-keys--catppuccin.png)
+
+## Comprendre la structure des clés
+
+PGPilot crée des clés avec une structure spécifique optimisée pour la cryptographie moderne :
+
+- **Clé primaire** (maître cert) : ed25519, certification uniquement (n'expire jamais)
+- **Sous-clé Sign** (S) : ed25519, pour signer des fichiers et des commits
+- **Sous-clé Encryption** (E) : cv25519, pour le déchiffrement des messages/fichiers
+- **Sous-clé Auth** (A) : ed25519 (optionnel), pour l'authentification SSH
+
+Cette structure suit les meilleures pratiques : les sous-clés peuvent être pivotées sans changer l'identité de votre clé maître.
+
+---
+
+## Navigation dans la liste des clés
+
+La vue **Mes clés** affiche vos clés secrètes dans une disposition à 2 colonnes :
+
+**Panneau gauche (320px fixe)** :
+
+- Liste des clés maîtres avec nom, email, date de création et badge d'expiration
+- Indicateur de niveau de confiance (badge coloré : Non défini / Marginal / Complet)
+- Icônes de clés (S E A) pour les types de sous-clés présentes
+
+**Panneau droit (remplit l'espace restant)** :
+
+- Informations détaillées sur la clé
+- Liste des sous-clés (lecture seule)
+- Boutons d'action (Exporter, Sauvegarde, Migrer, Publier, Supprimer)
+- Sélecteur de niveau de confiance
+
+Cliquez sur une clé dans la liste pour la sélectionner et voir les détails à droite.
+
+**Remarque sur le thème** : Dans le thème URSS, les indicateurs d'état (clé publiée sur le serveur, YubiKey, niveau de confiance) apparaissent sous forme de badges circulaires SVG au lieu d'icônes textuelles, offrant une esthétique soviétique distinctive tout en maintenant la clarté.
+
+---
+
+## Gérer les niveaux de confiance
+
+**Les niveaux de confiance** indiquent à PGPilot à quel point vous faites confiance à une clé. Lors du chiffrement, seules les clés ayant une confiance suffisante (Complet ou Ultime) sont recommandées sans avertissement.
+
+### Voir le niveau de confiance
+
+1. Sélectionnez une clé dans la liste (le panneau droit affiche les détails)
+2. Trouvez le badge **Confiance** — affiche le niveau actuel
+   - **Non défini** (gris) — vous n'avez pas vérifié cette clé
+   - **Marginal** (ambre) — vous avez partiellement vérifié le propriétaire
+   - **Complet** (vert) — vous avez complètement vérifié le propriétaire
+   - **Ultime** (vert, rare) — vous possédez cette clé
+
+### Changer le niveau de confiance
+
+1. Sélectionnez une clé dans la liste
+2. Dans le panneau de détails, cliquez sur le badge **Confiance**
+3. Un sélecteur apparaît avec trois options : Non défini, Marginal, Complet
+4. Cliquez sur votre choix
+5. La confiance est enregistrée immédiatement (appelle `gpg --import-ownertrust`)
+
+**Meilleure pratique** : Définissez la confiance uniquement après avoir rencontré quelqu'un en personne et avoir vérifié son empreinte à la main.
+
+---
+
+## Travailler avec les sous-clés
+
+Les sous-clés sont les chevaux de trait de votre clé. Elles gèrent le chiffrement et la signature, tandis que la clé primaire reste sécurisée.
+
+### Voir les sous-clés
+
+Sélectionnez une clé dans la liste. Le panneau droit affiche une section **Sous-clés** :
+
+```
+[S] Sign             Créée : 15-01-2024   Expire : Jamais
+    Algo : ed25519  ID : ABC123...
+
+[E] Encrypt          Créée : 15-01-2024   Expire : Jamais
+    Algo : cv25519  ID : DEF456...
+
+[A] Auth SSH         Créée : 20-01-2024   Expire : 20-01-2026
+    Algo : ed25519  ID : GHI789...
+```
+
+Légende : **[S]** = Sign, **[E]** = Encrypt, **[A]** = Authentication.
+
+### Ajouter une sous-clé
+
+Si vous manquez une sous-clé (ex: vous avez créé une clé sans SSH Auth et vous voulez l'ajouter maintenant) :
+
+1. Sélectionnez votre clé
+2. Cliquez sur **+ Ajouter une sous-clé**
+3. Choisissez le type : Sign / Encrypt / Auth
+4. Confirmez
+5. PGPilot appelle `gpg --quick-add-key` avec la nouvelle sous-clé
+
+C'est utile quand vous réalisez que vous aviez besoin d'une sous-clé que vous n'aviez pas incluse à la création.
+
+### Renouveler l'expiration de la sous-clé
+
+Les sous-clés expirent par défaut (après 1, 2 ou 5 ans). Le renouvellement prolonge la date d'expiration.
+
+1. Sélectionnez une clé, puis cliquez sur le bouton **Renouveler** de la carte de sous-clé
+2. Un modal demande une nouvelle durée d'expiration (1/2/5 ans)
+3. Cliquez sur **Renouveler**
+4. PGPilot appelle `gpg --quick-set-expire`
+5. L'expiration de la sous-clé se met à jour
+
+Vous pouvez renouveler une sous-clé autant de fois que nécessaire.
+
+### Faire pivoter une sous-clé (Remplacer)
+
+La rotation crée une **nouvelle** sous-clé avec des paramètres frais et **revoque** l'ancienne. À utiliser quand :
+
+- Une sous-clé est compromise ou suspectée d'être compromise
+- Vous voulez garder la clé primaire mais rafraîchir toutes les sous-clés
+
+Processus :
+
+1. Sélectionnez une clé, puis cliquez sur le bouton **Remplacer** de la carte de sous-clé
+2. Un modal demande une nouvelle durée d'expiration
+3. Cliquez sur **Remplacer**
+4. PGPilot :
+   - Snapshotte votre clé secrète (sauvegarde)
+   - Crée une nouvelle sous-clé avec `gpg --quick-add-key`
+   - Revoque l'ancienne sous-clé via `gpg --edit-key` (dialogue pilotée)
+   - Si la révocation échoue, restaure la snapshot
+5. Quand c'est fait, l'ancienne sous-clé est marquée comme révoquée ; la nouvelle est active
+
+**Remarque** : L'identité de la clé primaire est inchangée — l'empreinte reste la même.
+
+---
+
+## Exporter les clés
+
+Partagez votre clé publique avec vos contacts ou sauvegardez votre clé secrète.
+
+### Exporter la clé publique (fichier)
+
+1. Sélectionnez votre clé
+2. Cliquez sur **Exporter** ou le menu à trois points
+3. Choisissez **Fichier**
+4. PGPilot ouvre un dialogue d'enregistrement de fichier
+5. Choisissez un emplacement (par défaut : `VotreNom.pub.asc`)
+6. Cliquez sur **Enregistrer**
+
+Le fichier `.asc` ne contient que votre **clé publique**. C'est sûr de la partager largement.
+
+### Exporter la clé publique (presse-papiers)
+
+1. Sélectionnez votre clé
+2. Cliquez sur **Exporter** ou le menu à trois points
+3. Choisissez **Presse-papiers**
+4. Un modal de confirmation apparaît (pour éviter une copie accidentelle)
+5. Cliquez sur **Copier**
+6. PGPilot copie la clé publique dans le presse-papiers
+7. Un message d'état vert confirme : « Clé copiée »
+
+Collez-la maintenant dans un email, un chat ou un site web.
+
+### Exporter la clé publique (charger sur paste.rs)
+
+1. Sélectionnez votre clé
+2. Cliquez sur **Exporter** ou le menu à trois points
+3. Choisissez **Charger**
+4. Un modal de confirmation apparaît
+5. Cliquez sur **Charger**
+6. PGPilot charge sur paste.rs et retourne un lien partageable (ex: `https://paste.rs/abc123`)
+7. Partagez ce lien — n'importe qui peut récupérer votre clé publique sans avoir besoin d'email ou de GitHub
+
+C'est pratique pour le partage temporaire ou l'intégration dans une bio.
+
+### Sauvegarder la clé secrète
+
+**IMPORTANT** : Votre clé secrète vous permet de déchiffrer les messages et de signer les fichiers. Sauvegardez-la dans un endroit sécurisé !
+
+1. Sélectionnez votre clé
+2. Cliquez sur **Sauvegarde**
+3. PGPilot ouvre un dialogue de sélection de dossier
+4. Choisissez un endroit sécurisé (clé USB, SSD externe, coffre, etc.)
+5. Cliquez sur **Sélectionner le dossier**
+6. PGPilot exporte deux fichiers :
+   - `<KeyID>_secret.asc` — votre **clé privée** (chiffrée, nécessite un mot de passe pour l'utiliser)
+   - `<KeyID>_revocation.rev` — **certificat de révocation** (le cas échéant)
+7. Un message d'état confirme : « Sauvegarde terminée »
+
+**Pratiques de sécurité** :
+
+- Stockez la sauvegarde hors ligne (pas de réseau)
+- Chiffrez le lecteur USB lui-même
+- Conservez une copie dans un coffre physique si critique
+- Testez la récupération annuellement (déchiffrez, vérifiez l'empreinte)
+
+---
+
+## Importer les clés
+
+Ajoutez la clé publique de quelqu'un d'autre à votre trousseau pour lui envoyer des messages chiffrés.
+
+### Importer à partir d'un fichier
+
+1. Cliquez sur **Importer** dans la barre latérale
+2. La vue **Importer** s'ouvre avec des onglets
+3. Sélectionnez **Fichier**
+4. Cliquez sur **Choisir un fichier**
+5. Sélectionnez un fichier `.asc` contenant une clé PGP
+6. Cliquez sur **Importer**
+7. PGPilot valide et importe la clé
+8. Si réussi, vous êtes retourné à **Mes clés** avec la nouvelle clé listée
+
+### Importer à partir d'une URL
+
+1. Cliquez sur **Importer**
+2. Sélectionnez **URL**
+3. Collez un lien HTTPS vers un fichier `.asc` (ex: `https://example.com/keys/alice.asc`)
+4. Cliquez sur **Charger à partir de l'URL**
+5. PGPilot récupère le fichier et l'importe
+
+Doit être HTTPS ; HTTP est rejeté pour la sécurité.
+
+### Importer à partir du serveur de clés
+
+1. Cliquez sur **Importer**
+2. Sélectionnez **Serveur de clés**
+3. Entrez une requête de recherche :
+   - **Empreinte** (40 caractères hex) : `ABCD1234...`
+   - **ID de clé** (16 caractères hex) : `1234567890ABCDEF`
+   - **Email** : `alice@example.com`
+4. Choisissez le serveur de clés :
+   - **keys.openpgp.org** (par défaut, recommandé — respectueux de la vie privée)
+   - **keyserver.ubuntu.com** (traditionnel, retourne toutes les clés correspondantes)
+5. Cliquez sur **Rechercher**
+6. PGPilot interroge le serveur de clés et affiche les clé(s) correspondante(s)
+7. Cliquez sur **Importer** pour la clé que vous voulez
+
+Pour les requêtes d'email, PGPilot encode l'adresse et utilise le point de terminaison API `/pks/lookup?op=get`.
+
+### Importer à partir du texte collé
+
+1. Cliquez sur **Importer**
+2. Sélectionnez **Coller**
+3. Collez le texte entier blindé de la clé (commence par `-----BEGIN PGP PUBLIC KEY BLOCK-----`)
+4. L'aperçu se met à jour en direct
+5. Cliquez sur **Importer**
+6. PGPilot valide et ajoute la clé
+
+**Remarque de sécurité** : PGPilot valide que l'entrée commence par `-----BEGIN PGP`, rejetant les pages HTML, les messages d'erreur, etc.
+
+---
+
+## Supprimer les clés
+
+Supprimez une clé de votre trousseau.
+
+### Supprimer la clé publique
+
+Si vous avez uniquement la **clé publique** (pas de secret) :
+
+1. Sélectionnez la clé dans **Mes clés**
+2. Cliquez sur **Supprimer**
+3. Un modal de confirmation apparaît : « Êtes-vous sûr ? »
+4. Cliquez sur **Supprimer**
+5. PGPilot appelle `gpg --delete-keys <fingerprint>`
+6. La clé est supprimée ; l'état affiche : « Clé supprimée »
+
+### Supprimer la clé secrète
+
+Si vous avez la **clé secrète** :
+
+1. Sélectionnez la clé
+2. Cliquez sur **Supprimer**
+3. Un modal d'avertissement apparaît : « Cette action ne peut pas être annulée... »
+4. Cliquez sur **Supprimer la clé secrète**
+5. PGPilot appelle `gpg --delete-secret-and-public-keys <fingerprint>`
+6. Les clés secrète et publique sont effacées
+7. État : « Clé supprimée »
+
+**CRITIQUE** : Avant de supprimer votre clé secrète, exportez une sauvegarde ! Une fois supprimée, vous ne pouvez pas déchiffrer les anciens messages ou révoquer la clé si elle est compromise.
+
+### Supprimer le stub YubiKey
+
+Si une clé est stockée sur une **YubiKey** (smartcard) :
+
+1. Sélectionnez la clé
+2. Cliquez sur **Supprimer**
+3. Confirmez
+4. PGPilot supprime la clé de votre trousseau local
+
+Le stub reste sur la carte ; vous pouvez le réimporter plus tard. La clé privée **n'est pas** effacée de la carte (seulement une suppression `gpg` sur le stub du trousseau).
+
+---
+
+## Publier sur les serveurs de clés
+
+Rendez votre clé publique découvrable pour que d'autres puissent vous trouver par email.
+
+### Publier une clé
+
+1. Sélectionnez votre clé
+2. Cliquez sur **Publier**
+3. Un modal demande quel serveur de clés :
+   - **keys.openpgp.org** (recommandé — clés vérifiées uniquement, respect de la vie privée)
+   - **keyserver.ubuntu.com** (traditionnel, liste toutes les clés)
+4. Cliquez sur **Publier**
+5. PGPilot appelle `gpg --keyserver <url> --send-keys <fingerprint>`
+6. Si réussi, l'état affiche : « Clé publiée sur `<serveur>`»
+
+### Vérifier le statut de publication
+
+1. Sélectionnez votre clé
+2. Dans le panneau de détails, trouvez le badge **Serveur de clés** :
+   - **Non connu** (gris) — statut pas encore vérifié
+   - **Vérification en cours** (spinner) — vérification maintenant
+   - **Publié** (vert) — trouvé sur le serveur de clés
+   - **Non publié** (rouge) — non trouvé
+
+PGPilot vérifie automatiquement le statut chaque fois que vous visualisez une clé.
+
+### Republication automatique
+
+PGPilot republie automatiquement **les clés déjà publiées** tous les 28 jours :
+
+- Quand vous faites pivoter une sous-clé, PGPilot se souvient du serveur de clés que vous avez utilisé
+- Tous les 28 jours, il re-publie automatiquement votre clé
+- Vous verrez un message d'état en arrière-plan
+- Cela garantit que les rotations de sous-clés et les mises à jour sont toujours visibles
+
+Vous pouvez aussi **republier manuellement** en cliquant sur **Publier** à nouveau.
+
+### Partager un lien de serveur de clés
+
+Une fois publiée, vous pouvez partager un lien direct vers votre clé :
+
+```
+https://keys.openpgp.org/search?q=alice@example.com
+```
+
+D'autres peuvent récupérer votre clé sans votre email ou une autorité centrale.
+
+---
+
+## Prochaines étapes
+
+- Chiffrer des fichiers pour les contacts — voir [Opérations sur fichiers](/pgpilot/fr/file-operations/)
+- Utiliser SSH avec votre sous-clé Auth — voir [YubiKey / Smartcard](/pgpilot/fr/smartcard/) (section SSH)
+- Faire pivoter les clés sur le matériel — voir [YubiKey / Smartcard](/pgpilot/fr/smartcard/)
+- Dépanner les problèmes — voir [Dépannage](/pgpilot/fr/troubleshooting/)

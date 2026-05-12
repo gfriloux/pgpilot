@@ -1,6 +1,8 @@
 use chrono::Utc;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum DecryptStatus {
   CanDecrypt,
   NoKey,
@@ -68,7 +70,7 @@ impl std::fmt::Display for KeyExpiry {
   }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SubkeyInfo {
   pub fingerprint: String,
   pub key_id: String,
@@ -77,7 +79,8 @@ pub struct SubkeyInfo {
   pub expires: Option<String>,
 }
 
-#[derive(Debug, Clone, PartialEq, Default)]
+#[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
 pub enum TrustLevel {
   #[default]
   Undefined,
@@ -101,7 +104,7 @@ impl TrustLevel {
   }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct KeyInfo {
   pub fingerprint: String,
   pub key_id: String,
@@ -117,7 +120,7 @@ pub struct KeyInfo {
   pub trust: TrustLevel,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CardInfo {
   pub serial: String,
   pub sig_fp: Option<String>,
@@ -152,7 +155,8 @@ pub fn format_date(t: std::time::SystemTime) -> String {
   dt.format("%Y-%m-%d").to_string()
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum VerifyOutcome {
   Valid,
   BadSig,
@@ -162,7 +166,7 @@ pub enum VerifyOutcome {
   Error(String),
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct VerifyResult {
   pub outcome: VerifyOutcome,
   pub signer_name: Option<String>,
