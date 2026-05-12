@@ -50,15 +50,15 @@ jobs:
       - name: Build Tauri app (deb + rpm)
         run: nix develop --command sh -c 'cd app && cargo-tauri build --bundles deb,rpm'
 
-      # AppImage uses linuxdeploy, which is itself an AppImage. Running it inside
-      # the Nix dev shell fails because Nix's LD_LIBRARY_PATH overrides linuxdeploy's
-      # bundled libs. We unset LD_LIBRARY_PATH and set APPIMAGE_EXTRACT_AND_RUN=1
-      # (bypasses FUSE, not available on GitHub Actions runners) for this step only.
-      # The Rust binary is already compiled — cargo skips recompilation.
+      # AppImage uses linuxdeploy (itself an AppImage). Any Nix-injected env var
+      # (LD_LIBRARY_PATH, NIX_LDFLAGS, NIX_CC…) breaks linuxdeploy's library
+      # analysis. We run this step entirely outside nix develop, using the
+      # @tauri-apps/cli already installed in app/node_modules from the npm ci step.
+      # The Rust binary was compiled in the previous step — cargo skips recompilation.
       - name: Build AppImage
         run: |
-          sudo apt-get install -y libfuse2
-          nix develop --command sh -c 'cd app && env -u LD_LIBRARY_PATH APPIMAGE_EXTRACT_AND_RUN=1 cargo-tauri build --bundles appimage'
+          sudo apt-get install -y libfuse2t64
+          cd app && APPIMAGE_EXTRACT_AND_RUN=1 ./node_modules/.bin/tauri build --bundles appimage
 
       - name: Generate release notes for this tag
         run: nix develop --command git-cliff --current --output RELEASE_NOTES.md

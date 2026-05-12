@@ -72,6 +72,16 @@ in
       gmp
     ];
 
+    # gnupg must be in PATH at runtime: pgpilot invokes `gpg` as a subprocess
+    # for all cryptographic operations. We wrap the binary so gnupg is always
+    # available regardless of the user's PATH.
+    # pinentry is intentionally omitted: the choice of variant (qt, gnome3,
+    # tty…) belongs to the user and is typically set via programs.gnupg.agent
+    # or gpg-agent.conf.
+    makeWrapperArgs = [
+      "--prefix PATH : ${lib.makeBinPath [pkgs.gnupg]}"
+    ];
+
     postInstall = ''
       install -Dm644 share/applications/pgpilot.desktop \
         $out/share/applications/pgpilot.desktop
