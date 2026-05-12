@@ -16,38 +16,81 @@ mkShell {
     rust-analyzer
     cargo-audit
     git-cliff
-    mdbook
     just
+
     # sequoia-openpgp (nettle backend)
     clang
     nettle
     pkg-config
     gmp
-    # iced (wayland + x11)
+
+    # iced (wayland + x11) — conservé pour la branche main/iced
     wayland
     libxkbcommon
     libGL
     vulkan-loader
-    # rfd (native file dialog)
+
+    # rfd + Tauri (native file dialog + WebKit)
     gtk3
+
+    # Tauri v2
+    cargo-tauri
+    nodejs_22
+    xdotool
+
     # gpg (for testing)
     gnupg
+
     # CA bundle — requis pour rustls-native-certs (connexions TLS MQTT, HTTPS)
     cacert
+
+    mdbook
+  ];
+
+  buildInputs = with pkgs; [
+    # Tauri v2 — stack GTK/WebKit requise sur Linux
+    dbus
+    openssl
+    glib
+    glib-networking
+    webkitgtk_4_1
+    libsoup_3
+    cairo
+    pango
+    gdk-pixbuf
+    atk
+    librsvg
   ];
 
   shellHook = ''
         export LIBCLANG_PATH="${pkgs.llvmPackages.libclang.lib}/lib"
         export SSL_CERT_FILE="${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
-        export LD_LIBRARY_PATH=${pkgs.lib.makeLibraryPath [
-      pkgs.wayland
-      pkgs.libxkbcommon
-      pkgs.libGL
-      pkgs.vulkan-loader
-      pkgs.dbus
-    ]}:$LD_LIBRARY_PATH
+
+        # Sur KDE/Plasma, GTK doit déléguer les dialogues fichier à xdg-desktop-portal-kde
+        # (KDialog natif) plutôt que d'utiliser GtkFileChooser qui exige les schémas GNOME.
+        export GTK_USE_PORTAL=1
+        export LD_LIBRARY_PATH=${pkgs.lib.makeLibraryPath (with pkgs; [
+      wayland
+      libxkbcommon
+      libGL
+      vulkan-loader
+      dbus
+      openssl
+      glib
+      gtk3
+      webkitgtk_4_1
+      libsoup_3
+      cairo
+      pango
+      gdk-pixbuf
+      atk
+      librsvg
+    ])}:$LD_LIBRARY_PATH
 
         echo "[pgpilot] Ready."
+        echo "  cargo build          — build iced binary (legacy)"
+        echo "  just dev             — cargo-tauri dev"
+        echo "  just build           — cargo-tauri build"
 
         if [ ! -f .pre-commit-config.yaml ]; then
           echo "Generating .pre-commit-config.yaml..."

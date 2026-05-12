@@ -1,0 +1,14 @@
+/* Shrink mode: respects container width, never grows beyond natural size */
+.banner {
+  display: block;
+  max-width: 100%;
+  width: auto;
+  height: auto;
+}
+
+/* Fill mode: full card width, clipped by card's overflow:hidden + border-radius */
+.bannerFill {
+  display: block;
+  width: 100%;
+  height: auto;
+}

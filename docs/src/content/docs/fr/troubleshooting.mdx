@@ -1,0 +1,282 @@
+---
+title: Dépannage
+description: Diagnostiquez et corrigez les problèmes courants avec PGPilot.
+---
+
+Diagnostiquez et corrigez les problèmes courants avec PGPilot.
+
+## Obtenir de l'aide
+
+Avant d'essayer les corrections, collectez les infos diagnostiques :
+
+1. Ouvrez PGPilot, cliquez sur **Diagnostic** (barre latérale)
+2. Prenez une capture d'écran des résultats
+3. Notez les entrées rouges « Erreur »
+4. Incluez ces infos quand vous signalez les bugs
+
+---
+
+## Installation et démarrage
+
+### « pgpilot : commande non trouvée »
+
+**Cause** : Le binaire n'est pas dans PATH.
+
+**Correction** :
+
+- Si téléchargé : déplacez vers `/usr/local/bin/` :
+  ```bash
+  sudo mv /path/to/pgpilot /usr/local/bin/
+  pgpilot  # devrait fonctionner maintenant
+  ```
+
+### « GPG not found »
+
+**Cause** : GnuPG non installé.
+
+**Correction** : Installez GnuPG :
+
+- Ubuntu/Debian : `sudo apt install gnupg`
+- Fedora/RHEL : `sudo dnf install gnupg`
+- Arch : `sudo pacman -S gnupg`
+
+Puis redémarrez PGPilot.
+
+### PGPilot ne démarre pas
+
+**Cause** : Problème d'affichage X11/Wayland.
+
+**Correction** :
+
+1. Vérifiez l'affichage :
+   ```bash
+   echo $DISPLAY     # X11 devrait afficher :0 ou similaire
+   echo $WAYLAND_DISPLAY  # Wayland devrait afficher wayland-0
+   ```
+2. Si vide, démarrez un serveur d'affichage
+3. Réessayez
+
+---
+
+## GPG et clés
+
+### « Aucune clé trouvée » / Liste Mes clés vide
+
+**Cause** : Le trousseau GPG est vide ou corrompu.
+
+**Correction** :
+
+1. Listez les clés manuellement :
+   ```bash
+   gpg --list-keys
+   ```
+2. Si vide, créez votre première clé dans PGPilot
+3. Si `gpg --list-keys` affiche les clés mais PGPilot non :
+   - Vérifiez la var env GNUPGHOME
+   - Redémarrez PGPilot
+
+### « Empreinte invalide » lors de l'import
+
+**Cause** : Le fichier n'est pas une clé PGP valide.
+
+**Correction** :
+
+1. Vérifiez que le fichier est une clé valide :
+   ```bash
+   gpg --import < /path/to/file.asc
+   ```
+2. Si GnuPG la rejette, le fichier est invalide
+3. Demandez à l'expéditeur une nouvelle copie
+
+### L'invite de mot de passe se bloque
+
+**Cause** : `pinentry` (UI de mot de passe) n'est pas en cours d'exécution ou mal configuré.
+
+**Correction** :
+
+1. Vérifiez que pinentry est installé :
+   ```bash
+   which pinentry
+   ```
+   Si non trouvé :
+   - Ubuntu/Debian : `sudo apt install pinentry` (ou `pinentry-gtk2` pour GUI)
+   - Fedora : `sudo dnf install pinentry`
+   - Arch : `sudo pacman -S pinentry`
+
+2. Si pinentry existe mais se bloque :
+   - Tuez les processus bloqués :
+     ```bash
+     pkill -f pinentry
+     pkill -f gpg-agent
+     ```
+   - Démarrez frais :
+     ```bash
+     gpg-agent --daemon
+     pgpilot
+     ```
+
+### « Impossible de chiffrer » ou « Niveau de confiance trop bas »
+
+**Cause** : La clé du destinataire a une confiance insuffisante.
+
+**Correction** :
+
+1. Vérifiez la clé du destinataire :
+   - Sélectionnez-la dans PGPilot
+   - Vérifiez l'empreinte
+   - Cliquez sur le badge **Confiance** → **Complet**
+2. Réessayez de chiffrer
+
+---
+
+## YubiKey et Smartcard
+
+### « Carte non détectée »
+
+**Cause** : Clé matérielle non branchée ou scdaemon non en cours d'exécution.
+
+**Correction** :
+
+1. Branchez la clé
+2. Vérifiez : `gpg --card-status`
+3. Si erreur, redémarrez scdaemon :
+   ```bash
+   pkill scdaemon
+   gpg --card-status
+   ```
+
+### « Échec de la migration »
+
+**Cause** : Mauvais PIN administrateur ou carte pleine.
+
+**Correction** :
+
+1. Vérifiez le PIN administrateur :
+   ```bash
+   gpg --card-edit
+   admin
+   ```
+2. Si pleine (3 sous-clés max), réinitialisez la carte :
+   ```bash
+   gpg --card-edit
+   admin
+   factoryreset
+   ```
+
+Si la migration échoue partiellement, restaurez la sauvegarde :
+
+```bash
+gpg --import <backup-secret.asc>
+```
+
+---
+
+## Import et export
+
+### « Import échoué : Format invalide »
+
+**Cause** : Le fichier n'est pas une clé PGP valide.
+
+**Correction** :
+
+1. Vérifiez que le fichier commence par `-----BEGIN PGP` :
+   ```bash
+   head -1 /path/to/file.asc
+   ```
+2. Si non, le fichier est invalide
+3. Demandez une nouvelle copie à l'expéditeur
+
+### « Impossible d'exporter vers fichier : Permission refusée »
+
+**Cause** : Dossier non accessible en écriture.
+
+**Correction** :
+
+1. Vérifiez les permissions du dossier :
+   ```bash
+   ls -ld ~/Downloads
+   ```
+2. Si non accessible :
+   ```bash
+   chmod u+w ~/Downloads
+   ```
+
+---
+
+## Réseau et serveur de clés
+
+### « La recherche sur le serveur de clés a échoué »
+
+**Cause** : Problème réseau ou serveur de clés en panne.
+
+**Correction** :
+
+1. Vérifiez internet :
+   ```bash
+   ping keys.openpgp.org
+   ```
+2. Si pas de réponse :
+   - Vérifiez votre connexion WiFi/ethernet
+   - Essayez un autre réseau
+3. Si ping fonctionne, le serveur est peut-être en panne
+
+---
+
+## Opérations sur fichiers
+
+### « Le fichier existe déjà »
+
+**Cause** : PGPilot n'écrase pas sans votre consentement.
+
+**Correction** :
+
+- PGPilot ajoute automatiquement un suffixe compteur : `file_1.gpg`, `file_2.gpg`, etc.
+- Ou supprimez l'ancien fichier manuellement avant de re-chiffrer
+
+### « Déchiffrement échoué : Pas de clé secrète »
+
+**Cause** : Le fichier a été chiffré pour quelqu'un d'autre.
+
+**Correction** :
+
+1. Vérifiez qui l'a chiffré
+2. Si vous n'avez pas la clé, vous ne pouvez pas déchiffrer
+3. Demandez à l'expéditeur de déchiffrer et de partager sans chiffrement
+
+---
+
+## Performance et stabilité
+
+### « PGPilot est lent » ou « se bloque »
+
+**Cause** : Grand trousseau ou système lent.
+
+**Correction** :
+
+1. Réduisez les clés (supprimez les clés inutilisées)
+2. Fermez d'autres applications pour libérer la RAM
+3. Redémarrez PGPilot
+
+### « PGPilot crash au démarrage »
+
+**Cause** : Config ou trousseau corrompu.
+
+**Correction** :
+
+1. Réinitialisez la config :
+   ```bash
+   rm ~/.config/pgpilot/config.yaml
+   pgpilot
+   ```
+2. Si toujours, vérifiez le trousseau :
+   ```bash
+   gpg --list-keys
+   ```
+
+---
+
+## Plus d'aide
+
+- Voir [FAQ](/pgpilot/fr/faq/) pour les questions générales
+- Voir [Sécurité](/pgpilot/fr/security/) pour les modèles de menace
+- Signalez les bugs : https://github.com/gfriloux/pgpilot/issues

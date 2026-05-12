@@ -1,0 +1,117 @@
+---
+title: Démarrage rapide
+description: Mettez en place votre première clé PGP en 5 minutes.
+---
+
+Mettez en place votre première clé en 5 minutes.
+
+![Vue Mes Clefs — thème Catppuccin](/pgpilot/screenshots/my-keys--catppuccin.png)
+
+## Étape 1 : Créer votre première clé
+
+1. Lancez PGPilot
+2. Cliquez sur **Créer** dans la barre latérale
+3. Remplissez le formulaire :
+   - **Nom** : Votre nom complet (ex: "Alice Merveille")
+   - **Email** : Votre adresse email (ex: "alice@example.com")
+   - **Expiration des sous-clés** : Conservez la valeur par défaut (les clés créées par PGPilot n'expirent jamais)
+   - **Inclure l'authentification SSH** : Décochez (vous pouvez l'ajouter plus tard si nécessaire)
+4. Cliquez sur **Créer la clé**
+5. PGPilot appellera `gpg --batch --generate-key`. Cela prend 10-30 secondes. Vous verrez :
+   - Un message de progression
+   - Votre nouvelle clé apparaît dans la liste **Mes clés** sur la gauche
+   - Une coche verte « Clé créée avec succès »
+
+**Ce que PGPilot a créé** :
+
+- Une **clé primaire** (certification uniquement, ed25519)
+- Trois **sous-clés** :
+  - Sous-clé **Sign** (ed25519) — pour signer des fichiers
+  - Sous-clé **Encr** (cv25519) — pour le déchiffrement
+  - Sous-clé **Auth** (ed25519) — pour l'authentification SSH (optionnel)
+
+---
+
+## Étape 2 : Exporter votre clé publique
+
+Partagez votre clé publique avec vos contacts pour qu'ils puissent vous envoyer des messages chiffrés.
+
+1. Sélectionnez votre nouvelle clé dans la liste **Mes clés**
+2. Cliquez sur le bouton **Exporter** (ou le menu à trois points)
+3. Choisissez l'une de ces trois options :
+   - **Fichier** — enregistre `VotreNom.pub.asc` sur le disque
+   - **Presse-papiers** — copie la clé pour que vous puissiez la coller n'importe où
+   - **Charger** — publie sur paste.rs et vous donne un lien partageable
+
+**Exemple** : Exportez vers le presse-papiers, puis collez dans un email ou un chat.
+
+---
+
+## Étape 3 : Importer la clé d'un contact
+
+Recevez une clé publique de quelqu'un et ajoutez-la à votre trousseau.
+
+### Option A : À partir d'un fichier
+
+1. Cliquez sur **Importer** dans la barre latérale
+2. Sélectionnez **Fichier**
+3. Choisissez le fichier `.asc` contenant sa clé
+4. Cliquez sur **Importer** — PGPilot validera et ajoutera la clé
+
+### Option B : À partir du serveur de clés
+
+1. Cliquez sur **Importer**
+2. Sélectionnez **Serveur de clés**
+3. Entrez son email ou son empreinte
+4. PGPilot interroge `keys.openpgp.org` (ou un autre serveur de clés) et affiche la clé
+5. Cliquez sur **Importer**
+
+### Option C : À partir d'une URL ou du texte collé
+
+1. Cliquez sur **Importer**
+2. Sélectionnez **URL** (collez un lien HTTPS vers un fichier `.asc`) ou **Coller** (collez le texte blindé de la clé)
+3. PGPilot récupère ou analyse la clé
+4. Cliquez sur **Importer**
+
+---
+
+## Étape 4 : Faire confiance à leur clé
+
+Une fois importée, la clé apparaît dans **Mes clés** avec un niveau de confiance **Non défini**.
+
+Pour leur envoyer des messages chiffrés, augmentez leur confiance :
+
+1. Sélectionnez leur clé dans la liste
+2. Dans le panneau de détails, trouvez le badge **Confiance**
+3. Cliquez dessus et choisissez :
+   - **Marginal** — vous avez partiellement vérifié leur identité
+   - **Complet** — vous avez complètement vérifié leur identité
+4. Cliquez sur **Enregistrer**
+
+**Meilleure pratique** : Rencontrez-les en personne, échangez les empreintes et vérifiez-les à la main avant de faire confiance.
+
+---
+
+## Étape 5 : Chiffrer un fichier pour eux
+
+Vous pouvez maintenant leur envoyer des messages chiffrés.
+
+1. Cliquez sur **Chiffrer** dans la barre latérale
+2. Cliquez sur **Ajouter des fichiers** et sélectionnez un fichier
+3. Cochez leur clé dans la liste **Destinataires**
+4. Basculez éventuellement entre le format `.gpg` (binaire) et `.asc` (blindé/texte)
+5. Cliquez sur **Chiffrer**
+6. PGPilot crée `votrefichier.pdf.gpg` (ou `.asc`) dans le même dossier que l'original
+
+Envoyez le fichier chiffré. Seul lui peut le déchiffrer (avec le mot de passe de sa clé privée).
+
+---
+
+## Quoi ensuite ?
+
+- **Publiez votre clé** — Utilisez **Publier** pour charger sur les serveurs de clés pour que n'importe qui puisse trouver votre clé par email
+- **Faites pivoter les sous-clés** — Utilisez **Renouveler** ou **Remplacer** pour garder les sous-clés à jour
+- **Sauvegardez** — Utilisez **Sauvegarde** pour exporter votre clé privée + certificat de révocation
+- **YubiKey** — Utilisez **Migrer vers YubiKey** pour stocker vos sous-clés sur une clé de sécurité matérielle
+
+Voir [Gestion des clés](/pgpilot/fr/key-management/) pour des guides détaillés.

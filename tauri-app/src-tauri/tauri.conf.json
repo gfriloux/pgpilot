@@ -1,0 +1,40 @@
+{
+  "productName": "PGPilot",
+  "version": "0.8.0",
+  "identifier": "me.friloux.pgpilot",
+  "build": {
+    "frontendDist": "../dist",
+    "devUrl": "http://localhost:1421",
+    "beforeDevCommand": "npm run dev",
+    "beforeBuildCommand": "npm run build"
+  },
+  "app": {
+    "withGlobalTauri": false,
+    "security": {
+      "csp": "default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: asset: https://asset.localhost; script-src 'self'; connect-src ipc: http://ipc.localhost https://fonts.googleapis.com https://fonts.gstatic.com"
+    },
+    "windows": [
+      {
+        "title": "PGPilot",
+        "width": 1100,
+        "height": 680,
+        "minWidth": 1000,
+        "minHeight": 540,
+        "resizable": true,
+        "decorations": true
+      }
+    ]
+  },
+  "bundle": {
+    "active": true,
+    "icon": ["icons/icon.png"],
+    "linux": {
+      "deb": {
+        "depends": ["libwebkit2gtk-4.1-0", "libgtk-3-0", "libglib2.0-0"]
+      },
+      "appimage": {
+        "bundleMediaFramework": false
+      }
+    }
+  }
+}

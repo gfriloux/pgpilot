@@ -1,0 +1,52 @@
+/* ── Full-page wrapper ────────────────────────────────────────── */
+.page {
+  display: flex;
+  justify-content: center;
+  padding: 40px 24px;
+  overflow-y: auto;
+  height: 100%;
+}
+
+/* ── Form card ────────────────────────────────────────────────── */
+.card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 32px;
+  width: 100%;
+  max-width: 520px;
+  height: fit-content;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ── Heading ──────────────────────────────────────────────────── */
+.title {
+  font-family: var(--font-heading);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-header);
+  margin: 0;
+}
+
+.subtitle {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  line-height: 1.55;
+}
+
+/* ── Form layout ──────────────────────────────────────────────── */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ── Action buttons row ───────────────────────────────────────── */
+.actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 8px;
+}

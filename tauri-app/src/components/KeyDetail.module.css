@@ -1,0 +1,303 @@
+/* ── Root ─────────────────────────────────────────────────────── */
+.detail {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.columns {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.bannerRow {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: center;
+  overflow: hidden;
+}
+
+/* ── Left column — expands with the window ────────────────────── */
+.leftCol {
+  flex: 1;
+  min-width: 220px;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--border);
+  overflow: hidden;
+}
+
+/* Scrollable content area inside leftCol */
+.leftColContent {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+}
+
+/* ── Right column — fixed width (subkeys) ─────────────────────── */
+.rightCol {
+  width: 260px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+/* ── Key identity header ──────────────────────────────────────── */
+.keyName {
+  font-family: var(--font-heading);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-header);
+  line-height: 1.25;
+  margin-bottom: 2px;
+}
+
+.keyEmail {
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  margin-bottom: 14px;
+}
+
+/* ── Info rows ────────────────────────────────────────────────── */
+.infoRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.infoLabel {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  min-width: 72px;
+  flex-shrink: 0;
+  padding-top: 1px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.infoValue {
+  font-size: 0.8125rem;
+  color: var(--text-strong);
+  word-break: break-all;
+}
+
+.infoValueMono {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  letter-spacing: 0.02em;
+  word-break: break-all;
+}
+
+.infoValueMuted {
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* ── Expiry warning ───────────────────────────────────────────── */
+.expirySoon {
+  color: var(--warning);
+  font-weight: 600;
+}
+
+.expiryExpired {
+  color: var(--error);
+  font-weight: 600;
+}
+
+/* ── Trust colours ────────────────────────────────────────────── */
+.trustUndefined {
+  color: var(--text-muted);
+}
+
+.trustMarginal {
+  color: var(--warning);
+}
+
+.trustFull {
+  color: var(--success);
+}
+
+.trustUltimate {
+  color: var(--success);
+  font-weight: 700;
+}
+
+/* ── Card row ─────────────────────────────────────────────────── */
+.cardRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8125rem;
+  color: var(--success);
+}
+
+/* ── Keyserver status ─────────────────────────────────────────── */
+.keyserverPublished {
+  font-size: 0.8125rem;
+  color: var(--success);
+}
+
+.keyserverUnpublished {
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+}
+
+/* ── Trust picker (public keys only) ─────────────────────────── */
+.trustPicker {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 10px;
+  margin-bottom: 4px;
+}
+
+.trustRadioGroup {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.trustRadioLabel {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  user-select: none;
+}
+
+.trustRadioInput {
+  accent-color: var(--accent);
+  cursor: pointer;
+  width: 14px;
+  height: 14px;
+}
+
+/* ── Star separator ───────────────────────────────────────────── */
+.starSeparator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 14px 0;
+  color: var(--accent);
+  font-size: 0.75rem;
+}
+
+.starSeparator::before,
+.starSeparator::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+/* ── Keyserver publication row ────────────────────────────────── */
+.keyserverPublishedRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.keyserverUnpublishedRow {
+  margin-bottom: 6px;
+}
+
+.ksLinkBtn {
+  font-size: 0.75rem;
+  color: var(--accent);
+  background: none;
+  border: 1px solid var(--accent-border);
+  border-radius: var(--radius-sm);
+  padding: 2px 8px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background var(--transition-fast);
+}
+
+.ksLinkBtn:hover {
+  background: var(--accent-subtle);
+}
+
+/* ── Revocation certificate section ──────────────────────────── */
+.revCertSection {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px;
+  background: var(--input-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.revCertTitle {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.revCertFound {
+  font-size: 0.8125rem;
+  color: var(--success);
+}
+
+.revCertMissing {
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.revCertPath {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  color: var(--text-secondary);
+  word-break: break-all;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 3px 6px;
+}
+
+.revCertActions {
+  display: flex;
+  gap: 6px;
+}
+
+/* ── Action button rows ───────────────────────────────────────── */
+.actionRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+/* ── Subkeys column ───────────────────────────────────────────── */
+.subkeysTitle {
+  font-family: var(--font-heading);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+}
+
+.subkeysStack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}

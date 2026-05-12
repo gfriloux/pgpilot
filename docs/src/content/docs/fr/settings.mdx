@@ -1,0 +1,85 @@
+---
+title: Paramètres
+description: Configurez l'apparence de PGPilot et les préférences de langue.
+---
+
+Configurez l'apparence de PGPilot et les préférences de langue.
+
+## Accéder aux paramètres
+
+Cliquez sur **Paramètres** (icône d'engrenage) en bas de la barre latérale.
+
+---
+
+## Thème
+
+PGPilot offre deux thèmes visuels :
+
+![Paramètres — thème Catppuccin](/pgpilot/screenshots/settings--catppuccin.png)
+
+**Catppuccin Frappé** (par défaut)
+
+- Interface sombre avec couleur d'accent Mauve
+- Basée sur la palette de couleurs [Catppuccin](https://catppuccin.com/)
+- Convient à la plupart des environnements et conditions d'éclairage
+
+![Paramètres — thème URSS](/pgpilot/screenshots/settings--ussr.png)
+
+**URSS**
+
+- Thème inspiré par l'URSS avec zones de contenu crème et barre latérale quasi noire
+- Couleur d'accent rouge, police Bebas Neue pour la navigation, Russo One pour le contenu
+- Les titres de page affichent un texte savoureux soviétique amusant
+- Bannières de propagande dans chaque vue
+- Badges SVG circulaires pour l'état des clés
+- À vivre comme un easter egg amusant
+
+Pour changer le thème :
+
+1. Ouvrez **Paramètres**
+2. Sous **Thème**, cliquez sur la carte pour **Catppuccin Frappé** ou **URSS** pour prévisualiser
+3. Le thème s'applique immédiatement — aucun redémarrage requis
+
+---
+
+## Échelle de l'interface utilisateur
+
+Le facteur d'échelle ajuste la taille de l'interface entière.
+
+Valeurs disponibles : 50%, 75%, **100% (par défaut)**, 125%, 150%, 175%, 200%
+
+Pour changer l'échelle :
+
+1. Ouvrez **Paramètres**
+2. Sous **Échelle de l'interface**, utilisez le curseur pour sélectionner le pourcentage souhaité
+3. Le changement s'applique immédiatement
+
+> **Remarque** : Le facteur d'échelle est stocké et restauré au prochain lancement. Si l'interface devient inutilisable, supprimez `~/.config/pgpilot/config.yaml` pour réinitialiser.
+
+---
+
+## Langue
+
+PGPilot supporte l'anglais et le français.
+
+Au premier lancement, la langue est détectée automatiquement à partir de la locale système (`$LANG` / `$LC_ALL`). Si votre locale commence par `fr`, le français est utilisé ; sinon anglais.
+
+Pour changer la langue :
+
+1. Ouvrez **Paramètres**
+2. Sous **Langue**, cliquez sur le bouton **English** ou **Français**
+3. L'interface se met à jour immédiatement
+
+---
+
+## Fichier de préférences
+
+Tous les paramètres sont stockés dans `~/.config/pgpilot/config.yaml`. Exemple :
+
+```yaml
+language: french
+theme: ussr
+scale_factor: 1.0
+```
+
+Ce fichier est créé automatiquement au premier lancement. Le supprimer réinitialise toutes les préférences. Il **ne** contient aucune clé GPG ou donnée sensible.

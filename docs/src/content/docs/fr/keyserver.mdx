@@ -1,0 +1,179 @@
+---
+title: Serveur de clés et partage
+description: Publiez et découvrez des clés sur les serveurs de clés OpenPGP.
+---
+
+Publiez et découvrez des clés sur les serveurs de clés OpenPGP.
+
+## Qu'est-ce qu'un serveur de clés ?
+
+Un **serveur de clés** est une base de données de clés publiques indexées par empreinte, email et ID de clé. N'importe qui peut :
+
+- **Publier** sa clé → les autres la trouvent par email
+- **Chercher** la clé de quelqu'un → la télécharger
+- **Recevoir** la clé sans partager les fichiers directement
+
+PGPilot prend en charge deux serveurs de clés populaires :
+
+### keys.openpgp.org (recommandé)
+
+- Respectueux de la vie privée (ne liste pas les adresses email par défaut)
+- Nécessite une vérification par email (vous contrôlez votre inscription)
+- Moderne et bien maintenu
+- Respecte l'indicateur `--no-export`
+
+### keyserver.ubuntu.com
+
+- Serveur de clés OpenPGP traditionnel (pool synchronisable)
+- Liste toutes les clés publiquement (anyone peut voir votre email)
+- Grand réseau distribué
+- Meilleur pour trouver les clés par email
+
+---
+
+## Publier votre clé
+
+### Publier sur keys.openpgp.org
+
+1. Dans PGPilot, sélectionnez votre clé dans **Mes clés**
+2. Cliquez sur **Publier**
+3. Un modal demande « Où publier ? »
+   - Choisissez **keys.openpgp.org** (par défaut)
+4. Cliquez sur **Publier**
+5. Status : « Clé publiée sur keys.openpgp.org »
+
+**Après publication** : keys.openpgp.org vous envoie un lien de vérification par email.
+
+### Publier sur keyserver.ubuntu.com
+
+1. Sélectionnez votre clé
+2. Cliquez sur **Publier**
+3. Choisissez **keyserver.ubuntu.com**
+4. Cliquez sur **Publier**
+5. Status : « Clé publiée sur keyserver.ubuntu.com »
+
+Aucun email de vérification requis ; votre clé est immédiatement cherchable.
+
+---
+
+## Vérifier le statut de publication
+
+PGPilot affiche un badge **Serveur de clés** dans le panneau de détails de la clé :
+
+- **Non connu** (badge gris) → statut pas encore vérifié
+- **Vérification en cours** (spinner) → vérification maintenant...
+- **Publié** (coche verte) → trouvé sur le serveur de clés
+- **Non publié** (X rouge) → non trouvé
+
+PGPilot vérifie automatiquement le statut chaque fois que vous visualisez une clé.
+
+---
+
+## Republication automatique
+
+Pourquoi ? Les serveurs de clés expirent les anciens certificats. Pour garder votre clé fraîche et découvrable :
+
+**PGPilot republies tous les 28 jours** :
+
+- PGPilot se souvient du serveur de clés que vous avez utilisé
+- Tous les 28 jours, il re-publie automatiquement votre clé
+- Vous verrez un message d'état en arrière-plan
+- Cela garantit que les rotations de sous-clés sont toujours visibles
+
+---
+
+## Partager votre clé
+
+Une fois publiée, vous avez plusieurs façons de partager votre clé publique :
+
+### Via lien de recherche keys.openpgp.org
+
+```
+https://keys.openpgp.org/search?q=alice@example.com
+```
+
+N'importe qui peut accéder à ce lien et trouver votre clé par email.
+
+### Via paste.rs (temporaire)
+
+1. Sélectionnez votre clé
+2. Cliquez sur **Exporter** → **Charger**
+3. Un lien partageable est généré : `https://paste.rs/abc123xyz`
+4. Partagez le lien
+
+Ce lien fonctionne pendant 30 jours (rétention par défaut paste.rs).
+
+### Comme fichier .asc
+
+1. Sélectionnez votre clé
+2. Cliquez sur **Exporter** → **Fichier**
+3. Enregistrez en tant que `VotreNom.pub.asc`
+4. Partagez le fichier par email, upload sur votre site, etc.
+
+---
+
+## Chercher la clé de quelqu'un
+
+Utilisez la vue **Importer** de PGPilot pour trouver la clé publique de quelqu'un :
+
+1. Cliquez sur **Importer** dans la barre latérale
+2. Sélectionnez **Serveur de clés**
+3. Entrez leur :
+   - Email : `alice@example.com`
+   - Empreinte : `ABCD1234567890ABCD1234567890ABCD1234567890`
+   - ID de clé : `1234567890ABCDEF`
+4. Choisissez le serveur de clés
+5. Cliquez sur **Rechercher**
+6. PGPilot interroge et affiche les clés correspondantes
+7. Cliquez sur **Importer** pour celle que vous voulez
+
+---
+
+## Meilleures pratiques
+
+1. **Publier une fois, republier régulièrement**
+   - Publiez sur les deux serveurs majeurs
+   - Laissez PGPilot re-publier automatiquement
+
+2. **Utiliser la vérification par email**
+   - Après la publication sur keys.openpgp.org, vérifiez votre email
+   - Cela prévient l'usurpation d'email
+
+3. **Faire pivoter les anciennes clés**
+   - Les anciennes clés compromises doivent être révoquées, pas supprimées
+   - Utilisez **Renouveler** ou **Remplacer** pour les sous-clés
+   - Utilisez `gpg --gen-revoke` pour les clés maîtres
+
+4. **Vérifier avant d'importer**
+   - Vérifiez toujours l'empreinte avant de faire confiance
+   - Rencontrez quelqu'un en personne et comparez les empreintes
+   - Puis définissez le niveau de confiance dans PGPilot
+
+---
+
+## Dépannage
+
+**« La publication a échoué »**
+
+- Problème réseau — réessayez plus tard
+- Serveur de clés temporairement en panne — réessayez ou utilisez un autre serveur
+
+**« Clé non publiée après 30 minutes »**
+
+- keys.openpgp.org peut nécessiter une vérification par email
+- Vérifiez votre email pour un lien de confirmation
+- Cliquez sur le lien et réessayez
+
+**« Mauvaise clé trouvée »**
+
+- Si plusieurs clés existent pour un email, PGPilot les affiche toutes
+- Comparez les empreintes attentivement
+- N'importez que les clés que vous pouvez vérifier
+
+---
+
+## Prochaines étapes
+
+- Apprenez la signature et la vérification des fichiers — voir [Opérations sur fichiers](/pgpilot/fr/file-operations/)
+- Gérez la confiance — voir [Gestion des clés](/pgpilot/fr/key-management/) (Niveaux de confiance)
+- Utilisez les clés matérielles — voir [YubiKey / Smartcard](/pgpilot/fr/smartcard/)

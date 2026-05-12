@@ -1,0 +1,104 @@
+/* ── Row container ────────────────────────────────────────────── */
+.row {
+  display: flex;
+  align-items: center;
+  padding: 7px 12px;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+  position: relative;
+  border: 1px solid transparent;
+  /* shift border inward so it doesn't affect layout */
+  margin: 0 1px;
+}
+
+.row:hover:not(.rowSelected) {
+  background: var(--sidebar-hover-bg);
+}
+
+/* Catppuccin selected state */
+.rowSelected {
+  background: var(--accent-subtle);
+  border-color: var(--accent-border);
+  border-radius: var(--radius-sm);
+}
+
+
+/* ── Name column (flex 1) ─────────────────────────────────────── */
+.nameCol {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.nameText {
+  font-family: var(--font-heading);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-strong);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.emailText {
+  font-size: 0.6875rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Expires column (80px) ────────────────────────────────────── */
+.expiresCol {
+  width: 80px;
+  flex-shrink: 0;
+  font-size: 0.6875rem;
+  color: var(--text-secondary);
+  text-align: right;
+  padding-right: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Status badges column (56px) ─────────────────────────────── */
+.statusCol {
+  width: 56px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 3px;
+}
+
+.statusSlot {
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  line-height: 1;
+}
+
+.iconCard {
+  color: var(--text-muted);
+}
+
+.iconPublished {
+  color: var(--success);
+}
+
+.iconNotPublished {
+  color: var(--text-muted);
+}
+
+.iconTrustOk {
+  color: var(--success);
+}
+
+.iconTrustWarn {
+  color: var(--warning);
+}

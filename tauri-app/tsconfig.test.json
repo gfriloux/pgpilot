@@ -1,0 +1,11 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "moduleResolution": "bundler",
+    "skipLibCheck": true,
+    "noImplicitReturns": false,
+    "exactOptionalPropertyTypes": false,
+    "noUncheckedIndexedAccess": false
+  },
+  "include": ["src", "tests/**/*.ts", "playwright.config.ts"]
+}

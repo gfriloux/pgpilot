@@ -1,0 +1,221 @@
+---
+title: Opérations sur fichiers
+description: Chiffrez, déchiffrez, signez et vérifiez des fichiers avec PGPilot.
+---
+
+Chiffrez, déchiffrez, signez et vérifiez des fichiers avec PGPilot.
+
+## Chiffrement
+
+![Vue Chiffrement — thème Catppuccin](/pgpilot/screenshots/encrypt--catppuccin.png)
+
+Chiffrez les fichiers pour que seuls vos destinataires choisis puissent les lire.
+
+### Chiffrer un fichier
+
+1. Cliquez sur **Chiffrer** dans la barre latérale
+2. Dans la vue **Chiffrer** :
+   - Cliquez sur **Ajouter des fichiers** pour sélectionner un ou plusieurs fichiers
+   - Les fichiers apparaissent dans une liste
+3. Sélectionnez **Destinataires** — cliquez sur les chips de clés pour basculer :
+   - Seules les clés avec des sous-clés Encryption peuvent être sélectionnées
+   - Chaque chip affiche le nom de la clé, l'email et une icône de confiance
+   - **✓** (vert) — Confiance Complète ou Ultime
+   - **⚠️** (ambre) — Confiance Marginale ou Non définie
+4. Choisissez le format :
+   - **Binaire** (`.gpg`) — compressé, plus petit, binaire
+   - **Blindé** (`.asc`) — texte, lisible, plus grand, ASCII uniquement
+5. Cliquez sur **Chiffrer**
+
+Si une clé a une confiance **Non définie** ou **Marginale**, un modal d'avertissement apparaît. Cliquez sur **Continuer** pour procéder.
+
+**Sortie** : Les fichiers chiffrés sont créés à côté de l'original :
+- `document.pdf` → `document.pdf.gpg` ou `document.pdf.asc`
+- Si le fichier existe, un suffixe de compteur est ajouté
+
+### Glisser-déposer (X11)
+
+Sur X11, vous pouvez glisser les fichiers directement sur la vue **Chiffrer**.
+
+---
+
+## Déchiffrement
+
+Déchiffrez les fichiers qui ont été chiffrés pour vous.
+
+### Déchiffrer un fichier
+
+1. Cliquez sur **Déchiffrer** dans la barre latérale
+2. Cliquez sur **Ajouter des fichiers**
+3. Sélectionnez un ou plusieurs fichiers `.gpg` ou `.asc`
+4. PGPilot scanne chaque fichier :
+   - **Peut déchiffrer** (vert) si vous avez la clé privée
+   - **Pas de clé** (rouge) si vous manquez la clé de déchiffrement
+5. Cliquez sur **Déchiffrer**
+6. PGPilot demande votre mot de passe de clé privée
+7. Les fichiers déchiffrés sont créés à côté des originaux
+
+---
+
+## Signature
+
+![Vue Signature — thème Catppuccin](/pgpilot/screenshots/sign--catppuccin.png)
+
+Signez les fichiers pour prouver que vous les avez créés.
+
+### Signer un fichier
+
+1. Cliquez sur **Signer** dans la barre latérale
+2. Cliquez sur **Choisir un fichier**
+3. Sélectionnez la **clé de signature** :
+   - PGPilot filtre les clés avec des sous-clés Sign
+4. Cliquez sur **Signer**
+5. PGPilot demande votre mot de passe de clé privée
+6. Une signature détachée est créée : `votrefichier.sig` à côté de l'original
+
+**Qu'est-ce qu'une signature détachée ?**
+
+Un fichier `.sig` prouve que vous avez signé le fichier original. Contrairement à la signature à l'intérieur du fichier, la signature est séparée, donc :
+
+- Le fichier original reste inchangé
+- La signature est légère
+- Le destinataire peut vérifier avec : `gpg --verify votrefichier.sig votrefichier.pdf`
+
+---
+
+## Vérification de signature
+
+![Vue Vérification — thème Catppuccin](/pgpilot/screenshots/verify--catppuccin.png)
+
+Vérifiez qu'un fichier a été signé par qui vous pensez l'avoir signé.
+
+### Vérifier une signature
+
+1. Cliquez sur **Vérifier** dans la barre latérale
+2. Cliquez sur **Choisir un fichier** → sélectionnez le fichier original
+3. Cliquez sur **Choisir une signature** → sélectionnez le fichier `.sig`
+
+   **Détection automatique** : PGPilot cherche automatiquement `votrefichier.sig`.
+
+4. Cliquez sur **Vérifier**
+5. PGPilot affiche un résultat :
+
+#### Signature valide
+
+```
+✓ Signature valide
+Signé par : Alice Merveille <alice@example.com>
+Empreinte : ABCD1234...
+Date : 15-01-2024 14:30:00 UTC
+Confiance : Complet ✓
+```
+
+Coche verte, détails du signataire affichés. Le fichier est authentique.
+
+#### Mauvaise signature
+
+```
+✗ Signature invalide
+La signature ne correspond pas au fichier.
+Le fichier a peut-être été modifié.
+```
+
+X rouge. Le fichier a été modifié depuis la signature.
+
+#### Clé inconnue
+
+```
+? Clé inconnue
+Signé par (ID de clé) : 1234567890ABCDEF
+Empreinte : Non trouvée dans le trousseau
+```
+
+Avertissement jaune. La signature est valide, mais la clé du signataire n'est pas dans votre trousseau.
+
+#### Clé expirée
+
+```
+⏱ Clé expirée
+Signé par : Bob Smith <bob@example.com>
+La clé a expiré le : 31-12-2023
+```
+
+Avertissement orange. La clé du signataire a expiré.
+
+#### Clé révoquée
+
+```
+🔴 Clé révoquée
+Signé par : Charlie Brown <charlie@example.com>
+La clé a été révoquée
+```
+
+Avertissement rouge. Le signataire a révoqué sa clé. Ne faites pas confiance à cette signature.
+
+---
+
+## Toggle de format
+
+PGPilot offre deux formats de chiffrement :
+
+| Format | Extension | Type | Cas d'usage |
+|--------|-----------|------|----------|
+| **Binaire** | `.gpg` | Compressé, binaire | Transfert sécurisé, pièce jointe email |
+| **Blindé** | `.asc` | Texte (ASCII), lisible | Coller dans le corps d'un email, gists GitHub, formulaires web |
+
+---
+
+## Meilleures pratiques
+
+1. **Vérifiez toujours les signatures**
+   - Ne supposez pas qu'un fichier `.sig` est légitime
+   - Vérifiez avant de faire confiance au contenu
+
+2. **Vérifiez la confiance avant de vérifier**
+   - Signature invalide ≠ signataire non fiable
+   - Vérifiez le niveau de confiance du signataire
+
+3. **Chiffrez pour plusieurs destinataires**
+   - Chaque destinataire obtient sa propre copie chiffrée
+   - PGPilot gère cela automatiquement
+
+4. **Gardez les signatures avec les fichiers**
+   - Stockez `.sig` et l'original ensemble
+   - Si vous déplacez le fichier, déplacez aussi `.sig`
+
+5. **Testez avant d'envoyer**
+   - Chiffrez un fichier de test pour vous
+   - Déchiffrez-le pour vérifier que cela fonctionne
+   - Puis envoyez aux vrais destinataires
+
+---
+
+## Dépannage
+
+**« L'invite de mot de passe se bloque »**
+
+- Voir [Dépannage](/pgpilot/fr/troubleshooting/) — section pinentry
+
+**« Le fichier existe déjà »**
+
+- PGPilot ajoute automatiquement des compteurs : `file_1.gpg`, `file_2.gpg`, etc.
+- Ou supprimez l'ancien fichier chiffré manuellement
+
+**« Fichier de signature non trouvé »**
+
+- PGPilot cherche `votrefichier.sig` à côté de `votrefichier`
+- Si dans des dossiers différents, choisissez les deux fichiers manuellement
+
+**« Déchiffrement échoué : pas de clé secrète »**
+
+- Vous n'avez pas la clé privée pour ce fichier chiffré
+- Le fichier a été chiffré pour quelqu'un d'autre
+- Demandez-leur de déchiffrer et de partager le fichier non chiffré
+
+---
+
+## Prochaines étapes
+
+- Gérez qui peut déchiffrer — voir [Gestion des clés](/pgpilot/fr/key-management/) (Niveaux de confiance)
+- Publiez votre clé — voir [Serveur de clés et partage](/pgpilot/fr/keyserver/)
+- Utilisez SSH avec votre clé Auth — voir [YubiKey / Smartcard](/pgpilot/fr/smartcard/)

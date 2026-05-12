@@ -1,0 +1,47 @@
+{
+  "name": "pgpilot",
+  "version": "0.8.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "tauri": "tauri",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build",
+    "lint": "eslint src --ext .ts,.tsx",
+    "format": "prettier --write src",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "screenshots": "VITE_MOCK=true node scripts/screenshots.mjs"
+  },
+  "dependencies": {
+    "@tauri-apps/api": "^2.0.0",
+    "@tauri-apps/plugin-dialog": "^2.7.1",
+    "lucide-react": "^1.14.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.24.1",
+    "zustand": "^5.0.0"
+  },
+  "devDependencies": {
+    "@storybook/addon-essentials": "8.6.14",
+    "@storybook/addon-interactions": "8.6.14",
+    "@storybook/blocks": "8.6.14",
+    "@storybook/react": "8.6.14",
+    "@storybook/react-vite": "8.6.14",
+    "@tauri-apps/cli": "^2.0.0",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@typescript-eslint/eslint-plugin": "^7.0.0",
+    "@typescript-eslint/parser": "^7.0.0",
+    "@vitejs/plugin-react": "^4.3.1",
+    "eslint": "^8.57.0",
+    "eslint-plugin-react-hooks": "^4.6.2",
+    "playwright": "^1.40.0",
+    "prettier": "^3.3.0",
+    "storybook": "8.6.14",
+    "typescript": "^5.5.3",
+    "vite": "^6.0.0"
+  }
+}

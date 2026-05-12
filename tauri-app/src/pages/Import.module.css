@@ -1,0 +1,110 @@
+/* ── Full-page wrapper ────────────────────────────────────────── */
+.page {
+  display: flex;
+  justify-content: center;
+  padding: 40px 24px;
+  overflow-y: auto;
+  height: 100%;
+}
+
+/* ── Form card ────────────────────────────────────────────────── */
+.card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 32px;
+  width: 100%;
+  max-width: 560px;
+  height: fit-content;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ── Heading ──────────────────────────────────────────────────── */
+.title {
+  font-family: var(--font-heading);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-header);
+  margin: 0;
+}
+
+/* ── Tab panel ────────────────────────────────────────────────── */
+.tabPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ── Textarea ─────────────────────────────────────────────────── */
+.textareaLabel {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+  text-transform: uppercase;
+}
+
+.textarea {
+  width: 100%;
+  min-height: 180px;
+  background: var(--input-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  color: var(--text-strong);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  line-height: 1.5;
+  resize: vertical;
+  transition: border-color var(--transition-fast);
+}
+
+.textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.textarea:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ── File not-available notice ────────────────────────────────── */
+.fileNotice {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  background: var(--warning-bg);
+  border: 1px solid var(--warning);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  line-height: 1.55;
+}
+
+.fileNoticeIcon {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--warning);
+  color: var(--card-bg);
+  border-radius: 50%;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+/* ── Action buttons row ───────────────────────────────────────── */
+.actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 4px;
+}

@@ -325,6 +325,10 @@ impl ChatTransport for MqttHandle {
 // Subscription iced
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// Subscription iced (ui feature uniquement)
+// ---------------------------------------------------------------------------
+
 /// Crée un [`iced::Subscription`] à partir d'un [`MqttHandle`].
 ///
 /// Remonte chaque [`MqttEvent`] comme [`crate::app::Message::MqttEvent`].
@@ -334,6 +338,7 @@ impl ChatTransport for MqttHandle {
 ///
 /// `build_mqtt_stream` est la fonction builder passée à `run_with` — elle ne
 /// peut pas être une closure car `run_with` exige un `fn` pointer.
+#[cfg(feature = "ui")]
 pub fn subscription(handle: MqttHandle) -> iced::Subscription<crate::app::Message> {
   iced::Subscription::run_with(handle, build_mqtt_stream)
 }
@@ -342,6 +347,7 @@ pub fn subscription(handle: MqttHandle) -> iced::Subscription<crate::app::Messag
 ///
 /// Prend un `&MqttHandle` et retourne un `Stream<Item = crate::app::Message>`
 /// en consommant le receiver d'évènements tokio via `iced::stream::channel`.
+#[cfg(feature = "ui")]
 fn build_mqtt_stream(
   handle: &MqttHandle,
 ) -> impl futures::stream::Stream<Item = crate::app::Message> {
@@ -486,7 +492,7 @@ fn try_send(tx: &mpsc::Sender<MqttEvent>, event: MqttEvent) {
 ///
 /// - [`ChatError::InvalidConfig`] — URL malformée.
 /// - [`ChatError::TlsError`] — `mqtt://` non-local refusé en production.
-pub(crate) fn parse_relay_url(relay: &str) -> ChatResult<(String, u16, bool)> {
+pub fn parse_relay_url(relay: &str) -> ChatResult<(String, u16, bool)> {
   let (scheme, rest) = relay
     .split_once("://")
     .ok_or_else(|| ChatError::InvalidConfig(format!("URL malformée : {relay}")))?;

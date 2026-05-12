@@ -1,0 +1,15 @@
+{
+  "name": "pgpilot-docs",
+  "type": "module",
+  "version": "1.0.0",
+  "description": "Documentation for pgpilot — PGP key manager for Linux",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview"
+  },
+  "dependencies": {
+    "@astrojs/starlight": "^0.34.0",
+    "astro": "^5.5.0"
+  }
+}

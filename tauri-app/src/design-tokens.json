@@ -1,0 +1,101 @@
+{
+  "themes": {
+    "catppuccin": {
+      "colors": {
+        "sidebar-bg":       "#303446",
+        "sidebar-hover-bg": "rgba(202, 158, 230, 0.15)",
+        "sidebar-text":     "#c6d0f5",
+        "detail-bg":        "#292c3c",
+        "card-bg":          "#363a4f",
+        "border":           "#49506a",
+        "text-strong":      "#e5e7eb",
+        "text-secondary":   "#a8aac5",
+        "text-muted":       "#6c7086",
+        "text-header":      "#c6d0f5",
+        "accent":           "#ca9ee6",
+        "accent-hover":     "#d4a8e6",
+        "accent-subtle":    "rgba(202, 158, 230, 0.12)",
+        "accent-border":    "rgba(202, 158, 230, 0.3)",
+        "text-on-accent":   "#292c3c",
+        "success":          "#a6e3a1",
+        "success-bg":       "rgba(166, 227, 161, 0.1)",
+        "error":            "#e78284",
+        "error-bg":         "rgba(231, 130, 132, 0.1)",
+        "warning":          "#e5c890",
+        "warning-bg":       "rgba(229, 200, 144, 0.1)"
+      },
+      "typography": {
+        "font-body":    "'Inter', system-ui, sans-serif",
+        "font-mono":    "'JetBrains Mono', monospace",
+        "font-nav":     "'Inter', system-ui, sans-serif",
+        "font-heading": "'Inter', system-ui, sans-serif"
+      },
+      "radius": {
+        "sm": "6px",
+        "md": "10px",
+        "lg": "16px"
+      },
+      "shadows": {
+        "sm":  "0 1px 3px rgba(0,0,0,0.3)",
+        "md":  "0 4px 12px rgba(0,0,0,0.4)",
+        "lg":  "0 8px 24px rgba(0,0,0,0.5)"
+      }
+    },
+    "ussr": {
+      "colors": {
+        "sidebar-bg":       "#0f0d09",
+        "sidebar-hover-bg": "rgba(216, 44, 32, 0.12)",
+        "sidebar-text":     "#f0ebd8",
+        "detail-bg":        "#1a1714",
+        "card-bg":          "#f0ebd8",
+        "border":           "#d9d3bc",
+        "text-strong":      "#1a1815",
+        "text-secondary":   "#4a4742",
+        "text-muted":       "#7a7370",
+        "text-header":      "#0f0d09",
+        "accent":           "#d82c20",
+        "accent-hover":     "#c2251a",
+        "accent-subtle":    "rgba(216, 44, 32, 0.1)",
+        "accent-border":    "rgba(216, 44, 32, 0.3)",
+        "text-on-accent":   "#f0ebd8",
+        "success":          "#5a8a3a",
+        "success-bg":       "rgba(90, 138, 58, 0.1)",
+        "error":            "#d82c20",
+        "error-bg":         "rgba(216, 44, 32, 0.1)",
+        "warning":          "#c9780f",
+        "warning-bg":       "rgba(201, 120, 15, 0.1)"
+      },
+      "typography": {
+        "font-body":    "'Inter', system-ui, sans-serif",
+        "font-mono":    "'JetBrains Mono', monospace",
+        "font-nav":     "'Bebas Neue', sans-serif",
+        "font-heading": "'Russo One', sans-serif"
+      },
+      "radius": {
+        "sm": "6px",
+        "md": "10px",
+        "lg": "16px"
+      },
+      "shadows": {
+        "sm":  "0 1px 3px rgba(0,0,0,0.5)",
+        "md":  "0 4px 12px rgba(0,0,0,0.6)",
+        "lg":  "0 8px 24px rgba(0,0,0,0.7)"
+      }
+    }
+  },
+  "shared": {
+    "spacing": {
+      "1":  "4px",
+      "2":  "8px",
+      "3":  "12px",
+      "4":  "16px",
+      "6":  "24px",
+      "8":  "32px",
+      "12": "48px"
+    },
+    "transition": {
+      "fast":   "120ms ease",
+      "normal": "200ms ease"
+    }
+  }
+}

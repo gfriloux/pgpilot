@@ -1,0 +1,205 @@
+---
+title: YubiKey et Smartcard
+description: Stockez vos sous-clés sur du matériel pour une sécurité renforcée.
+---
+
+Stockez vos sous-clés sur du matériel pour une sécurité renforcée.
+
+![Vue Diagnostic — thème Catppuccin](/pgpilot/screenshots/health--catppuccin.png)
+
+## Pourquoi utiliser une clé matérielle ?
+
+Une **clé de sécurité matérielle** (ex: **YubiKey**) garde vos clés privées isolées de votre ordinateur :
+
+- Les clés privées ne quittent jamais le matériel
+- Ordinateur compromis ≠ clés compromises
+- Nécessite la clé physique présente pour signer/déchiffrer
+- Vous utilisez toujours `gpg` — PGPilot est votre GUI
+
+**Compromis** : Plus lent (nécessite une interaction physique) ; plus sécurisé.
+
+---
+
+## Matériel supporté
+
+PGPilot prend en charge les **cartes à puce compatibles OpenPGP** via `gpg` :
+
+- **YubiKey 5 / 5C / 5 Nano** (plus populaire)
+- **YubiKey 4** (plus ancien, toujours supporté)
+- **Nitrokey** (alternative open-source)
+- **Gemalto IDBridge** (entreprise)
+- Tout appareil compatible **OpenPGP Card 3.x**
+
+### Exigences
+
+- Clé matérielle branchée (USB-A, USB-C ou NFC)
+- GnuPG ≥ 2.2 (avec support smartcard)
+- `scdaemon` en cours d'exécution (généralement automatique)
+
+---
+
+## Migrer une sous-clé vers du matériel
+
+Déplacez une sous-clé individuelle vers la carte.
+
+### Avant de commencer
+
+1. **Sauvegardez votre clé** : Cliquez sur **Sauvegarde** d'abord
+2. **Initialisez la carte** (première fois uniquement) :
+   ```bash
+   gpg --card-edit
+   admin
+   passwd  # définir le PIN administrateur (par défaut : 12345678)
+   quit
+   ```
+
+### Migrer dans PGPilot
+
+1. Sélectionnez votre clé
+2. Cliquez sur **Migrer vers YubiKey**
+3. Un modal demande : « Quelle sous-clé ? »
+   - Choisissez **Sign**, **Encrypt** ou **Auth**
+4. Confirmez : « Cette action ne peut pas être annulée »
+5. Après succès :
+   - L'icône de carte apparaît
+   - La sous-clé vit maintenant sur la carte
+   - La clé privée est supprimée de votre ordinateur
+
+---
+
+## Utiliser une clé basée sur carte
+
+Une fois une sous-clé sur la carte, la signature et le déchiffrement fonctionnent comme avant dans PGPilot :
+
+1. **Signature** : Cliquez sur **Signer**, choisissez la clé de signature, entrez le PIN
+2. **Déchiffrement** : Cliquez sur **Déchiffrer**, le déchiffrement se fait sur la carte, entrez le PIN
+3. **Publication** : **Publier** fonctionne toujours (envoie le stub + clé publique)
+
+De la perspective de PGPilot, c'est transparent.
+
+---
+
+## Authentification SSH avec sous-clé Auth
+
+Si vous avez créé votre clé avec la sous-clé SSH Auth :
+
+### Configuration (une seule fois)
+
+1. Exportez votre clé publique en format SSH :
+   ```bash
+   gpg --export-ssh-key <fingerprint> > ~/.ssh/id_pgp.pub
+   ```
+
+2. Ajoutez à authorized_keys sur vos serveurs :
+   ```bash
+   cat ~/.ssh/id_pgp.pub >> ~/.ssh/authorized_keys  # sur le serveur distant
+   ```
+
+3. Configurez SSH pour utiliser la clé GPG :
+   ```bash
+   export SSH_AUTH_SOCK="/run/user/$(id -u)/gnupg/S.gpg-agent.ssh"
+   ssh -i ~/.ssh/id_pgp.pub username@server.com
+   ```
+
+---
+
+## Faire pivoter une sous-clé basée sur carte
+
+Si une sous-clé basée sur carte est compromise ou expirée :
+
+1. Faites pivoter normalement : Sélectionnez la clé, cliquez sur **Remplacer**
+2. PGPilot crée une nouvelle sous-clé sur **le disque**
+3. L'ancienne sous-clé sur la carte est révoquée
+4. Vous pouvez maintenant :
+   - Garder la nouvelle sous-clé sur le disque, ou
+   - La migrer vers la carte
+
+---
+
+## Plusieurs cartes
+
+Vous pouvez avoir plusieurs clés matérielles :
+
+1. Branchez une carte différente
+2. Dans PGPilot, sélectionnez une clé différente
+3. Migrez différentes sous-clés vers différentes cartes
+4. Les cartes sont identifiées par numéro de série
+
+---
+
+## Réinitialiser une carte
+
+Pour effacer et réutiliser une carte :
+
+```bash
+gpg --card-edit
+admin
+factoryreset  # AVERTISSEMENT : efface toutes les clés sur la carte
+quit
+```
+
+Puis réinitialisez :
+
+```bash
+gpg --card-edit
+admin
+passwd
+quit
+```
+
+**⚠️ AVERTISSEMENT** : `factoryreset` est irréversible.
+
+---
+
+## Dépannage
+
+**« Carte non détectée »**
+
+- Branchez la clé
+- Vérifiez : `gpg --card-status`
+- Voir [Dépannage](/pgpilot/fr/troubleshooting/) pour les problèmes scdaemon
+
+**« La migration a échoué »**
+
+- Mauvais PIN administrateur (par défaut : `12345678`)
+- Carte pleine (max 3 sous-clés)
+- Carte non détectée en cours d'opération
+
+Si la migration échoue partiellement, restaurez à partir de la sauvegarde :
+
+```bash
+gpg --import <backup-secret.asc>
+```
+
+---
+
+## Meilleures pratiques
+
+1. **Sauvegardez avant la migration**
+   - Exportez toujours une sauvegarde de clé secrète
+   - Gardez les sauvegardes hors ligne
+
+2. **Utilisez un PIN fort**
+   - Par défaut : `12345678` (extrêmement faible)
+   - Changez immédiatement
+   - Recommandé : 8+ caractères mélangés
+
+3. **Gardez la carte avec vous**
+   - Impossible de signer/déchiffrer sans elle
+   - Carte perdue = besoin de faire pivoter les clés
+
+4. **Testez la récupération**
+   - Restaurez régulièrement à partir de la sauvegarde
+   - Ne découvrez pas la corruption de sauvegarde en urgence
+
+5. **Documentez votre configuration**
+   - Notez quelle carte contient les clés de quelle sous-clé
+   - Stockez les numéros de série avec vos sauvegardes
+
+---
+
+## Prochaines étapes
+
+- Apprenez le chiffrement et la signature — voir [Opérations sur fichiers](/pgpilot/fr/file-operations/)
+- Publiez les clés avec des sous-clés migrées — voir [Serveur de clés et partage](/pgpilot/fr/keyserver/)
+- Diagnostiquez les problèmes — voir [Dépannage](/pgpilot/fr/troubleshooting/)
