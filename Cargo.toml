@@ -21,6 +21,7 @@ chat = [
   "webpki-roots",
   "async-trait",
 ]
+rumqttc = ["dep:rumqttc"]
 
 [dependencies]
 anyhow           = "1"
@@ -44,8 +45,8 @@ async-trait  = { version = "0.1", optional = true }
 futures      = { version = "0.3", optional = true }
 iced         = { version = "0.14", features = ["tokio", "image", "svg"], optional = true }
 rfd          = { version = "0.17", optional = true }
-rumqttc      = { version = "0.24", features = ["use-rustls"], optional = true }
-rustls       = { version = "0.22", features = ["ring"], optional = true }
+rumqttc      = { version = "0.25", features = ["use-rustls"], optional = true }
+rustls       = { version = "0.23", features = ["ring"], optional = true }
 webpki-roots = { version = "0.26", optional = true }
 
 [dev-dependencies]

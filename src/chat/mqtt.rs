@@ -205,9 +205,12 @@ impl MqttHandle {
       // plus fiable que les certs système sur NixOS et autres distros non-standard.
       let mut root_store = rustls::RootCertStore::empty();
       root_store.extend(webpki_roots::TLS_SERVER_ROOTS.iter().cloned());
-      let client_config = ClientConfig::builder()
-        .with_root_certificates(root_store)
-        .with_no_client_auth();
+      let client_config =
+        ClientConfig::builder_with_provider(Arc::new(rustls::crypto::ring::default_provider()))
+          .with_safe_default_protocol_versions()
+          .expect("ring supports default TLS versions")
+          .with_root_certificates(root_store)
+          .with_no_client_auth();
       options.set_transport(Transport::Tls(rumqttc::TlsConfiguration::Rustls(Arc::new(
         client_config,
       ))));

@@ -55,10 +55,18 @@ jobs:
           GNUPGHOME: /tmp/pgpilot-test-slow-${{ github.run_id }}
 
       - name: cargo audit
-        run: nix develop --command cargo audit
-        # Treat advisories as warnings during audits so a newly published CVE
-        # does not block merges before a fix is available. Remove --warn-severity
-        # if you want hard failures.
+        # RUSTSEC-2026-{0098,0099,0104,0049}: rustls-webpki 0.102.x pulled by
+        # rumqttc 0.25.1 directly — cannot fix without upstream rumqttc release.
+        # RUSTSEC-2025-0134: rustls-pemfile unmaintained (also via rumqttc).
+        # RUSTSEC-2024-0436: paste unmaintained (via iced → rav1e).
+        run: |
+          nix develop --command cargo audit \
+            --ignore RUSTSEC-2026-0098 \
+            --ignore RUSTSEC-2026-0099 \
+            --ignore RUSTSEC-2026-0104 \
+            --ignore RUSTSEC-2026-0049 \
+            --ignore RUSTSEC-2025-0134 \
+            --ignore RUSTSEC-2024-0436
         continue-on-error: true
 
   nix-check:
