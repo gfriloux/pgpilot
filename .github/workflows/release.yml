@@ -68,7 +68,7 @@ jobs:
             pkg-config \
             clang \
             libclang-dev \
-            libnettle-dev \
+            nettle-dev \
             libgmp-dev \
             libfuse2t64
 
