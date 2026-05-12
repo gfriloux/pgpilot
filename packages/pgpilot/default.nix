@@ -6,13 +6,14 @@
 }:
 # pgpilot — Tauri v2 + React 18 desktop app.
 #
-# Build split into two phases:
-#   1. frontend  — npm/Vite build of the React app (produces dist/)
-#   2. backend   — rustPlatform.buildRustPackage for the Tauri crate,
-#                  with tauri.conf.json patched to embed the pre-built dist/
+# Build uses cargo-tauri.hook (nixpkgs standard for Tauri v2 apps) which:
+#   - Runs `cargo tauri build` instead of plain `cargo build`
+#   - Sets TAURI_ENV_DEBUG=false → production binary (no dev server connection)
+#   - Handles frontend embedding correctly
 #
-# The final binary is self-contained: Tauri embeds the frontend at compile time.
-# Runtime deps: webkit2gtk (WebView), gtk3, libsoup3.
+# npm deps are provided offline via fetchNpmDeps + npmHooks.npmConfigHook.
+# The `beforeBuildCommand` in tauri.conf.json runs `npm run build` which
+# succeeds because npmConfigHook pre-configured the offline registry.
 #
 # To recompute npmDepsHash after any change to app/package-lock.json:
 #   nix run nixpkgs#prefetch-npm-deps -- app/package-lock.json
@@ -20,31 +21,28 @@ let
   pname = "pgpilot";
   version = "0.8.0";
   src = inputs.self;
-
-  frontend = pkgs.buildNpmPackage {
-    pname = "pgpilot-frontend";
-    inherit version;
-    src = src + "/app";
-
-    npmDepsHash = "sha256-ZgPg7QvUiWuEJW96T3hCp0/fPiV1FrOWE2a+LAszqns=";
-
-    buildPhase = "npm run build";
-    installPhase = "cp -r dist $out";
-  };
 in
   pkgs.rustPlatform.buildRustPackage {
     inherit pname version src;
 
     cargoLock.lockFile = "${src}/Cargo.lock";
 
-    cargoBuildFlags = ["--package" "pgpilot-app"];
+    # npm deps for the React frontend
+    npmDeps = pkgs.fetchNpmDeps {
+      src = src + "/app";
+      hash = "sha256-ZgPg7QvUiWuEJW96T3hCp0/fPiV1FrOWE2a+LAszqns=";
+    };
+    npmRoot = "app";
 
-    # Tauri integration tests require a display — skip in sandbox
+    # No tests: Tauri integration tests require a display
     doCheck = false;
 
     env.LIBCLANG_PATH = "${pkgs.llvmPackages.libclang.lib}/lib";
 
     nativeBuildInputs = with pkgs; [
+      cargo-tauri.hook # Runs `cargo tauri build`, sets TAURI_ENV_DEBUG=false
+      nodejs
+      npmHooks.npmConfigHook # Feeds offline npm deps to the build
       pkg-config
       clang
       wrapGAppsHook4
@@ -67,13 +65,6 @@ in
       nettle
       gmp
     ];
-
-    # Patch tauri.conf.json to use the pre-built frontend and skip the npm step
-    preBuild = ''
-      substituteInPlace app/src-tauri/tauri.conf.json \
-        --replace-fail '"beforeBuildCommand": "npm run build"' '"beforeBuildCommand": ""' \
-        --replace-fail '"frontendDist": "../dist"' '"frontendDist": "${frontend}"'
-    '';
 
     postInstall = ''
       install -Dm644 share/applications/pgpilot.desktop \
