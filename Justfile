@@ -1,8 +1,10 @@
 dev:
     cd app && cargo-tauri dev
 
+# Builds .deb and .rpm only — AppImage requires linuxdeploy which relies on a
+# FHS-compatible system (/lib64/ld-linux-x86-64.so.2). Use CI (Ubuntu) for AppImage.
 build:
-    cd app && cargo-tauri build
+    cd app && cargo-tauri build --bundles deb,rpm
 
 build-bin:
     cd app && cargo-tauri build --no-bundle

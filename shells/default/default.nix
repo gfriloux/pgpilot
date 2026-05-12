@@ -17,7 +17,6 @@ mkShell {
     cargo-audit
     git-cliff
     just
-    linuxdeploy
 
     # sequoia-openpgp (nettle backend)
     clang
@@ -68,6 +67,11 @@ mkShell {
         # Sur KDE/Plasma, GTK doit déléguer les dialogues fichier à xdg-desktop-portal-kde
         # (KDialog natif) plutôt que d'utiliser GtkFileChooser qui exige les schémas GNOME.
         export GTK_USE_PORTAL=1
+
+        # Sur NixOS, les AppImages (dont linuxdeploy utilisé par cargo-tauri build)
+        # ne trouvent pas /lib64/ld-linux-x86-64.so.2. Ce flag force l'extraction
+        # sans FUSE, contournant le problème.
+        export APPIMAGE_EXTRACT_AND_RUN=1
         export LD_LIBRARY_PATH=${pkgs.lib.makeLibraryPath (with pkgs; [
       wayland
       libxkbcommon
