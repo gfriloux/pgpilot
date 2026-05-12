@@ -28,6 +28,12 @@ in
     cargoLock.lockFile = "${src}/Cargo.lock";
 
     # npm deps for the React frontend
+    # cargo-tauri.hook pushd's to tauriRoot before running `cargo tauri build`.
+    # Without this, the hook runs from the workspace root where there is no
+    # src-tauri/, causing Tauri CLI to search the tree and find docs/package.json
+    # instead of app/package.json.
+    tauriRoot = "app";
+
     npmDeps = pkgs.fetchNpmDeps {
       src = src + "/app";
       hash = "sha256-ZgPg7QvUiWuEJW96T3hCp0/fPiV1FrOWE2a+LAszqns=";
