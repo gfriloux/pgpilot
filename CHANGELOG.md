@@ -3,6 +3,21 @@
 All notable changes to pgpilot are documented here.
 Releases follow [Semantic Versioning](https://semver.org/).
 
+## [0.8.0] — 2026-05-12
+
+### Bug Fixes
+
+- **audit**: cargo audit stuff ([`0bd9a03`](https://github.com/gfriloux/pgpilot/commit/0bd9a03720a05f454e3979388dc3d5f378a8cd85))
+
+### Documentation
+
+- **astro**: update installation instructions ([`880c2da`](https://github.com/gfriloux/pgpilot/commit/880c2dab9e4eec30206c59f9ee92a9b75eac324b))
+
+### Refactoring
+
+- **all**: use tauri + astro ([`6fc4432`](https://github.com/gfriloux/pgpilot/commit/6fc44328c95c3b4d0e748bcd4ce1a5779ea405c9))
+- **all**: remove references to iced ([`22ac0d1`](https://github.com/gfriloux/pgpilot/commit/22ac0d17defcecf255133b65c57dcaf26df1f899))
+- **all**: rework project structure ([`1b33a50`](https://github.com/gfriloux/pgpilot/commit/1b33a50c78e001a6da04a091a6b29ca256f0e1e3))
 ## [0.7.0] — 2026-05-08
 
 ### Documentation
