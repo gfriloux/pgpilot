@@ -25,9 +25,12 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
-          cache-dependency-path: docs/package-lock.json
-      - run: cd docs && npm ci && npm run build
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        with:
+          path: docs/node_modules
+          key: docs-node-${{ hashFiles('docs/package.json') }}
+      - run: cd docs && npm install && npm run build
       - uses: actions/upload-pages-artifact@v3
         with:
           path: docs/dist
