@@ -332,46 +332,6 @@ impl ChatTransport for MqttHandle {
 // Subscription iced (ui feature uniquement)
 // ---------------------------------------------------------------------------
 
-/// Crée un [`iced::Subscription`] à partir d'un [`MqttHandle`].
-///
-/// Remonte chaque [`MqttEvent`] comme [`crate::app::Message::MqttEvent`].
-///
-/// Utilise [`iced::Subscription::run_with`] avec `MqttHandle` comme données
-/// d'identité stables (l'adresse Arc est stable tant que le handle vit).
-///
-/// `build_mqtt_stream` est la fonction builder passée à `run_with` — elle ne
-/// peut pas être une closure car `run_with` exige un `fn` pointer.
-#[cfg(feature = "ui")]
-pub fn subscription(handle: MqttHandle) -> iced::Subscription<crate::app::Message> {
-  iced::Subscription::run_with(handle, build_mqtt_stream)
-}
-
-/// Builder de stream MQTT passé à [`iced::Subscription::run_with`].
-///
-/// Prend un `&MqttHandle` et retourne un `Stream<Item = crate::app::Message>`
-/// en consommant le receiver d'évènements tokio via `iced::stream::channel`.
-#[cfg(feature = "ui")]
-fn build_mqtt_stream(
-  handle: &MqttHandle,
-) -> impl futures::stream::Stream<Item = crate::app::Message> {
-  // On prend le receiver une seule fois (Option<mpsc::Receiver<MqttEvent>>).
-  // Les appels suivants (re-rendus iced) retournent `None` → stream vide.
-  let rx_opt = handle.take_event_stream();
-
-  iced::stream::channel(MQTT_EVENT_CHANNEL_CAP, async move |mut output| {
-    use futures::SinkExt as _;
-    if let Some(mut rx) = rx_opt {
-      while let Some(event) = rx.recv().await {
-        let _ = output.send(crate::app::Message::MqttEvent(event)).await;
-      }
-    }
-    // Maintient le stream vivant indéfiniment une fois le channel épuisé,
-    // conformément au pattern websocket d'iced (évite un redémarrage spurieux
-    // de la Subscription).
-    futures::future::pending::<()>().await;
-  })
-}
-
 // ---------------------------------------------------------------------------
 // Tâche tokio interne
 // ---------------------------------------------------------------------------

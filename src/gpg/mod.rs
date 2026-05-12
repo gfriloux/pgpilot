@@ -64,7 +64,7 @@ pub(crate) fn sanitize_gpg_stderr(stderr: &str) -> String {
 
 pub use card::move_key_to_card;
 pub use health::{run_all_checks, CheckStatus, HealthCheck};
-#[cfg(any(feature = "ui", feature = "chat"))]
+#[cfg(feature = "chat")]
 pub(crate) use keyring::validate_fp;
 pub use keyring::{
   add_subkey, backup_key, check_keyserver, create_key, decrypt_files, delete_key, encrypt_files,

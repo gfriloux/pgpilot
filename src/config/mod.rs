@@ -1,9 +1,13 @@
-use crate::i18n::Language;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
-/// Visual theme variant. Defined here (in config) so that config does not
-/// depend on the ui module, avoiding circular imports.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
+pub enum Language {
+  #[default]
+  English,
+  French,
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
 pub enum ThemeVariant {
   #[default]
@@ -19,13 +23,9 @@ pub struct Config {
   pub scale_factor: f64,
   pub theme: ThemeVariant,
   /// URL du broker MQTT par défaut.
-  /// `None` → fallback vers `mqtts://broker.hivemq.com:8883` (Let's Encrypt,
-  /// compatible webpki-roots). test.mosquitto.org:8883 utilise une CA v1 rejetée
-  /// par rustls — ne pas l'utiliser comme valeur par défaut.
   #[serde(default)]
   pub mqtt_default_relay: Option<String>,
   /// Fingerprint 40 hex de la clef locale utilisée pour le chat.
-  /// `None` → première clef privée disponible dans le keyring.
   #[serde(default)]
   pub chat_local_fp: Option<String>,
 }
@@ -122,10 +122,6 @@ mod tests {
       detect_language_from_locale("de_DE.UTF-8"),
       Language::English
     );
-    assert_eq!(
-      detect_language_from_locale("ja_JP.UTF-8"),
-      Language::English
-    );
   }
 
   #[test]
@@ -151,27 +147,5 @@ mod tests {
   fn config_defaults_scale_factor() {
     let cfg = Config::default();
     assert!((cfg.scale_factor - 1.0).abs() < f64::EPSILON);
-  }
-
-  #[test]
-  fn all_english_strings_non_empty() {
-    use crate::i18n::{strings_for, Language};
-    let s = strings_for(Language::English);
-    assert!(!s.nav_my_keys().is_empty());
-    assert!(!s.btn_cancel().is_empty());
-    assert!(!s.err_export_failed().is_empty());
-    assert!(!s.settings_title().is_empty());
-    assert!(!s.status_key_deleted().is_empty());
-  }
-
-  #[test]
-  fn all_french_strings_non_empty() {
-    use crate::i18n::{strings_for, Language};
-    let s = strings_for(Language::French);
-    assert!(!s.nav_my_keys().is_empty());
-    assert!(!s.btn_cancel().is_empty());
-    assert!(!s.err_export_failed().is_empty());
-    assert!(!s.settings_title().is_empty());
-    assert!(!s.status_key_deleted().is_empty());
   }
 }

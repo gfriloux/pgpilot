@@ -24,7 +24,7 @@ mkShell {
     pkg-config
     gmp
 
-    # iced (wayland + x11) — conservé pour la branche main/iced
+    # Wayland/X11 libs (Tauri WebKit)
     wayland
     libxkbcommon
     libGL
@@ -88,7 +88,7 @@ mkShell {
     ])}:$LD_LIBRARY_PATH
 
         echo "[pgpilot] Ready."
-        echo "  cargo build          — build iced binary (legacy)"
+        echo "  cargo build          — build library (gpg + chat)"
         echo "  just dev             — cargo-tauri dev"
         echo "  just build           — cargo-tauri build"
 
