@@ -32,7 +32,7 @@ jobs:
             cargo-${{ runner.os }}-
 
       # All cargo commands run inside the dev shell so LIBCLANG_PATH and
-      # LD_LIBRARY_PATH are set correctly for sequoia-openpgp and iced.
+      # LD_LIBRARY_PATH are set correctly for sequoia-openpgp and webkit2gtk.
 
       - name: cargo fmt
         run: nix develop --command cargo fmt -- --check --config tab_spaces=2
@@ -44,12 +44,12 @@ jobs:
         run: nix develop --command cargo build
 
       - name: cargo test (unit)
-        run: nix develop --command cargo test --lib --bins
+        run: nix develop --command cargo test --package pgpilot --lib --bins
         env:
           GNUPGHOME: /tmp/pgpilot-test-${{ github.run_id }}
 
       - name: cargo test (integration)
-        run: nix develop --command cargo test -- --ignored
+        run: nix develop --command cargo test --package pgpilot -- --ignored
         timeout-minutes: 10
         env:
           GNUPGHOME: /tmp/pgpilot-test-slow-${{ github.run_id }}
@@ -58,15 +58,13 @@ jobs:
         # RUSTSEC-2026-{0098,0099,0104,0049}: rustls-webpki 0.102.x pulled by
         # rumqttc 0.25.1 directly — cannot fix without upstream rumqttc release.
         # RUSTSEC-2025-0134: rustls-pemfile unmaintained (also via rumqttc).
-        # RUSTSEC-2024-0436: paste unmaintained (via iced → rav1e).
         run: |
           nix develop --command cargo audit \
             --ignore RUSTSEC-2026-0098 \
             --ignore RUSTSEC-2026-0099 \
             --ignore RUSTSEC-2026-0104 \
             --ignore RUSTSEC-2026-0049 \
-            --ignore RUSTSEC-2025-0134 \
-            --ignore RUSTSEC-2024-0436
+            --ignore RUSTSEC-2025-0134
         continue-on-error: true
 
   nix-check:

@@ -1,30 +1,30 @@
 dev:
-    cd tauri-app && cargo-tauri dev
+    cd app && cargo-tauri dev
 
 build:
-    cd tauri-app && cargo-tauri build
+    cd app && cargo-tauri build
 
 build-bin:
-    cd tauri-app && cargo-tauri build --no-bundle
+    cd app && cargo-tauri build --no-bundle
 
 test:
-    cargo test
+    cargo test --package pgpilot
 
 test-all:
-    cargo test -- --ignored
+    cargo test --package pgpilot -- --ignored
 
 fmt:
     cargo fmt -- --config tab_spaces=2
-    cd tauri-app && cargo fmt --manifest-path src-tauri/Cargo.toml -- --config tab_spaces=2
+    cargo fmt --manifest-path app/src-tauri/Cargo.toml -- --config tab_spaces=2
 
 check:
     cargo fmt --check -- --config tab_spaces=2
     cargo clippy -- -D warnings
-    cargo test
+    cargo test --package pgpilot
     cargo audit
 
 screenshots:
-    cd tauri-app && VITE_MOCK=true node scripts/screenshots.mjs
+    cd app && VITE_MOCK=true node scripts/screenshots.mjs
 
 docs-dev:
     cd docs && npm run dev

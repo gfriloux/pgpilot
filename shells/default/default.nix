@@ -17,6 +17,7 @@ mkShell {
     cargo-audit
     git-cliff
     just
+    linuxdeploy
 
     # sequoia-openpgp (nettle backend)
     clang
@@ -43,8 +44,6 @@ mkShell {
 
     # CA bundle — requis pour rustls-native-certs (connexions TLS MQTT, HTTPS)
     cacert
-
-    mdbook
   ];
 
   buildInputs = with pkgs; [

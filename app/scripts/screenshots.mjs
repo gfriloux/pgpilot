@@ -1,7 +1,7 @@
 /**
  * screenshots.mjs
  * Launches Vite in mock mode, captures a screenshot of every view in both
- * themes (Catppuccin and USSR), then saves them to docs/screenshots/.
+ * themes (Catppuccin and USSR), then saves them to ../../docs/public/screenshots/.
  *
  * Usage:
  *   VITE_MOCK=true node scripts/screenshots.mjs
@@ -12,7 +12,7 @@ import { spawn } from 'child_process';
 import { mkdirSync, existsSync } from 'fs';
 
 const BASE_URL = 'http://localhost:1421';
-const OUT_DIR = new URL('../docs/screenshots/', import.meta.url).pathname;
+const OUT_DIR = new URL('../../docs/public/screenshots/', import.meta.url).pathname;
 
 const NIX_CHROMIUM_CANDIDATES = [
   '/nix/store/h16ak6ir2p2n8nhqgbg6iqzy17243h3j-playwright-chromium-headless-shell/chrome-headless-shell-linux64/chrome-headless-shell',

@@ -2,8 +2,11 @@
 .envrc
 .pre-commit-config.yaml
 target
-/book/book
-/tauri-app/node_modules/
-/tauri-app/dist/
-/tauri-app/src-tauri/target/
-/tauri-app/src-tauri/gen/
+/app/node_modules/
+/app/dist/
+/app/src-tauri/target/
+/app/src-tauri/gen/
+/docs/node_modules/
+/docs/dist/
+tmp/
+todo.txt

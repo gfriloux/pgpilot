@@ -1,15 +1,14 @@
 use std::path::Path;
 use std::sync::Arc;
 
-use tauri::Emitter as _;
 use pgpilot::chat::{
-  mqtt::ChatTransport as _,
-  ChatCryptoCtx, ChatPayload, MqttConfig, MqttEvent, MqttHandle, Room, RoomParticipant, RoomStore,
-  WireAck, WireMessage, ACK_TOPIC_PREFIX, MAX_WIRE_MESSAGE_BYTES, PRESENCE_TOPIC_PREFIX,
+  mqtt::ChatTransport as _, ChatCryptoCtx, ChatPayload, MqttConfig, MqttEvent, MqttHandle, Room,
+  RoomParticipant, RoomStore, WireAck, WireMessage, ACK_TOPIC_PREFIX, MAX_WIRE_MESSAGE_BYTES,
+  PRESENCE_TOPIC_PREFIX,
 };
 use pgpilot::gpg::card::{card_status as gpg_card_status, move_key_to_card};
-use pgpilot::gpg::health::{run_all_checks, HealthCheck};
 use pgpilot::gpg::gnupg_homedir;
+use pgpilot::gpg::health::{run_all_checks, HealthCheck};
 use pgpilot::gpg::keyring::{
   add_subkey, backup_key as gpg_backup_key, check_keyserver as gpg_check_keyserver,
   create_key as gpg_create_key, decrypt_files as gpg_decrypt_files, delete_key as gpg_delete_key,
@@ -22,6 +21,7 @@ use pgpilot::gpg::keyring::{
   validate_fp, verify_signature as gpg_verify_signature,
 };
 use pgpilot::gpg::types::{CardInfo, DecryptStatus, KeyExpiry, KeyInfo, TrustLevel, VerifyResult};
+use tauri::Emitter as _;
 use tokio::sync::Mutex;
 
 // ---------------------------------------------------------------------------
@@ -128,8 +128,8 @@ async fn backup_key(fp: String, dest_dir: String) -> Result<Vec<String>, String>
     let key_id = fp[fp.len() - 16..].to_string();
 
     // Canonicalize and verify the destination directory to prevent path traversal
-    let canon_dir = std::fs::canonicalize(&dest_dir)
-      .map_err(|e| format!("Invalid destination: {e}"))?;
+    let canon_dir =
+      std::fs::canonicalize(&dest_dir).map_err(|e| format!("Invalid destination: {e}"))?;
     if !canon_dir.is_dir() {
       return Err("Destination is not a directory".to_string());
     }
@@ -166,9 +166,11 @@ async fn delete_key(fp: String, has_secret: bool) -> Result<(), String> {
 
 #[tauri::command]
 async fn publish_key(fp: String, keyserver_url: String) -> Result<String, String> {
-  tokio::task::spawn_blocking(move || gpg_publish_key(&fp, &keyserver_url).map_err(|e| e.to_string()))
-    .await
-    .map_err(|e| e.to_string())?
+  tokio::task::spawn_blocking(move || {
+    gpg_publish_key(&fp, &keyserver_url).map_err(|e| e.to_string())
+  })
+  .await
+  .map_err(|e| e.to_string())?
 }
 
 #[tauri::command]
@@ -187,7 +189,11 @@ async fn check_keyserver(fp: String) -> Result<bool, String> {
 // ---------------------------------------------------------------------------
 
 #[tauri::command]
-async fn renew_subkey_cmd(key_fp: String, subkey_fp: String, expiry_days: u32) -> Result<(), String> {
+async fn renew_subkey_cmd(
+  key_fp: String,
+  subkey_fp: String,
+  expiry_days: u32,
+) -> Result<(), String> {
   tokio::task::spawn_blocking(move || {
     let expiry = days_to_expiry(expiry_days)?;
     renew_subkey(&key_fp, &subkey_fp, &expiry).map_err(|e| e.to_string())
@@ -409,11 +415,7 @@ async fn chat_list_rooms() -> Result<Vec<Room>, String> {
 
 /// Crée un nouveau salon, l'insère dans `rooms.yaml` et retourne le salon créé.
 #[tauri::command]
-async fn chat_create_room(
-  name: String,
-  relay: String,
-  my_fp: String,
-) -> Result<Room, String> {
+async fn chat_create_room(name: String, relay: String, my_fp: String) -> Result<Room, String> {
   tokio::task::spawn_blocking(move || {
     // Validate relay URL (must be mqtts:// or mqtt://localhost)
     pgpilot::chat::mqtt::parse_relay_url(&relay).map_err(|e| e.to_string())?;
@@ -540,11 +542,9 @@ async fn chat_start(
   let crypto = {
     let fp = room.my_fp.clone();
     let peers: Vec<String> = room.participants.iter().map(|p| p.fp.clone()).collect();
-    tokio::task::spawn_blocking(move || {
-      ChatCryptoCtx::load(&fp, &peers).map_err(|e| e.to_string())
-    })
-    .await
-    .map_err(|e| e.to_string())??
+    tokio::task::spawn_blocking(move || ChatCryptoCtx::load(&fp, &peers).map_err(|e| e.to_string()))
+      .await
+      .map_err(|e| e.to_string())??
   };
   let crypto = Arc::new(crypto);
 
@@ -597,10 +597,7 @@ async fn chat_start(
             let _ = ah.emit("chat:connected", ());
           }
           MqttEvent::Disconnected(reason) => {
-            let _ = ah.emit(
-              "chat:disconnected",
-              serde_json::json!({ "reason": reason }),
-            );
+            let _ = ah.emit("chat:disconnected", serde_json::json!({ "reason": reason }));
           }
           MqttEvent::Reconnecting { attempt } => {
             let _ = ah.emit(
@@ -609,21 +606,18 @@ async fn chat_start(
             );
           }
           MqttEvent::MessageReceived { topic, payload } => {
-            dispatch_mqtt_message(
-              &topic,
-              &payload,
-              &room_clone,
-              &crypto_clone,
-              &ah,
-            )
-            .await;
+            dispatch_mqtt_message(&topic, &payload, &room_clone, &crypto_clone, &ah).await;
           }
         }
       }
     }
   });
 
-  *session_guard = Some(ChatSession { handle, room, crypto });
+  *session_guard = Some(ChatSession {
+    handle,
+    room,
+    crypto,
+  });
   Ok(())
 }
 
@@ -644,7 +638,9 @@ async fn chat_generate_join_code(room_id: String, my_fp: String) -> Result<Strin
       room_name: Some(room.name.clone()),
       sig: String::new(),
     };
-    let sig = join_code.sign(&ctx.homedir, &my_fp).map_err(|e| e.to_string())?;
+    let sig = join_code
+      .sign(&ctx.homedir, &my_fp)
+      .map_err(|e| e.to_string())?;
     join_code.sig = sig;
     join_code.encode().map_err(|e| e.to_string())
   })
@@ -669,8 +665,14 @@ async fn chat_join_room(join_code_str: String, my_fp: String) -> Result<Room, St
       my_fp: my_fp.clone(),
       created_at: now,
       participants: vec![
-        RoomParticipant { fp: join_code.invited_by, joined_at: now },
-        RoomParticipant { fp: my_fp, joined_at: now },
+        RoomParticipant {
+          fp: join_code.invited_by,
+          joined_at: now,
+        },
+        RoomParticipant {
+          fp: my_fp,
+          joined_at: now,
+        },
       ],
     };
     store.upsert(room.clone());
@@ -701,9 +703,7 @@ async fn chat_send(
   state: tauri::State<'_, ChatState>,
 ) -> Result<String, String> {
   let session_guard = state.session.lock().await;
-  let session = session_guard
-    .as_ref()
-    .ok_or("no active chat session")?;
+  let session = session_guard.as_ref().ok_or("no active chat session")?;
 
   if session.room.id != room_id {
     return Err("room_id mismatch with active session".to_string());
@@ -830,10 +830,7 @@ async fn dispatch_chat_message(
   let wire_clone = wire.clone();
   let result = tokio::task::spawn_blocking(move || {
     // Recréer un ChatCryptoCtx depuis les champs publics (pas de Clone derivé).
-    let ctx = ChatCryptoCtx {
-      homedir,
-      local_fp,
-    };
+    let ctx = ChatCryptoCtx { homedir, local_fp };
     ctx.decrypt_message(&chat_payload)
   })
   .await;
