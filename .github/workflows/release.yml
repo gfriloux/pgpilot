@@ -45,8 +45,20 @@ jobs:
       - name: Install frontend dependencies
         run: cd app && npm ci
 
-      - name: Build Tauri app (Linux bundles)
-        run: nix develop --command sh -c 'cd app && cargo-tauri build'
+      # Build .deb and .rpm inside the Nix dev shell (provides LIBCLANG_PATH,
+      # LD_LIBRARY_PATH, webkit2gtk, etc. required by sequoia-openpgp and Tauri).
+      - name: Build Tauri app (deb + rpm)
+        run: nix develop --command sh -c 'cd app && cargo-tauri build --bundles deb,rpm'
+
+      # AppImage uses linuxdeploy, which is itself an AppImage. Running it inside
+      # the Nix dev shell fails because Nix's LD_LIBRARY_PATH overrides linuxdeploy's
+      # bundled libs. We unset LD_LIBRARY_PATH and set APPIMAGE_EXTRACT_AND_RUN=1
+      # (bypasses FUSE, not available on GitHub Actions runners) for this step only.
+      # The Rust binary is already compiled — cargo skips recompilation.
+      - name: Build AppImage
+        run: |
+          sudo apt-get install -y libfuse2
+          nix develop --command sh -c 'cd app && env -u LD_LIBRARY_PATH APPIMAGE_EXTRACT_AND_RUN=1 cargo-tauri build --bundles appimage'
 
       - name: Generate release notes for this tag
         run: nix develop --command git-cliff --current --output RELEASE_NOTES.md
