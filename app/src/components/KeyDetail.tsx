@@ -112,7 +112,9 @@ export function KeyDetail({
   const [revCertGenerating, setRevCertGenerating] = useState(false);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setKsPublished(null);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setRevCertPath(undefined);
 
     checkKeyserver(fp)

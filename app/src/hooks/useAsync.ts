@@ -37,7 +37,7 @@ export function useAsync<T>(
           setState((prev) => ({ ...prev, loading: false, error: message }));
         }
       });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps, react-hooks/use-memo
   }, deps);
 
   useEffect(() => {
