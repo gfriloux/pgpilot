@@ -19,18 +19,12 @@ export function Tabs({ tabs, activeTab, onChange }: TabsProps) {
     const buttons = listRef.current?.querySelectorAll<HTMLButtonElement>('[role="tab"]');
     if (!buttons) return;
 
-    let next = index;
-    if (e.key === 'ArrowRight') {
-      next = (index + 1) % tabs.length;
-    } else if (e.key === 'ArrowLeft') {
-      next = (index - 1 + tabs.length) % tabs.length;
-    } else if (e.key === 'Home') {
-      next = 0;
-    } else if (e.key === 'End') {
-      next = tabs.length - 1;
-    } else {
-      return;
-    }
+    let next: number;
+    if (e.key === 'ArrowRight') next = (index + 1) % tabs.length;
+    else if (e.key === 'ArrowLeft') next = (index - 1 + tabs.length) % tabs.length;
+    else if (e.key === 'Home') next = 0;
+    else if (e.key === 'End') next = tabs.length - 1;
+    else return;
 
     e.preventDefault();
     const target = buttons[next];

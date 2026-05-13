@@ -94,7 +94,7 @@ function findSubkey(subkeys: SubkeyInfo[], usage: string): SubkeyInfo | undefine
 
 export function KeyDetail({
   keyInfo,
-  published,
+  published: _published,
   bannerN,
   cardConnected = false,
   onBackup,

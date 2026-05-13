@@ -291,6 +291,7 @@ function Conversation({ room, onClose }: ConversationProps) {
   function handleCopyInvite(): void {
     chatGenerateJoinCode(room.id, room.my_fp)
       .then((code) => navigator.clipboard.writeText(code))
+      // eslint-disable-next-line no-console
       .catch((err: unknown) => console.error('Copy invite failed', err));
   }
 
@@ -308,7 +309,6 @@ function Conversation({ room, onClose }: ConversationProps) {
       cancelled = true;
       chatStop().catch(() => undefined);
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [room.id]);
 
   // Scroll to bottom when new messages arrive

@@ -63,6 +63,10 @@ export default function AppLayout() {
   useChatEvents();
 
   useEffect(() => {
+    document.documentElement.dataset['theme'] = theme;
+  }, [theme]);
+
+  useEffect(() => {
     getVersion()
       .then(setVersion)
       .catch(() => setVersion('(mock)'));
