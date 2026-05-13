@@ -3,6 +3,20 @@
 All notable changes to pgpilot are documented here.
 Releases follow [Semantic Versioning](https://semver.org/).
 
+## [0.8.7] — 2026-05-13
+
+### Bug Fixes
+
+- **all**: trying to fix CI ([`b3800aa`](https://github.com/gfriloux/pgpilot/commit/b3800aa63d466bcae0641f03f6e083d655764006))
+- **all**: more version fixes ([`b6584f2`](https://github.com/gfriloux/pgpilot/commit/b6584f263c919ee732f4cc29467c981df7a956fc))
+## [0.8.6] — 2026-05-13
+
+### Dependencies
+
+- **deps**: Update GitHub Actions ([`6e00360`](https://github.com/gfriloux/pgpilot/commit/6e0036022c50e00c9b39e341eff6ca1728ac337b))
+- **deps**: Update Rust crate sha2 to 0.11 ([`d68b37e`](https://github.com/gfriloux/pgpilot/commit/d68b37e83f1b728e2055d2bd8b5ce63f968e7246))
+- **deps**: Update Rust dependencies ([`acab753`](https://github.com/gfriloux/pgpilot/commit/acab75386e2497b6fa244da3edd0c89a8af86dd3))
+- **deps**: bump major versions (React 19, Vite 8, TS 6, Astro 6) ([`0b6c29a`](https://github.com/gfriloux/pgpilot/commit/0b6c29a6e36462e5b97bc6ced2137f0d222a69dc))
 ## [0.8.0] — 2026-05-12
 
 ### Bug Fixes
