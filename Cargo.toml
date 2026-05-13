@@ -32,7 +32,7 @@ rumqttc = ["dep:rumqttc"]
 anyhow           = "1"
 base64           = "0.22"
 chrono           = { version = "0.4", features = ["serde"] }
-dirs             = "5"
+dirs             = "6"
 percent-encoding = "2"
 serde            = { version = "1", features = ["derive"] }
 serde_json       = "1"
@@ -40,7 +40,7 @@ serde_yaml       = "0.9"
 sequoia-openpgp  = { version = "2", default-features = false, features = ["crypto-nettle"] }
 sha2             = "0.11"
 tempfile         = "3"
-thiserror        = "1"
+thiserror        = "2"
 tokio            = { version = "1", features = ["full"] }
 ureq             = "3"
 uuid             = { version = "1", features = ["v4", "serde"] }
@@ -49,7 +49,7 @@ uuid             = { version = "1", features = ["v4", "serde"] }
 async-trait  = { version = "0.1", optional = true }
 rumqttc      = { version = "0.25", features = ["use-rustls"], optional = true }
 rustls       = { version = "0.23", features = ["ring"], optional = true }
-webpki-roots = { version = "0.26", optional = true }
+webpki-roots = { version = "1.0", optional = true }
 
 [dev-dependencies]
 tempfile = "3"
