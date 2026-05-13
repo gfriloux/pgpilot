@@ -1,6 +1,6 @@
 {
   "name": "pgpilot",
-  "version": "0.8.0",
+  "version": "0.8.7",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -26,11 +26,8 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@storybook/addon-essentials": "^8.6.18",
-    "@storybook/addon-interactions": "^8.6.18",
-    "@storybook/blocks": "^8.6.18",
-    "@storybook/react": "^8.6.18",
-    "@storybook/react-vite": "^8.6.18",
+    "@storybook/react": "^10.3.6",
+    "@storybook/react-vite": "^10.3.6",
     "@tauri-apps/cli": "^2.0.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
@@ -41,7 +38,7 @@
     "eslint-plugin-react-hooks": "^6.1.1",
     "playwright": "^1.40.0",
     "prettier": "^3.3.0",
-    "storybook": "^8.6.18",
+    "storybook": "^10.3.6",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.59.3",
     "vite": "^8.0.12"
