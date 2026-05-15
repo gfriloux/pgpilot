@@ -33,3 +33,25 @@ docs-dev:
 
 docs-build:
     cd docs && npm run build
+
+# Recompute npmDepsHash and update packages/pgpilot/default.nix
+update-nix-hash:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    hash=$(nix run nixpkgs#prefetch-npm-deps -- app/package-lock.json)
+    sed -i 's|hash = "sha256-[^"]*"|hash = "'"${hash}"'"|' packages/pgpilot/default.nix
+    echo "npmDepsHash updated: ${hash}"
+
+# Bump version everywhere and update Nix hash — usage: just release 0.8.8
+release VERSION:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    v="{{VERSION}}"
+    sed -i "s/^version = \"[0-9.]*\"/version = \"${v}\"/" Cargo.toml
+    sed -i "s/^version = \"[0-9.]*\"/version = \"${v}\"/" app/src-tauri/Cargo.toml
+    sed -i "s/\"version\": \"[0-9.]*\"/\"version\": \"${v}\"/" app/package.json
+    sed -i "s/\"version\": \"[0-9.]*\"/\"version\": \"${v}\"/" app/src-tauri/tauri.conf.json
+    sed -i "s/version = \"[0-9.]*\";/version = \"${v}\";/" packages/pgpilot/default.nix
+    sed -i "1,15s/\"version\": \"[0-9.]*\"/\"version\": \"${v}\"/" app/package-lock.json
+    just update-nix-hash
+    echo "Done — review changes then: git add -A && git commit -m 'chore(release): v${v}' && git tag v${v} && git push && git push --tags"

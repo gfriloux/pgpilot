@@ -2522,7 +2522,7 @@ dependencies = [
 
 [[package]]
 name = "pgpilot"
-version = "0.8.7"
+version = "0.8.8"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -2547,7 +2547,7 @@ dependencies = [
 
 [[package]]
 name = "pgpilot-app"
-version = "0.8.7"
+version = "0.8.8"
 dependencies = [
  "chrono",
  "pgpilot",
