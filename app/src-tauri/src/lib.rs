@@ -437,6 +437,9 @@ async fn chat_create_room(name: String, relay: String, my_fp: String) -> Result<
     if name.trim().is_empty() || name.len() > 256 {
       return Err("Room name must be 1–256 characters".to_string());
     }
+    if name.chars().any(|c| c.is_control()) {
+      return Err("Room name ne peut pas contenir de caractères de contrôle".to_string());
+    }
 
     let mut store = RoomStore::load().map_err(|e| e.to_string())?;
     let room = Room {
@@ -634,6 +637,7 @@ async fn chat_start(
 /// Génère un code d'invitation signé pour le salon donné.
 #[tauri::command]
 async fn chat_generate_join_code(room_id: String, my_fp: String) -> Result<String, String> {
+  validate_fp(&my_fp).map_err(|e| e.to_string())?;
   tokio::task::spawn_blocking(move || {
     let ctx = ChatCryptoCtx::load(&my_fp, &[]).map_err(|e| e.to_string())?;
     let store = RoomStore::load().map_err(|e| e.to_string())?;
@@ -661,6 +665,7 @@ async fn chat_generate_join_code(room_id: String, my_fp: String) -> Result<Strin
 /// Rejoint un salon via un code d'invitation (vérifie la signature GPG).
 #[tauri::command]
 async fn chat_join_room(join_code_str: String, my_fp: String) -> Result<Room, String> {
+  validate_fp(&my_fp).map_err(|e| e.to_string())?;
   tokio::task::spawn_blocking(move || {
     let ctx = ChatCryptoCtx::load(&my_fp, &[]).map_err(|e| e.to_string())?;
     let join_code =

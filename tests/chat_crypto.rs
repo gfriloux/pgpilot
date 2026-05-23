@@ -14,13 +14,8 @@
 
 mod common;
 
-use std::sync::Mutex;
-
 use pgpilot::chat::crypto::ChatCryptoCtx;
 use pgpilot::chat::ChatPayload;
-
-/// Sérialise les tests qui doivent temporairement toucher `GNUPGHOME`.
-static ENV_LOCK: Mutex<()> = Mutex::new(());
 
 // ---------------------------------------------------------------------------
 // Helper : génère une clef ed25519 + cv25519 dans le homedir de test.
@@ -114,7 +109,7 @@ fn generate_test_key(homedir: &str, name: &str, email: &str) -> String {
 #[test]
 #[ignore = "nécessite la création d'une clef GPG (~5 s) — exécuter avec --ignored"]
 fn crypto_ctx_load_succeeds_with_secret_key() {
-  let _guard = ENV_LOCK.lock().expect("ENV_LOCK empoisonné");
+  let _guard = common::ENV_LOCK.lock().expect("ENV_LOCK empoisonné");
 
   let (_tmp, homedir) = common::setup_test_gnupghome();
   // Surcharger GNUPGHOME pour que gnupg_dir() pointe vers notre homedir temp.

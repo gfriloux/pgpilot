@@ -93,6 +93,14 @@ fn validate_keyserver_query(query: &str) -> Result<()> {
   );
 }
 
+fn check_gpg_output(output: &std::process::Output) -> anyhow::Result<()> {
+  if output.status.success() {
+    return Ok(());
+  }
+  let stderr = String::from_utf8_lossy(&output.stderr);
+  Err(anyhow::anyhow!("{}", sanitize_gpg_stderr(&stderr)))
+}
+
 fn all_public_fingerprints() -> Result<HashSet<String>> {
   let homedir = gnupg_dir()?;
   let output = gpg_command(&homedir)
@@ -217,10 +225,7 @@ pub fn export_public_key_armored(fingerprint: &str) -> Result<String> {
     .output()
     .context("failed to run gpg --export")?;
 
-  if !output.status.success() {
-    let stderr = String::from_utf8_lossy(&output.stderr);
-    return Err(anyhow::anyhow!("{}", sanitize_gpg_stderr(&stderr)));
-  }
+  check_gpg_output(&output)?;
   if output.stdout.is_empty() {
     return Err(anyhow::anyhow!("Aucune clef trouvée pour ce fingerprint"));
   }
@@ -270,10 +275,7 @@ pub fn export_public_key(fingerprint: &str, path: &std::path::Path) -> Result<()
     .output()
     .context("failed to run gpg --export")?;
 
-  if !output.status.success() {
-    let stderr = String::from_utf8_lossy(&output.stderr);
-    return Err(anyhow::anyhow!("{}", sanitize_gpg_stderr(&stderr)));
-  }
+  check_gpg_output(&output)?;
   if output.stdout.is_empty() {
     return Err(anyhow::anyhow!("Aucune clef trouvée pour ce fingerprint"));
   }
@@ -302,10 +304,7 @@ fn export_secret_key(fingerprint: &str, path: &std::path::Path) -> Result<()> {
     .output()
     .context("failed to run gpg --export-secret-keys")?;
 
-  if !output.status.success() {
-    let stderr = String::from_utf8_lossy(&output.stderr);
-    return Err(anyhow::anyhow!("{}", sanitize_gpg_stderr(&stderr)));
-  }
+  check_gpg_output(&output)?;
   if output.stdout.is_empty() {
     return Err(anyhow::anyhow!(
       "Aucune clef secrète trouvée pour ce fingerprint"
@@ -334,11 +333,12 @@ pub fn backup_key(
   #[cfg(unix)]
   {
     use std::os::unix::fs::PermissionsExt;
-    if let Ok(meta) = std::fs::metadata(&secret_path) {
-      let mut perms = meta.permissions();
-      perms.set_mode(0o600);
-      let _ = std::fs::set_permissions(&secret_path, perms);
-    }
+    let meta =
+      std::fs::metadata(&secret_path).context("failed to read metadata for secret key file")?;
+    let mut perms = meta.permissions();
+    perms.set_mode(0o600);
+    std::fs::set_permissions(&secret_path, perms)
+      .context("failed to set permissions on secret key file")?;
   }
 
   let homedir = gnupg_dir()?;
@@ -643,10 +643,7 @@ pub fn import_key_from_text(content: &str) -> Result<()> {
       .context("failed to write to stdin")?;
   }
   let output = child.wait_with_output().context("failed to wait for gpg")?;
-  if !output.status.success() {
-    let stderr = String::from_utf8_lossy(&output.stderr);
-    return Err(anyhow::anyhow!("{}", sanitize_gpg_stderr(&stderr)));
-  }
+  check_gpg_output(&output)?;
   Ok(())
 }
 
@@ -670,10 +667,7 @@ pub fn import_key_from_keyserver(query: &str, keyserver_url: &str) -> Result<()>
       .args(["--keyserver", &keyserver_url, "--recv-keys", query])
       .output()
       .context("failed to run gpg --recv-keys")?;
-    if !output.status.success() {
-      let stderr = String::from_utf8_lossy(&output.stderr);
-      return Err(anyhow::anyhow!("{}", sanitize_gpg_stderr(&stderr)));
-    }
+    check_gpg_output(&output)?;
     Ok(())
   }
 }
@@ -681,14 +675,12 @@ pub fn import_key_from_keyserver(query: &str, keyserver_url: &str) -> Result<()>
 pub fn import_key(path: &std::path::Path) -> Result<()> {
   let homedir = gnupg_dir()?;
   let output = gpg_command(&homedir)
-    .args(["--import", &path.to_string_lossy()])
+    .args(["--import", "--"])
+    .arg(path)
     .output()
     .context("failed to run gpg --import")?;
 
-  if !output.status.success() {
-    let stderr = String::from_utf8_lossy(&output.stderr);
-    return Err(anyhow::anyhow!("{}", sanitize_gpg_stderr(&stderr)));
-  }
+  check_gpg_output(&output)?;
   Ok(())
 }
 
@@ -1050,12 +1042,94 @@ fn resolve_signer_trust(signer_fp: &Option<String>) -> TrustLevel {
     .unwrap_or(TrustLevel::Undefined)
 }
 
+fn has_gnupg_token(stdout: &str, token: &str) -> bool {
+  stdout.lines().any(|l| {
+    let mut f = l.split_whitespace();
+    f.next() == Some("[GNUPG:]") && f.next() == Some(token)
+  })
+}
+
+fn parse_verify_status(stdout: &str, stderr: &str) -> super::types::VerifyResult {
+  use super::types::{TrustLevel, VerifyOutcome, VerifyResult};
+  let detail = format!("{stdout}{stderr}").trim().to_string();
+
+  let has_goodsig = has_gnupg_token(stdout, "GOODSIG");
+  let has_validsig = has_gnupg_token(stdout, "VALIDSIG");
+
+  let outcome = if has_goodsig && has_validsig {
+    VerifyOutcome::Valid
+  } else if stdout.lines().any(|l| {
+    let mut f = l.split_whitespace();
+    f.next() == Some("[GNUPG:]") && matches!(f.next(), Some("NO_PUBKEY") | Some("ERRSIG"))
+  }) {
+    VerifyOutcome::UnknownKey
+  } else if has_gnupg_token(stdout, "EXPKEYSIG") {
+    VerifyOutcome::ExpiredKey
+  } else if has_gnupg_token(stdout, "REVKEYSIG") {
+    VerifyOutcome::RevokedKey
+  } else if has_gnupg_token(stdout, "BADSIG") {
+    VerifyOutcome::BadSig
+  } else {
+    VerifyOutcome::Error(detail.clone())
+  };
+
+  // VALIDSIG émet le fingerprint 40 hex en champ 2 (fingerprint complet de la sous-clef).
+  // BADSIG/EXPKEYSIG/REVKEYSIG/GOODSIG émettent seulement le key ID 16 hex en champ 2.
+  let signer_fp = stdout.lines().find_map(|line| {
+    let fields: Vec<&str> = line.split_whitespace().collect();
+    if fields.len() >= 3 && fields[0] == "[GNUPG:]" && fields[1] == "VALIDSIG" {
+      let fp = fields[2];
+      if fp.len() == 40 && fp.chars().all(|c| c.is_ascii_hexdigit()) {
+        Some(fp.to_string())
+      } else {
+        None
+      }
+    } else {
+      None
+    }
+  });
+
+  // Tokens GOODSIG, BADSIG, EXPKEYSIG, REVKEYSIG : `[GNUPG:] <TOKEN> <keyid> <name...>`
+  let signer_name = stdout.lines().find_map(|line| {
+    for token in ["GOODSIG", "BADSIG", "EXPKEYSIG", "REVKEYSIG"] {
+      let prefix = format!("[GNUPG:] {token} ");
+      if let Some(rest) = line.strip_prefix(&prefix) {
+        let mut parts = rest.splitn(2, ' ');
+        parts.next();
+        return parts.next().map(str::to_string);
+      }
+    }
+    None
+  });
+
+  // VALIDSIG format: [GNUPG:] VALIDSIG <fp> <date> <timestamp_unix> ...
+  // fields[4] is the unix timestamp (fields[3] is the ISO date string).
+  let signed_at = stdout.lines().find_map(|line| {
+    let fields: Vec<&str> = line.split_whitespace().collect();
+    if fields.len() >= 5 && fields[0] == "[GNUPG:]" && fields[1] == "VALIDSIG" {
+      if let Ok(ts) = fields[4].parse::<i64>() {
+        use chrono::TimeZone;
+        let dt = chrono::Utc.timestamp_opt(ts, 0).single()?;
+        return Some(dt.format("%Y-%m-%d %H:%M UTC").to_string());
+      }
+    }
+    None
+  });
+
+  VerifyResult {
+    outcome,
+    signer_name,
+    signer_fp,
+    signed_at,
+    detail,
+    signer_trust: TrustLevel::Undefined,
+  }
+}
+
 pub fn verify_signature(
   file: PathBuf,
   sig_file: Option<PathBuf>,
 ) -> Result<super::types::VerifyResult> {
-  use super::types::{VerifyOutcome, VerifyResult};
-
   let homedir = gnupg_dir()?;
   let sig = match sig_file {
     Some(s) => s,
@@ -1070,7 +1144,7 @@ pub fn verify_signature(
   }
 
   let out = gpg_command(&homedir)
-    .args(["--batch", "--status-fd", "1", "--verify"])
+    .args(["--batch", "--status-fd", "1", "--verify", "--"])
     .arg(&sig)
     .arg(&file)
     .output()
@@ -1078,97 +1152,24 @@ pub fn verify_signature(
 
   let stdout = String::from_utf8_lossy(&out.stdout).to_string();
   let stderr = String::from_utf8_lossy(&out.stderr).to_string();
-  let detail = format!("{stdout}{stderr}").trim().to_string();
 
-  let has_goodsig = stdout.lines().any(|l| {
-    let mut f = l.split_whitespace();
-    f.next() == Some("[GNUPG:]") && f.next() == Some("GOODSIG")
-  });
-  let has_validsig = stdout.lines().any(|l| {
-    let mut f = l.split_whitespace();
-    f.next() == Some("[GNUPG:]") && f.next() == Some("VALIDSIG")
-  });
-
-  let outcome = if has_goodsig && has_validsig {
-    VerifyOutcome::Valid
-  } else if stdout.lines().any(|l| {
-    let mut f = l.split_whitespace();
-    f.next() == Some("[GNUPG:]") && matches!(f.next(), Some("NO_PUBKEY") | Some("ERRSIG"))
-  }) {
-    VerifyOutcome::UnknownKey
-  } else if stdout.lines().any(|l| {
-    let mut f = l.split_whitespace();
-    f.next() == Some("[GNUPG:]") && f.next() == Some("EXPKEYSIG")
-  }) {
-    VerifyOutcome::ExpiredKey
-  } else if stdout.lines().any(|l| {
-    let mut f = l.split_whitespace();
-    f.next() == Some("[GNUPG:]") && f.next() == Some("REVKEYSIG")
-  }) {
-    VerifyOutcome::RevokedKey
-  } else if stdout.lines().any(|l| {
-    let mut f = l.split_whitespace();
-    f.next() == Some("[GNUPG:]") && f.next() == Some("BADSIG")
-  }) {
-    VerifyOutcome::BadSig
-  } else {
-    VerifyOutcome::Error(detail.clone())
-  };
-
-  // VALIDSIG émet le fingerprint 40 hex en champ 2 (fingerprint complet de la sous-clef).
-  // BADSIG/EXPKEYSIG/REVKEYSIG/GOODSIG émettent seulement le key ID 16 hex en champ 2.
-  let signer_fp = stdout.lines().find_map(|line| {
-    let fields: Vec<&str> = line.split_whitespace().collect();
-    if fields.len() >= 3 && fields[0] == "[GNUPG:]" && fields[1] == "VALIDSIG" {
-      Some(fields[2].to_string())
-    } else {
-      None
-    }
-  });
-
-  // Tokens GOODSIG, BADSIG, EXPKEYSIG, REVKEYSIG : `[GNUPG:] <TOKEN> <keyid> <name...>`
-  let signer_name = stdout.lines().find_map(|line| {
-    let tokens = ["GOODSIG", "BADSIG", "EXPKEYSIG", "REVKEYSIG"];
-    for token in tokens {
-      let prefix = format!("[GNUPG:] {token} ");
-      if let Some(rest) = line.strip_prefix(&prefix) {
-        let mut parts = rest.splitn(2, ' ');
-        parts.next();
-        return parts.next().map(str::to_string);
-      }
-    }
-    None
-  });
-
-  let signed_at = stdout.lines().find_map(|line| {
-    let fields: Vec<&str> = line.split_whitespace().collect();
-    if fields.len() >= 4 && fields[0] == "[GNUPG:]" && fields[1] == "VALIDSIG" {
-      if let Ok(ts) = fields[3].parse::<i64>() {
-        use chrono::TimeZone;
-        let dt = chrono::Utc.timestamp_opt(ts, 0).single()?;
-        return Some(dt.format("%Y-%m-%d %H:%M UTC").to_string());
-      }
-    }
-    None
-  });
-
-  let signer_trust = resolve_signer_trust(&signer_fp);
-
-  Ok(VerifyResult {
-    outcome,
-    signer_name,
-    signer_fp,
-    signed_at,
-    detail,
-    signer_trust,
-  })
+  let mut result = parse_verify_status(&stdout, &stderr);
+  result.signer_trust = resolve_signer_trust(&result.signer_fp);
+  Ok(result)
 }
 
 pub fn inspect_decrypt(file: &std::path::Path) -> Result<super::types::DecryptStatus> {
   use super::types::DecryptStatus;
   let homedir = gnupg_dir()?;
   let out = gpg_command(&homedir)
-    .args(["--batch", "--status-fd", "1", "--list-only", "--decrypt"])
+    .args([
+      "--batch",
+      "--status-fd",
+      "1",
+      "--list-only",
+      "--decrypt",
+      "--",
+    ])
     .arg(file)
     .output()
     .context("failed to run gpg --list-only --decrypt")?;
@@ -1281,6 +1282,7 @@ pub fn decrypt_files(files: &[PathBuf]) -> Result<Vec<String>> {
     cmd.arg("--yes");
     cmd.arg("--output").arg(&candidate);
     cmd.arg("--decrypt");
+    cmd.arg("--");
     cmd.arg(file);
 
     let out = cmd.output().context("failed to run gpg --decrypt")?;
@@ -1303,4 +1305,228 @@ pub fn decrypt_files(files: &[PathBuf]) -> Result<Vec<String>> {
   }
 
   Ok(results)
+}
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+
+  // ── validate_fp ──────────────────────────────────────────────────────────
+
+  #[test]
+  fn fp_valid_40_uppercase_hex() {
+    assert!(validate_fp("A1B2C3D4E5F6A1B2C3D4E5F6A1B2C3D4E5F6A1B2").is_ok());
+  }
+
+  #[test]
+  fn fp_valid_40_lowercase_hex() {
+    assert!(validate_fp("a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2").is_ok());
+  }
+
+  #[test]
+  fn fp_valid_40_mixed_case() {
+    assert!(validate_fp("A1b2C3d4E5f6A1b2C3d4E5f6A1b2C3d4E5f6A1b2").is_ok());
+  }
+
+  #[test]
+  fn fp_invalid_too_short() {
+    assert!(validate_fp("A1B2C3D4E5F6A1B2C3D4E5F6A1B2C3D4E5F6A1").is_err()); // 39 chars
+  }
+
+  #[test]
+  fn fp_invalid_too_long() {
+    assert!(validate_fp("A1B2C3D4E5F6A1B2C3D4E5F6A1B2C3D4E5F6A1B2X").is_err()); // 41 chars
+  }
+
+  #[test]
+  fn fp_invalid_non_hex_char() {
+    assert!(validate_fp("A1B2C3D4E5F6A1B2C3D4E5F6A1B2C3D4E5F6A1GG").is_err());
+  }
+
+  #[test]
+  fn fp_invalid_empty() {
+    assert!(validate_fp("").is_err());
+  }
+
+  #[test]
+  fn fp_invalid_with_spaces() {
+    assert!(validate_fp("A1B2 C3D4 E5F6 A1B2 C3D4 E5F6 A1B2 C3D4 E5F6 A1B2").is_err());
+  }
+
+  // ── validate_keyserver_url ───────────────────────────────────────────────
+
+  #[test]
+  fn keyserver_url_openpgp_ok() {
+    assert!(validate_keyserver_url("https://keys.openpgp.org").is_ok());
+  }
+
+  #[test]
+  fn keyserver_url_ubuntu_ok() {
+    assert!(validate_keyserver_url("https://keyserver.ubuntu.com").is_ok());
+  }
+
+  #[test]
+  fn keyserver_url_trailing_slash_ok() {
+    // La fonction trim_end_matches('/') doit accepter les slashes traînants.
+    assert!(validate_keyserver_url("https://keys.openpgp.org/").is_ok());
+  }
+
+  #[test]
+  fn keyserver_url_http_rejected() {
+    assert!(validate_keyserver_url("http://keys.openpgp.org").is_err());
+  }
+
+  #[test]
+  fn keyserver_url_unknown_host_rejected() {
+    assert!(validate_keyserver_url("https://evil.example.com").is_err());
+  }
+
+  #[test]
+  fn keyserver_url_empty_rejected() {
+    assert!(validate_keyserver_url("").is_err());
+  }
+
+  // ── validate_keyserver_query ─────────────────────────────────────────────
+
+  #[test]
+  fn keyserver_query_full_fp_ok() {
+    assert!(validate_keyserver_query("A1B2C3D4E5F6A1B2C3D4E5F6A1B2C3D4E5F6A1B2").is_ok());
+  }
+
+  #[test]
+  fn keyserver_query_long_id_ok() {
+    assert!(validate_keyserver_query("DEADBEEF12345678").is_ok()); // 16 hex
+  }
+
+  #[test]
+  fn keyserver_query_email_ok() {
+    assert!(validate_keyserver_query("alice@example.com").is_ok());
+  }
+
+  #[test]
+  fn keyserver_query_email_with_plus_ok() {
+    assert!(validate_keyserver_query("alice+pgp@example.com").is_ok());
+  }
+
+  #[test]
+  fn keyserver_query_short_id_rejected() {
+    // 8 hex (short ID) n'est plus accepté — trop ambiguë.
+    assert!(validate_keyserver_query("DEADBEEF").is_err());
+  }
+
+  #[test]
+  fn keyserver_query_illegal_chars_rejected() {
+    assert!(validate_keyserver_query("alice; rm -rf /").is_err());
+  }
+
+  #[test]
+  fn keyserver_query_empty_rejected() {
+    assert!(validate_keyserver_query("").is_err());
+  }
+
+  // ── parse_verify_status ───────────────────────────────────────────────────
+
+  #[test]
+  fn parse_verify_valid_signature() {
+    let stdout = "\
+[GNUPG:] GOODSIG DEADBEEF12345678 Alice Dupont <alice@example.com>\n\
+[GNUPG:] VALIDSIG A1B2C3D4E5F6A1B2C3D4AAAA1234567890ABCDEF 2024-01-15 1705296000 0 4 0 22 8 00 A1B2C3D4E5F6A1B2C3D4E5F6A1B2C3D4E5F6A1B2\n\
+[GNUPG:] TRUST_FULL 0 pgp\n";
+    let result = parse_verify_status(stdout, "");
+    assert_eq!(result.outcome, super::super::types::VerifyOutcome::Valid);
+    assert_eq!(
+      result.signer_fp.as_deref(),
+      Some("A1B2C3D4E5F6A1B2C3D4AAAA1234567890ABCDEF")
+    );
+    assert_eq!(
+      result.signer_name.as_deref(),
+      Some("Alice Dupont <alice@example.com>")
+    );
+    assert!(result.signed_at.is_some());
+  }
+
+  #[test]
+  fn parse_verify_bad_signature() {
+    let stdout = "\
+[GNUPG:] BADSIG DEADBEEF12345678 Alice Dupont <alice@example.com>\n";
+    let result = parse_verify_status(stdout, "");
+    assert_eq!(result.outcome, super::super::types::VerifyOutcome::BadSig);
+    assert!(result.signer_fp.is_none());
+    assert_eq!(
+      result.signer_name.as_deref(),
+      Some("Alice Dupont <alice@example.com>")
+    );
+  }
+
+  #[test]
+  fn parse_verify_unknown_key() {
+    let stdout = "\
+[GNUPG:] NO_PUBKEY DEADBEEF12345678\n\
+[GNUPG:] ERRSIG DEADBEEF12345678 22 8 00 1705296000 9\n";
+    let result = parse_verify_status(stdout, "");
+    assert_eq!(
+      result.outcome,
+      super::super::types::VerifyOutcome::UnknownKey
+    );
+    assert!(result.signer_fp.is_none());
+    assert!(result.signer_name.is_none());
+  }
+
+  #[test]
+  fn parse_verify_expired_key() {
+    let stdout = "\
+[GNUPG:] EXPKEYSIG DEADBEEF12345678 Alice Dupont <alice@example.com>\n";
+    let result = parse_verify_status(stdout, "");
+    assert_eq!(
+      result.outcome,
+      super::super::types::VerifyOutcome::ExpiredKey
+    );
+    assert_eq!(
+      result.signer_name.as_deref(),
+      Some("Alice Dupont <alice@example.com>")
+    );
+  }
+
+  #[test]
+  fn parse_verify_revoked_key() {
+    let stdout = "\
+[GNUPG:] REVKEYSIG DEADBEEF12345678 Alice Dupont <alice@example.com>\n";
+    let result = parse_verify_status(stdout, "");
+    assert_eq!(
+      result.outcome,
+      super::super::types::VerifyOutcome::RevokedKey
+    );
+  }
+
+  #[test]
+  fn parse_verify_empty_stdout_returns_error() {
+    let result = parse_verify_status("", "gpg: some error");
+    assert!(matches!(
+      result.outcome,
+      super::super::types::VerifyOutcome::Error(_)
+    ));
+    assert!(result.signer_fp.is_none());
+  }
+
+  #[test]
+  fn parse_verify_validsig_timestamp_parsed() {
+    // ts = 1705296000 → 2024-01-15
+    let stdout = "\
+[GNUPG:] GOODSIG DEADBEEF12345678 Alice\n\
+[GNUPG:] VALIDSIG ABCDEF1234567890ABCDEF1234567890ABCDEF12 2024-01-15 1705296000 0 4 0 22 8 00 ABCDEF1234567890ABCDEF1234567890ABCDEF12\n";
+    let result = parse_verify_status(stdout, "");
+    assert!(result
+      .signed_at
+      .as_deref()
+      .map(|s| s.contains("2024-01-15"))
+      .unwrap_or(false));
+  }
+
+  #[test]
+  fn parse_verify_goodsig_without_validsig_is_error() {
+    // GOODSIG seul sans VALIDSIG ne doit pas être considéré comme valide.
+    let stdout = "[GNUPG:] GOODSIG DEADBEEF12345678 Alice\n";
+    let result = parse_verify_status(stdout, "");
+    assert_ne!(result.outcome, super::super::types::VerifyOutcome::Valid);
+  }
 }

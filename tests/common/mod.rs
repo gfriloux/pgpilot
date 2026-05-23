@@ -1,7 +1,13 @@
 #![allow(dead_code)]
 use std::io::Write;
 use std::process::{Command, Stdio};
+use std::sync::Mutex;
 use tempfile::TempDir;
+
+/// Mutex partagé pour sérialiser les tests qui modifient des variables
+/// d'environnement (ex. GNUPGHOME). Chaque fichier de test est un binaire
+/// séparé, donc ce lock protège uniquement les threads au sein du même binaire.
+pub static ENV_LOCK: Mutex<()> = Mutex::new(());
 
 pub fn setup_test_gnupghome() -> (TempDir, String) {
   let dir = TempDir::new().expect("tempdir");

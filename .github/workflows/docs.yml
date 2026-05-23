@@ -29,8 +29,8 @@ jobs:
         uses: actions/cache@v5
         with:
           path: docs/node_modules
-          key: docs-node-${{ hashFiles('docs/package.json') }}
-      - run: cd docs && npm install && npm run build
+          key: docs-node-${{ hashFiles('docs/package-lock.json') }}
+      - run: cd docs && npm ci && npm run build
       - uses: actions/upload-pages-artifact@v5
         with:
           path: docs/dist

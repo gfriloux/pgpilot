@@ -21,21 +21,21 @@ const MOCK_KEYS: KeyInfo[] = [
         key_id: 'B1B2C3D4E5F6B1B2',
         algo: 'ed25519',
         usage: 'S',
-        expires: '2025-01-15',
+        expires: '2028-01-15',
       },
       {
         fingerprint: 'C1B2C3D4E5F6A1B2C3D4E5F6A1B2C3D4E5F6C1B2',
         key_id: 'C1B2C3D4E5F6C1B2',
         algo: 'cv25519',
         usage: 'E',
-        expires: '2025-01-15',
+        expires: '2028-01-15',
       },
       {
         fingerprint: 'D1B2C3D4E5F6A1B2C3D4E5F6A1B2C3D4E5F6D1B2',
         key_id: 'D1B2C3D4E5F6D1B2',
         algo: 'ed25519',
         usage: 'A',
-        expires: '2025-01-15',
+        expires: '2028-01-15',
       },
     ],
   },
@@ -46,7 +46,7 @@ const MOCK_KEYS: KeyInfo[] = [
     email: 'bob@example.org',
     algo: 'rsa4096',
     created: '2021-06-01',
-    expires: '2026-06-01',
+    expires: '2028-06-01',
     has_secret: false,
     on_card: false,
     card_serial: null,
@@ -57,14 +57,14 @@ const MOCK_KEYS: KeyInfo[] = [
         key_id: '2234567890ABCDEF',
         algo: 'rsa4096',
         usage: 'S',
-        expires: '2026-06-01',
+        expires: '2028-06-01',
       },
       {
         fingerprint: '3234567890ABCDEF1234567890ABCDEF32345678',
         key_id: '3234567890ABCDEF',
         algo: 'rsa4096',
         usage: 'E',
-        expires: '2026-06-01',
+        expires: '2028-06-01',
       },
     ],
   },
@@ -118,7 +118,6 @@ export async function invoke<T>(
     case 'list_keys':
       return MOCK_KEYS as T;
 
-    case 'get_card_info':
     case 'card_status':
       return null as T;
 
@@ -177,16 +176,21 @@ export async function invoke<T>(
     case 'sign_file_cmd':
       return '/tmp/file.txt.sig' as T;
 
-    // Verify
-    case 'verify_signature_cmd':
-      return {
-        outcome: 'valid',
-        signer_name: 'Alice Dupont',
-        signer_fp: 'A1B2C3D4E5F6A1B2C3D4E5F6A1B2C3D4E5F6A1B2',
-        signed_at: '2024-01-15',
-        detail: 'Good signature',
-        signer_trust: 'ultimate',
-      } as T;
+    // Verify — file name controls the outcome in mock mode:
+    //   *.bad_sig.* → bad_sig, *.unknown_key.* → unknown_key,
+    //   *.expired.* → expired_key, *.revoked.* → revoked_key, else → valid
+    case 'verify_signature_cmd': {
+      const f = (_args as { file: string }).file ?? '';
+      if (f.includes('bad_sig'))
+        return { outcome: 'bad_sig', signer_name: null, signer_fp: null, signed_at: null, detail: 'BAD signature', signer_trust: 'unknown' } as T;
+      if (f.includes('unknown_key'))
+        return { outcome: 'unknown_key', signer_name: null, signer_fp: null, signed_at: null, detail: 'No public key', signer_trust: 'unknown' } as T;
+      if (f.includes('expired_key'))
+        return { outcome: 'expired_key', signer_name: 'Alice Dupont', signer_fp: 'A1B2C3D4E5F6A1B2C3D4E5F6A1B2C3D4E5F6A1B2', signed_at: '2022-01-01', detail: 'Key expired', signer_trust: 'full' } as T;
+      if (f.includes('revoked_key'))
+        return { outcome: 'revoked_key', signer_name: 'Alice Dupont', signer_fp: 'A1B2C3D4E5F6A1B2C3D4E5F6A1B2C3D4E5F6A1B2', signed_at: '2023-06-01', detail: 'Key revoked', signer_trust: 'undefined' } as T;
+      return { outcome: 'valid', signer_name: 'Alice Dupont', signer_fp: 'A1B2C3D4E5F6A1B2C3D4E5F6A1B2C3D4E5F6A1B2', signed_at: '2024-01-15', detail: 'Good signature', signer_trust: 'ultimate' } as T;
+    }
 
     // Health
     case 'run_health_checks_cmd':
@@ -230,7 +234,7 @@ export async function invoke<T>(
 
     case 'chat_create_room':
       return {
-        id: 'mock-room-1',
+        id: 'mock-room-' + Math.random().toString(36).slice(2),
         name: (_args as { name: string }).name,
         relay: 'mqtts://broker.hivemq.com:8883',
         my_fp: 'A1B2C3D4E5F6A1B2C3D4E5F6A1B2C3D4E5F6A1B2',

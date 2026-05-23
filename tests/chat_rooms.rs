@@ -11,18 +11,10 @@
 
 #![allow(dead_code)]
 
-use std::sync::Mutex;
+mod common;
 
 use pgpilot::chat::rooms::JoinCode;
 use pgpilot::chat::{ChatError, Room, RoomParticipant, RoomStore};
-
-// ---------------------------------------------------------------------------
-// Mutex de sérialisation des tests manipulant des variables d'environnement.
-// `std::env::set_var` est non thread-safe ; les tests env-sensibles doivent
-// s'exécuter séquentiellement.
-// ---------------------------------------------------------------------------
-
-static ENV_LOCK: Mutex<()> = Mutex::new(());
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -319,7 +311,7 @@ fn join_code_sign_and_verify_roundtrip() {
 fn room_store_load_returns_default_if_file_absent() {
   // Pointer XDG_CONFIG_HOME vers un répertoire temporaire vide pour que
   // rooms.yaml n'existe pas.
-  let _guard = ENV_LOCK.lock().expect("ENV_LOCK empoisonné");
+  let _guard = common::ENV_LOCK.lock().expect("ENV_LOCK empoisonné");
 
   let tmp = tempfile::TempDir::new().expect("tempdir");
   // `dirs::config_dir()` lit XDG_CONFIG_HOME en priorité sur Linux.
@@ -349,7 +341,7 @@ fn room_store_load_returns_default_if_file_absent() {
 #[test]
 fn room_store_load_rejects_oversized_file() {
   // Créer un fichier rooms.yaml > 1 Mio dans un répertoire temporaire.
-  let _guard = ENV_LOCK.lock().expect("ENV_LOCK empoisonné");
+  let _guard = common::ENV_LOCK.lock().expect("ENV_LOCK empoisonné");
 
   let tmp = tempfile::TempDir::new().expect("tempdir");
   let config_dir = tmp.path().join("pgpilot");
