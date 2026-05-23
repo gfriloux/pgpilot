@@ -93,8 +93,7 @@ jobs:
           git pull --rebase origin main
           nix develop --command git-cliff --output CHANGELOG.md
           git add CHANGELOG.md
-          git commit -m "chore(release): update CHANGELOG.md for ${{ github.ref_name }}"
-          git push origin main
+          git diff --cached --quiet || (git commit -m "chore(release): update CHANGELOG.md for ${{ github.ref_name }}" && git push origin main)
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v3
