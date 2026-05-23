@@ -19,6 +19,9 @@ jobs:
 
       - name: Install Nix
         uses: DeterminateSystems/nix-installer-action@v22
+        with:
+          extra-conf: |
+            access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
 
       - name: Cache Nix store
         uses: DeterminateSystems/magic-nix-cache-action@v13
@@ -84,11 +87,11 @@ jobs:
 
       - name: Update CHANGELOG.md
         run: |
-          nix develop --command git-cliff --output CHANGELOG.md
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git checkout main
           git pull --rebase origin main
+          nix develop --command git-cliff --output CHANGELOG.md
           git add CHANGELOG.md
           git commit -m "chore(release): update CHANGELOG.md for ${{ github.ref_name }}"
           git push origin main
