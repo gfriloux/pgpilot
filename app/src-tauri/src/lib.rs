@@ -107,7 +107,18 @@ async fn export_public_key_armored(fp: String) -> Result<String, String> {
 #[tauri::command]
 async fn export_public_key_to_file(fp: String, dest_path: String) -> Result<(), String> {
   tokio::task::spawn_blocking(move || {
-    export_public_key(&fp, Path::new(&dest_path)).map_err(|e| e.to_string())
+    validate_fp(&fp).map_err(|e| e.to_string())?;
+    let p = Path::new(&dest_path);
+    let parent = p.parent().ok_or("invalid destination path")?;
+    let canon_parent =
+      std::fs::canonicalize(parent).map_err(|e| format!("Invalid destination directory: {e}"))?;
+    if !canon_parent.is_dir() {
+      return Err("destination parent is not a directory".to_string());
+    }
+    let file_name = p
+      .file_name()
+      .ok_or("missing file name in destination path")?;
+    export_public_key(&fp, &canon_parent.join(file_name)).map_err(|e| e.to_string())
   })
   .await
   .map_err(|e| e.to_string())?
@@ -121,10 +132,7 @@ async fn export_public_key_to_file(fp: String, dest_path: String) -> Result<(), 
 #[tauri::command]
 async fn backup_key(fp: String, dest_dir: String) -> Result<Vec<String>, String> {
   tokio::task::spawn_blocking(move || {
-    // Derive the key_id (last 16 hex chars of the fingerprint).
-    if fp.len() < 16 {
-      return Err("fingerprint too short".to_string());
-    }
+    validate_fp(&fp).map_err(|e| e.to_string())?;
     let key_id = fp[fp.len() - 16..].to_string();
 
     // Canonicalize and verify the destination directory to prevent path traversal
@@ -133,9 +141,8 @@ async fn backup_key(fp: String, dest_dir: String) -> Result<Vec<String>, String>
     if !canon_dir.is_dir() {
       return Err("Destination is not a directory".to_string());
     }
-    let dir = canon_dir;
 
-    gpg_backup_key(&fp, &dir, &key_id)
+    gpg_backup_key(&fp, &canon_dir, &key_id)
       .map(|(secret_name, rev_name)| {
         let mut files = vec![secret_name];
         if let Some(rev) = rev_name {
@@ -332,6 +339,9 @@ async fn encrypt_files_cmd(
   force_trust: bool,
 ) -> Result<Vec<String>, String> {
   tokio::task::spawn_blocking(move || {
+    for fp in &recipients {
+      validate_fp(fp).map_err(|e| e.to_string())?;
+    }
     let paths: Vec<std::path::PathBuf> = files.iter().map(std::path::PathBuf::from).collect();
     gpg_encrypt_files(&paths, &recipients, armor, force_trust).map_err(|e| e.to_string())
   })

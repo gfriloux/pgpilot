@@ -72,3 +72,18 @@ test('placeholder is shown when no key is selected', async ({ page }) => {
   // No key selected initially
   await expect(page.getByText(/Select a key/i)).toBeVisible();
 });
+
+test('Alice detail — Backup button triggers success toast', async ({ page }) => {
+  const list = page.getByRole('listbox', { name: 'My keys' });
+  await list.getByText('Alice Dupont').click();
+  await expect(page.locator('h2')).toContainText('Alice Dupont');
+
+  // The Backup button is in the KeyDetail panel — visible for keys with has_secret
+  await page.getByRole('button', { name: /^Backup$/i }).click();
+
+  // mock open({ directory: true }) returns /tmp/mock-backup-dir automatically
+  // mock backup_key returns ['ABCDEF12_secret.asc', 'ABCDEF12_revocation.rev']
+  const toast = page.getByRole('status');
+  await expect(toast).toBeVisible({ timeout: 5000 });
+  await expect(toast).toContainText('Backup');
+});

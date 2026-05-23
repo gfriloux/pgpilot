@@ -87,9 +87,10 @@ jobs:
           nix develop --command git-cliff --output CHANGELOG.md
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout main
           git add CHANGELOG.md
           git commit -m "chore(release): update CHANGELOG.md for ${{ github.ref_name }}"
-          git push origin HEAD:main
+          git push origin main
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v3

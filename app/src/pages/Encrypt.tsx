@@ -84,7 +84,13 @@ export default function Encrypt() {
     if (untrusted > 0) {
       setShowTrustModal(true);
     } else {
-      runEncrypt(false);
+      // Keys with trust 'full' (set via --import-ownertrust) are not validated
+      // through GPG's web of trust — pass --trust-model always so GPG accepts them.
+      const needsForceTrust = [...selectedFps].some((fp) => {
+        const k = keys.find((x) => x.fingerprint === fp);
+        return k?.trust === 'full';
+      });
+      runEncrypt(needsForceTrust);
     }
   }
 

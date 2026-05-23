@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { open } from '@tauri-apps/plugin-dialog';
 import { useKeys } from '../hooks/useKeys';
 import { useKeysStore } from '../store/keys';
 import { useUiStore } from '../store/ui';
-import { cardStatus, checkKeyserver } from '../ipc/keys';
+import { cardStatus, checkKeyserver, backupKey } from '../ipc/keys';
 import type { KeyInfo } from '../types/ipc';
 import { Button } from '../components/Button';
 import { KeyListRow } from '../components/KeyListRow';
@@ -40,6 +41,7 @@ export default function MyKeys() {
   const setStatus = useUiStore((s) => s.setStatus);
 
   const [cardConnected, setCardConnected] = useState(false);
+  const [backupLoading, setBackupLoading] = useState(false);
   const [keyserverStatuses, setKeyserverStatuses] = useState<Record<string, boolean>>({});
   const checkedFps = useRef<Set<string>>(new Set());
 
@@ -69,8 +71,17 @@ export default function MyKeys() {
 
   const expiringSoon = findExpiringSoon(keys);
 
-  function handleBackup(fp: string): void {
-    setStatus('info', `Backup: file dialog not yet implemented for ${fp.slice(0, 8)}…`);
+  async function handleBackup(fp: string): Promise<void> {
+    const dir = await open({ directory: true });
+    if (dir === null || Array.isArray(dir)) return;
+    setBackupLoading(true);
+    backupKey(fp, dir)
+      .then((files) => { setStatus('success', `Backup saved: ${files.join(', ')}`); })
+      .catch((err: unknown) => {
+        const msg = err instanceof Error ? err.message : String(err);
+        setStatus('error', `Backup failed: ${msg}`);
+      })
+      .finally(() => { setBackupLoading(false); });
   }
 
   function handleAfterDelete(): void {
@@ -168,10 +179,12 @@ export default function MyKeys() {
       <div className={styles.detailPanel}>
         {selectedKey !== null ? (
           <KeyDetail
+            key={selectedKey.fingerprint}
             keyInfo={selectedKey}
             bannerN={25}
             cardConnected={cardConnected}
             onBackup={handleBackup}
+            backupLoading={backupLoading}
             onAfterDelete={handleAfterDelete}
             onReload={reload}
           />
@@ -181,6 +194,7 @@ export default function MyKeys() {
           </div>
         )}
       </div>
+
     </div>
   );
 }

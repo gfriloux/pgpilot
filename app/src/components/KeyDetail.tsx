@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
+import { open } from '@tauri-apps/plugin-dialog';
 import type { KeyInfo, SubkeyInfo, TrustLevel } from '../types/ipc';
 import { formatDate, formatFp } from '../utils/format';
 import {
-  exportPublicKeyArmored,
+  exportPublicKeyToFile,
   deleteKey,
   publishKey,
   moveToCard,
@@ -28,7 +29,8 @@ interface KeyDetailProps {
   bannerN?: 12 | 16 | 17 | 18 | 19 | 20 | 23 | 24 | 25 | 26 | 27 | 29;
   /** Whether a YubiKey/smartcard is currently connected */
   cardConnected?: boolean;
-  onBackup: (fp: string) => void;
+  onBackup: (fp: string) => void | Promise<void>;
+  backupLoading?: boolean;
   /** Called after a successful delete so the parent can navigate away */
   onAfterDelete: () => void;
   /** Called after any mutation so the parent can reload the key list */
@@ -98,6 +100,7 @@ export function KeyDetail({
   bannerN,
   cardConnected = false,
   onBackup,
+  backupLoading = false,
   onAfterDelete,
   onReload,
 }: KeyDetailProps) {
@@ -112,11 +115,6 @@ export function KeyDetail({
   const [revCertGenerating, setRevCertGenerating] = useState(false);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setKsPublished(null);
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setRevCertPath(undefined);
-
     checkKeyserver(fp)
       .then(setKsPublished)
       .catch(() => { setKsPublished(null); });
@@ -156,18 +154,20 @@ export function KeyDetail({
     keyInfo.trust === 'ultimate' ? 'full' : (keyInfo.trust as 'undefined' | 'marginal' | 'full'),
   );
 
-  // ── Export public key → clipboard ────────────────────────────────
-  function handleExportPublic(): void {
-    exportPublicKeyArmored(fp)
-      .then((armored) =>
-        navigator.clipboard.writeText(armored).then(() => {
-          setStatus('success', 'Public key copied to clipboard.');
-        }),
-      )
+  // ── Export public key — directory picker, filename auto-generated ─
+  async function handleExportPublic(): Promise<void> {
+    const dir = await open({ directory: true });
+    if (dir === null || Array.isArray(dir)) return;
+    const fileName = `${fp.slice(-16)}.asc`;
+    const destPath = `${dir}/${fileName}`;
+    setActionLoading(true);
+    exportPublicKeyToFile(fp, destPath)
+      .then(() => { setStatus('success', `Exported to ${destPath}`); })
       .catch((err: unknown) => {
         const msg = err instanceof Error ? err.message : String(err);
         setStatus('error', `Export failed: ${msg}`);
-      });
+      })
+      .finally(() => { setActionLoading(false); });
   }
 
   // ── Delete key ────────────────────────────────────────────────────
@@ -345,7 +345,7 @@ export function KeyDetail({
               <Button
                 variant="primary"
                 size="sm"
-                onClick={handleExportPublic}
+                onClick={() => { void handleExportPublic(); }}
               >
                 Export public
               </Button>
@@ -353,7 +353,8 @@ export function KeyDetail({
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => { onBackup(fp); }}
+                  loading={backupLoading}
+                  onClick={() => { void onBackup(fp); }}
                 >
                   Backup
                 </Button>
