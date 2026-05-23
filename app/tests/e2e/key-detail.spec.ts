@@ -87,3 +87,17 @@ test('switching between keys updates the detail panel', async ({ page }) => {
   await list.getByText('Charlie Moreau').click();
   await expect(page.locator('h2')).toContainText('Charlie Moreau');
 });
+
+test('Alice detail — Export public key shows success toast', async ({ page }) => {
+  const list = page.getByRole('listbox', { name: 'My keys' });
+  await list.getByText('Alice Dupont').click();
+  await expect(page.locator('h2')).toContainText('Alice Dupont');
+
+  // Click the export button — mock save() returns /tmp/mock-export-key.asc automatically
+  await page.getByRole('button', { name: /Export public/i }).click();
+
+  // Toast should appear with the exported path
+  const toast = page.getByRole('status');
+  await expect(toast).toBeVisible({ timeout: 5000 });
+  await expect(toast).toContainText('Exported');
+});

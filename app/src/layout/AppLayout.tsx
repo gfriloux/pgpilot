@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
 import {
   Key,
@@ -13,6 +13,7 @@ import {
   type LucideProps,
 } from 'lucide-react';
 import { useConfigStore } from '../store/config';
+import { useUiStore } from '../store/ui';
 import { getVersion } from '../ipc/keys';
 import { useChatEvents } from '../hooks/useChatEvents';
 import styles from './AppLayout.module.css';
@@ -59,8 +60,18 @@ const NAV_SECTIONS: NavSection[] = [
 
 export default function AppLayout() {
   const theme = useConfigStore((s) => s.theme);
+  const status = useUiStore((s) => s.status);
+  const clearStatus = useUiStore((s) => s.clearStatus);
   const [version, setVersion] = useState<string>('...');
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useChatEvents();
+
+  useEffect(() => {
+    if (status === null) return;
+    if (timerRef.current !== null) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => { clearStatus(); }, 4000);
+    return () => { if (timerRef.current !== null) clearTimeout(timerRef.current); };
+  }, [status, clearStatus]);
 
   useEffect(() => {
     document.documentElement.dataset['theme'] = theme;
@@ -106,6 +117,17 @@ export default function AppLayout() {
       <main className={styles.content}>
         <Outlet />
       </main>
+
+      {status !== null && (
+        <div
+          className={[styles.toast, styles[`toast_${status.kind}`]].join(' ')}
+          role="status"
+          aria-live="polite"
+          onClick={clearStatus}
+        >
+          {status.message}
+        </div>
+      )}
     </div>
   );
 }

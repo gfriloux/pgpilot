@@ -106,6 +106,7 @@ export default function PublicKeys() {
       <div className={styles.detailPanel}>
         {selectedKey !== null ? (
           <KeyDetail
+            key={selectedKey.fingerprint}
             keyInfo={selectedKey}
             bannerN={17}
             onBackup={handleBackup}

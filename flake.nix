@@ -17,5 +17,12 @@
       snowfall = {
         namespace = "pgpilot";
       };
+
+      outputs-builder = channels: {
+        packages.default = channels.nixpkgs.callPackage ./packages/pgpilot {
+          lib = channels.nixpkgs.lib;
+          inputs = inputs;
+        };
+      };
     };
 }

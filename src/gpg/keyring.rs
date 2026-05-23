@@ -312,7 +312,12 @@ fn export_secret_key(fingerprint: &str, path: &std::path::Path) -> Result<()> {
     ));
   }
 
-  std::fs::write(path, &output.stdout).context("failed to write key file")
+  std::fs::OpenOptions::new()
+    .write(true)
+    .create_new(true)
+    .open(path)
+    .and_then(|mut f| std::io::Write::write_all(&mut f, &output.stdout))
+    .context("failed to write key file")
 }
 
 pub fn backup_key(

@@ -19,7 +19,7 @@
 #   nix run nixpkgs#prefetch-npm-deps -- app/package-lock.json
 let
   pname = "pgpilot";
-  version = "0.8.8";
+  version = "0.8.9";
   src = inputs.self;
 in
   pkgs.rustPlatform.buildRustPackage {
@@ -36,9 +36,23 @@ in
 
     npmDeps = pkgs.fetchNpmDeps {
       src = src + "/app";
-      hash = "sha256-HWOCVvCS0xUosSjIqB9DJj54TS1nI79pr/sDiniCzoY=";
+      hash = "sha256-mdRQbWS5xWtqaGlr52IsO2q0HXSERnTTzKqRVYmFSCE=";
     };
     npmRoot = "app";
+
+    # In the Nix build, `beforeBuildCommand = "npm run build"` runs in an npm
+    # context that also sees docs/package.json (astro) and fails. We clear it
+    # and build the frontend ourselves in preBuild instead.
+    postPatch = ''
+      substituteInPlace app/src-tauri/tauri.conf.json \
+        --replace '"beforeBuildCommand": "npm run build"' '"beforeBuildCommand": ""'
+    '';
+
+    preBuild = ''
+      pushd app
+      npm run build
+      popd
+    '';
 
     # No tests: Tauri integration tests require a display
     doCheck = false;
@@ -80,6 +94,8 @@ in
     # or gpg-agent.conf.
     makeWrapperArgs = [
       "--prefix PATH : ${lib.makeBinPath [pkgs.gnupg]}"
+      "--set GTK_USE_PORTAL 1"
+      "--prefix LD_LIBRARY_PATH : ${pkgs.dbus.lib}/lib"
     ];
 
     postInstall = ''

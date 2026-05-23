@@ -12,6 +12,7 @@ export default defineConfig({
     alias: isMock
       ? {
           '@tauri-apps/api/core': path.resolve('./src/lib/mock-tauri.ts'),
+          '@tauri-apps/api/event': path.resolve('./src/lib/mock-event.ts'),
           '@tauri-apps/plugin-dialog': path.resolve('./src/lib/mock-dialog.ts'),
         }
       : {},
