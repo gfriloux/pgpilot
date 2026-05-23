@@ -20,8 +20,8 @@
 
       outputs-builder = channels: {
         packages.default = channels.nixpkgs.callPackage ./packages/pgpilot {
-          lib = channels.nixpkgs.lib;
-          inputs = inputs;
+          inherit (channels.nixpkgs) lib;
+          inherit inputs;
         };
       };
     };
