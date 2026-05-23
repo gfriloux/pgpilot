@@ -3,6 +3,15 @@
 All notable changes to pgpilot are documented here.
 Releases follow [Semantic Versioning](https://semver.org/).
 
+## [0.8.9] — 2026-05-23
+
+### Bug Fixes
+
+- **ci**: pass github token to nix in release workflow ([`1d6634d`](https://github.com/gfriloux/pgpilot/commit/1d6634d6bac1e5ae0af4e48dc70753b2dce73f54))
+
+### Features
+
+- **all**: use latest version of crates ([`36ea01e`](https://github.com/gfriloux/pgpilot/commit/36ea01e4621bac87fbce8f8c621233871dd9dfa1))
 ## [0.8.7] — 2026-05-13
 
 ### Bug Fixes
