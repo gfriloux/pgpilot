@@ -13,7 +13,10 @@ interface UseKeysResult {
 
 export function useKeys(): UseKeysResult {
   const { data, loading, error, reload } = useAsync(listKeys, []);
-  const { setKeys, setLoading, setError, keys } = useKeysStore();
+  const keys = useKeysStore((s) => s.keys);
+  const setKeys = useKeysStore((s) => s.setKeys);
+  const setLoading = useKeysStore((s) => s.setLoading);
+  const setError = useKeysStore((s) => s.setError);
 
   useEffect(() => {
     setLoading(loading);

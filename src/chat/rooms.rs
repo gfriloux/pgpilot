@@ -327,19 +327,30 @@ impl JoinCode {
       .map_err(|_| ChatError::InvalidJoinCode)?;
 
     let out = gpg_command(homedir)
-      .args([
-        "--batch",
-        "--verify",
-        sig_tmp.path().to_str().unwrap_or(""),
-        data_tmp.path().to_str().unwrap_or(""),
-      ])
+      .args(["--batch", "--status-fd", "1", "--verify", "--"])
+      .arg(sig_tmp.path())
+      .arg(data_tmp.path())
       .output()
       .map_err(|_| ChatError::JoinCodeSignatureInvalid)?;
 
-    if out.status.success() {
-      Ok(())
-    } else {
-      Err(ChatError::JoinCodeSignatureInvalid)
+    if !out.status.success() {
+      return Err(ChatError::JoinCodeSignatureInvalid);
+    }
+
+    // Extraire le fingerprint de la clef PRIMAIRE depuis la ligne VALIDSIG du status-fd.
+    // Format : [GNUPG:] VALIDSIG <fp_sous_clef> <date> <ts> ... <fp_primaire>
+    // Le dernier champ est la clef primaire — invited_by est toujours un fp de clef primaire.
+    let stdout = String::from_utf8_lossy(&out.stdout);
+    let signer_fp = stdout
+      .lines()
+      .find(|l| l.contains("[GNUPG:] VALIDSIG"))
+      .and_then(|l| l.split_whitespace().last())
+      .filter(|fp| fp.len() == 40 && fp.chars().all(|c| c.is_ascii_hexdigit()))
+      .map(|fp| fp.to_string());
+
+    match signer_fp {
+      Some(fp) if fp.eq_ignore_ascii_case(&self.invited_by) => Ok(()),
+      _ => Err(ChatError::JoinCodeSignatureInvalid),
     }
   }
 }

@@ -39,6 +39,7 @@ pub(crate) fn gpg_command(homedir: &str) -> std::process::Command {
     }
   }
   cmd.args(["--homedir", homedir]);
+  cmd.arg("--no-options");
   cmd
 }
 

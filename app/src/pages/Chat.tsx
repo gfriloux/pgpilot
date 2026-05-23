@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import React from 'react';
 import { useChatStore } from '../store/chat';
 import { useKeysStore } from '../store/keys';
 import {
@@ -95,7 +96,7 @@ interface CreateFormProps {
 
 function CreateRoomForm({ onCreated, onCancel }: CreateFormProps) {
   const allKeys = useKeysStore((s) => s.keys);
-  const secretKeys = allKeys.filter((k) => k.has_secret);
+  const secretKeys = useMemo(() => allKeys.filter((k) => k.has_secret), [allKeys]);
 
   const [name, setName] = useState('');
   const [relay, setRelay] = useState(DEFAULT_RELAY);
@@ -219,8 +220,6 @@ function RoomRow({ room, selected, onClick }: RoomRowProps) {
 }
 
 // ── Error Boundary ────────────────────────────────────────────────
-
-import React from 'react';
 
 interface ErrorBoundaryState { error: Error | null }
 
@@ -483,7 +482,8 @@ interface JoinRoomFormProps {
 }
 
 function JoinRoomForm({ onJoined, onCancel }: JoinRoomFormProps) {
-  const keys = useKeysStore((s) => s.keys).filter((k) => k.has_secret);
+  const allKeys = useKeysStore((s) => s.keys);
+  const keys = useMemo(() => allKeys.filter((k) => k.has_secret), [allKeys]);
   const [code, setCode] = useState('');
   const [myFp, setMyFp] = useState(keys[0]?.fingerprint ?? '');
   const [loading, setLoading] = useState(false);
@@ -579,8 +579,11 @@ export default function Chat() {
   }
 
   function handleDeleteRoom(roomId: string): void {
-    chatDeleteRoom(roomId).catch(() => { /* ignore */ });
+    const room = rooms.find((r) => r.id === roomId);
     deleteRoomFromStore(roomId);
+    chatDeleteRoom(roomId).catch(() => {
+      if (room !== undefined) addRoom(room);
+    });
   }
 
   function handleClose(): void {

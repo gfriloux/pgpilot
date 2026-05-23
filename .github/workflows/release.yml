@@ -93,7 +93,7 @@ jobs:
           git pull --rebase origin main
           nix develop --command git-cliff --output CHANGELOG.md
           git add CHANGELOG.md
-          git diff --cached --quiet || (git commit -m "chore(release): update CHANGELOG.md for ${{ github.ref_name }}" && git push origin main)
+          git diff --cached --quiet || (git commit -m "chore(release): update CHANGELOG.md for ${{ github.ref_name }}" && git push origin main) || true
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v3
@@ -101,5 +101,6 @@ jobs:
           body_path: RELEASE_NOTES.md
           files: |
             target/release/bundle/deb/*.deb
+            target/release/bundle/rpm/*.rpm
             target/release/bundle/appimage/*.AppImage
           fail_on_unmatched_files: false

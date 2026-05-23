@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { open } from '@tauri-apps/plugin-dialog';
 import { useKeys } from '../hooks/useKeys';
@@ -35,7 +35,7 @@ export default function MyKeys() {
   const navigate = useNavigate();
   const { loading, error, reload } = useKeys();
   const allKeys = useKeysStore((s) => s.keys);
-  const keys = allKeys.filter((k) => k.has_secret);
+  const keys = useMemo(() => allKeys.filter((k) => k.has_secret), [allKeys]);
   const selectedFp = useKeysStore((s) => s.selectedFp);
   const selectKey = useKeysStore((s) => s.selectKey);
   const setStatus = useUiStore((s) => s.setStatus);

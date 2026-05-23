@@ -74,10 +74,6 @@ export default function AppLayout() {
   }, [status, clearStatus]);
 
   useEffect(() => {
-    document.documentElement.dataset['theme'] = theme;
-  }, [theme]);
-
-  useEffect(() => {
     getVersion()
       .then(setVersion)
       .catch(() => setVersion('(mock)'));

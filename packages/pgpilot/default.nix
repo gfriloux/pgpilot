@@ -19,7 +19,7 @@
 #   nix run nixpkgs#prefetch-npm-deps -- app/package-lock.json
 let
   pname = "pgpilot";
-  version = "0.8.9";
+  version = "0.9.0";
   src = inputs.self;
 in
   pkgs.rustPlatform.buildRustPackage {

@@ -5,13 +5,6 @@ export const listKeys = (): Promise<KeyInfo[]> => invoke('list_keys');
 
 export const getVersion = (): Promise<string> => invoke('get_version');
 
-export const getCardInfo = (): Promise<CardInfo | null> => invoke('get_card_info');
-
-export const verifySignature = (
-  file: string,
-  sigFile: string | null,
-): Promise<VerifyResult> => invoke('verify_signature', { file, sigFile });
-
 // ── Export ────────────────────────────────────────────────────────
 export const exportPublicKeyArmored = (fp: string): Promise<string> =>
   invoke('export_public_key_armored', { fp });
