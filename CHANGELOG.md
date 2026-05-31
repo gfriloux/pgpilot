@@ -3,6 +3,11 @@
 All notable changes to pgpilot are documented here.
 Releases follow [Semantic Versioning](https://semver.org/).
 
+## [0.9.1] — 2026-05-31
+
+### Features
+
+- **all**: add v0.9.1 ([`248077a`](https://github.com/gfriloux/pgpilot/commit/248077a7080e0de994a78ff350a018380c178f75))
 ## [0.8.9] — 2026-05-23
 
 ### Bug Fixes
