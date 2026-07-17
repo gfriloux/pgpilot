@@ -36,7 +36,7 @@ in
 
     npmDeps = pkgs.fetchNpmDeps {
       src = src + "/app";
-      hash = "sha256-shcZWOwMHIirbkS5AZIJVwreb6uc4+l/XislLjc+O58=";
+      hash = "sha256-m72b4OW9/neYHjh/dM9s+emfySA/NtolTn9v4/elpAs=";
     };
     npmRoot = "app";
 
