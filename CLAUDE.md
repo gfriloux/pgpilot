@@ -251,6 +251,7 @@ Then update `npmDepsHash` in `packages/pgpilot/default.nix`.
 ## Known issues / backlog
 
 - **rustls-webpki CVEs** (RUSTSEC-2026-{0098,0099,0104,0049}): `rumqttc 0.25.1` has a direct dep on `rustls-webpki 0.102.x`. Cannot fix without upstream rumqttc release. Ignored in CI via `--ignore`.
+- **quick-xml DoS** (RUSTSEC-2026-{0194,0195}): reached only at build time via `wayland-scanner` (protocol codegen) and `plist` (bundling), on trusted inputs — no runtime exposure. Ignored in CI via `--ignore`.
 - **YubiKey post-migration verification** (SECURITY_PLAN.md §3.4): blocked on ability to delete a key from YubiKey slot for testing.
 - **Post-quantum cryptography**: blocked on GnuPG stable PQC support.
 - **Dashboard métriques**: home screen redesign with key stats (count, expiring, published, on YubiKey).
