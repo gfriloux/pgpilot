@@ -1,3 +1,6 @@
+default:
+    @just --list
+
 dev:
     cd app && cargo-tauri dev
 
@@ -9,20 +12,37 @@ build:
 build-bin:
     cd app && cargo-tauri build --no-bundle
 
-test:
-    cargo test --package pgpilot
+# Full quality gate (fmt-check + lint + Rust tests + E2E) — single source of truth, run before every commit.
+ci: fmt-check lint test e2e
 
-test-all:
-    cargo test --package pgpilot -- --ignored
-
+# Format in place (Rust lib + Tauri backend).
 fmt:
     cargo fmt -- --config tab_spaces=2
     cargo fmt --manifest-path app/src-tauri/Cargo.toml -- --config tab_spaces=2
 
-check:
+# Verify formatting without modifying — fails if anything is unformatted.
+fmt-check:
     cargo fmt --check -- --config tab_spaces=2
+    cargo fmt --manifest-path app/src-tauri/Cargo.toml --check -- --config tab_spaces=2
+
+# Static lint (clippy). No warning tolerated.
+lint:
     cargo clippy -- -D warnings
+
+# Fast Rust unit tests.
+test:
     cargo test --package pgpilot
+
+# + slow GPG integration tests (real gpg, ~30 s).
+test-all:
+    cargo test --package pgpilot -- --ignored
+
+# Playwright E2E (VITE_MOCK=true, no Tauri binary needed).
+e2e:
+    cd app && npm run test:e2e
+
+# CVE scan (non-blocking in CI: known CVEs ignored).
+audit:
     cargo audit
 
 screenshots:
