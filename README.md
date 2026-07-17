@@ -121,14 +121,16 @@ This runs four checks: `alejandra` (Nix formatting), `deadnix` (dead Nix code), 
 
 | Command | Purpose |
 |---|---|
+| `just ci` | Full quality gate: fmt-check + clippy + Rust tests + E2E |
 | `just dev` | Start Tauri + Vite dev server (hot reload) |
 | `just build` | Build production bundles |
 | `just build-bin` | Build binary only (no .deb/.AppImage) |
-| `just test` | Run Playwright E2E tests (mock mode, no binary needed) |
+| `just test` | Run fast Rust unit tests |
+| `just e2e` | Run Playwright E2E tests (mock mode, no binary needed) |
 | `just screenshots` | Capture all screenshots in both themes |
-| `cargo clippy -- -D warnings` | Lint Rust (warnings are errors) |
-| `cargo fmt -- --config tab_spaces=2` | Format Rust (2-space tabs) |
-| `cargo audit` | CVE scan |
+| `just lint` | Lint Rust (clippy, warnings are errors) |
+| `just fmt` | Format Rust (2-space tabs) |
+| `just audit` | CVE scan |
 | `pre-commit run --all-files` | Run all pre-commit checks |
 
 **Code style:** Rust indentation is 2 spaces, enforced via `tab_spaces=2` in rustfmt.

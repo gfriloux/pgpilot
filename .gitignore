@@ -10,3 +10,7 @@ target
 /docs/dist/
 tmp/
 todo.txt
+
+# Claude — local only; everything under .claude/plans/ is committed
+.claude/settings.local.json
+.claude/worktrees/
