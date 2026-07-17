@@ -41,3 +41,4 @@ under their minor's plan.
 | `v0.8.9` | `7514a1f` | 2026-05-23 | Native file pickers + CI fixes | [`v0.8.9/`](v0.8.9/plan.md) |
 | `v0.9.0` | `28f31e7` | 2026-05-23 | Quality & security hardening | [`v0.9.0/`](v0.9.0/plan.md) |
 | `v0.9.1` | `b105370` | 2026-05-31 | AppImage EGL crash fix | [`v0.9.1/`](v0.9.1/plan.md) |
+| `v0.10.0` | _pending_ | 2026-07-17 | Drop the non-functional AppImage + consolidate 10 Renovate dependency PRs | [`v0.10.0/`](v0.10.0/plan.md) |

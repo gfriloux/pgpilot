@@ -19,7 +19,7 @@
 #   nix run nixpkgs#prefetch-npm-deps -- app/package-lock.json
 let
   pname = "pgpilot";
-  version = "0.9.1";
+  version = "0.10.0";
   src = inputs.self;
 in
   pkgs.rustPlatform.buildRustPackage {
@@ -36,7 +36,7 @@ in
 
     npmDeps = pkgs.fetchNpmDeps {
       src = src + "/app";
-      hash = "sha256-m72b4OW9/neYHjh/dM9s+emfySA/NtolTn9v4/elpAs=";
+      hash = "sha256-lJmI8PZJ6caLLLu7uqUwFvUidWrmaf1UlI+v04sejMo=";
     };
     npmRoot = "app";
 
