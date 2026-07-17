@@ -87,7 +87,7 @@ just audit      # cargo audit (CVE scan, non-blocking in CI)
 ### Tauri app (app/)
 ```bash
 just dev        # cargo-tauri dev (starts Vite + Tauri)
-just build      # cargo-tauri build --bundles deb,rpm  (AppImage = CI only, needs FHS linker)
+just build      # cargo-tauri build --bundles deb,rpm
 just build-bin  # cargo-tauri build --no-bundle        (binary only, fastest)
 
 # Dev without binary (mock mode):
@@ -111,7 +111,7 @@ Indentation is **2 spaces** (configured via `tab_spaces=2` in rustfmt).
   `npm install && npm run build` → deploy to GitHub Pages via `actions/deploy-pages`
 
 - **Release** (`.github/workflows/release.yml`) — on `v*` tag:
-  `cargo-tauri build` → generate RELEASE_NOTES.md with git-cliff → update CHANGELOG.md → GitHub Release with `.deb` + `.AppImage`
+  `cargo-tauri build` → generate RELEASE_NOTES.md with git-cliff → update CHANGELOG.md → GitHub Release with `.deb` + `.rpm`
 
 To publish a release:
 ```bash
@@ -247,10 +247,6 @@ nix run nixpkgs#prefetch-npm-deps -- app/package-lock.json
 ```
 
 Then update `npmDepsHash` in `packages/pgpilot/default.nix`.
-
-### AppImage in CI
-
-`linuxdeploy` (used by Tauri to produce AppImages) is itself an AppImage. On NixOS it cannot run because `/lib64/ld-linux-x86-64.so.2` is absent. `just build` therefore only produces `.deb` and `.rpm`. The AppImage is built exclusively in CI (`release.yml`) on Ubuntu, where the release build is split into two steps: deb/rpm inside `nix develop`, AppImage with `LD_LIBRARY_PATH` unset and `APPIMAGE_EXTRACT_AND_RUN=1`.
 
 ## Known issues / backlog
 

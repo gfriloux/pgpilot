@@ -199,7 +199,7 @@ git push --tags
 ```
 
 La CI génère ensuite automatiquement le CHANGELOG via `git-cliff` et publie la release GitHub
-avec les artefacts `.deb` et `.AppImage`.
+avec les artefacts `.deb` et `.rpm`.
 
 ---
 
