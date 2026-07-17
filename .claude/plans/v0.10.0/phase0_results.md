@@ -23,4 +23,5 @@ Après ça : **92 passed**. Rien à committer — la CI (Ubuntu) utilise le Chro
 
 ## Working tree au départ
 - Non suivis à ne pas committer : `result`, `app/result`, `target-docker/`, `docker/`,
-  `shells/appimage/` (suivi, sera supprimé), `SECURITY_PLAN.md` (interne, jamais committé).
+  `shells/appimage/` (non suivi — vestige local jamais committé, supprimé du disque),
+  `SECURITY_PLAN.md` (interne, jamais committé).
