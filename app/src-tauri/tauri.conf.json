@@ -1,6 +1,6 @@
 {
   "productName": "PGPilot",
-  "version": "0.9.1",
+  "version": "0.10.0",
   "identifier": "me.friloux.pgpilot",
   "build": {
     "frontendDist": "../dist",
@@ -31,9 +31,6 @@
     "linux": {
       "deb": {
         "depends": ["libwebkit2gtk-4.1-0", "libgtk-3-0", "libglib2.0-0"]
-      },
-      "appimage": {
-        "bundleMediaFramework": false
       }
     }
   }

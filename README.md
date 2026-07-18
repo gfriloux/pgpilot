@@ -95,7 +95,7 @@ On NixOS, the Nix dev shell (see below) sets everything automatically.
 ```bash
 nix develop
 just dev     # starts Vite + Tauri in dev mode (hot reload)
-just build   # production bundle (.deb, .AppImage)
+just build   # production bundles (.deb, .rpm)
 ```
 
 ### With direnv
@@ -124,7 +124,7 @@ This runs four checks: `alejandra` (Nix formatting), `deadnix` (dead Nix code), 
 | `just ci` | Full quality gate: fmt-check + clippy + Rust tests + E2E |
 | `just dev` | Start Tauri + Vite dev server (hot reload) |
 | `just build` | Build production bundles |
-| `just build-bin` | Build binary only (no .deb/.AppImage) |
+| `just build-bin` | Build binary only (no bundles) |
 | `just test` | Run fast Rust unit tests |
 | `just e2e` | Run Playwright E2E tests (mock mode, no binary needed) |
 | `just screenshots` | Capture all screenshots in both themes |

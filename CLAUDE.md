@@ -87,7 +87,7 @@ just audit      # cargo audit (CVE scan, non-blocking in CI)
 ### Tauri app (app/)
 ```bash
 just dev        # cargo-tauri dev (starts Vite + Tauri)
-just build      # cargo-tauri build --bundles deb,rpm  (AppImage = CI only, needs FHS linker)
+just build      # cargo-tauri build --bundles deb,rpm
 just build-bin  # cargo-tauri build --no-bundle        (binary only, fastest)
 
 # Dev without binary (mock mode):
@@ -111,7 +111,7 @@ Indentation is **2 spaces** (configured via `tab_spaces=2` in rustfmt).
   `npm install && npm run build` → deploy to GitHub Pages via `actions/deploy-pages`
 
 - **Release** (`.github/workflows/release.yml`) — on `v*` tag:
-  `cargo-tauri build` → generate RELEASE_NOTES.md with git-cliff → update CHANGELOG.md → GitHub Release with `.deb` + `.AppImage`
+  `cargo-tauri build` → generate RELEASE_NOTES.md with git-cliff → update CHANGELOG.md → GitHub Release with `.deb` + `.rpm`
 
 To publish a release:
 ```bash
@@ -248,13 +248,10 @@ nix run nixpkgs#prefetch-npm-deps -- app/package-lock.json
 
 Then update `npmDepsHash` in `packages/pgpilot/default.nix`.
 
-### AppImage in CI
-
-`linuxdeploy` (used by Tauri to produce AppImages) is itself an AppImage. On NixOS it cannot run because `/lib64/ld-linux-x86-64.so.2` is absent. `just build` therefore only produces `.deb` and `.rpm`. The AppImage is built exclusively in CI (`release.yml`) on Ubuntu, where the release build is split into two steps: deb/rpm inside `nix develop`, AppImage with `LD_LIBRARY_PATH` unset and `APPIMAGE_EXTRACT_AND_RUN=1`.
-
 ## Known issues / backlog
 
 - **rustls-webpki CVEs** (RUSTSEC-2026-{0098,0099,0104,0049}): `rumqttc 0.25.1` has a direct dep on `rustls-webpki 0.102.x`. Cannot fix without upstream rumqttc release. Ignored in CI via `--ignore`.
+- **quick-xml DoS** (RUSTSEC-2026-{0194,0195}): reached only at build time via `wayland-scanner` (protocol codegen) and `plist` (bundling), on trusted inputs — no runtime exposure. Ignored in CI via `--ignore`.
 - **YubiKey post-migration verification** (SECURITY_PLAN.md §3.4): blocked on ability to delete a key from YubiKey slot for testing.
 - **Post-quantum cryptography**: blocked on GnuPG stable PQC support.
 - **Dashboard métriques**: home screen redesign with key stats (count, expiring, published, on YubiKey).
