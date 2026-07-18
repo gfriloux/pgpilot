@@ -3,7 +3,24 @@
 All notable changes to pgpilot are documented here.
 Releases follow [Semantic Versioning](https://semver.org/).
 
-## [0.9.1] — 2026-05-31
+## [Unreleased]
+
+### Bug Fixes
+
+- **ci**: commit docs/package-lock.json so npm ci works ([`871d21d`](https://github.com/gfriloux/pgpilot/commit/871d21d801d30e5230f2181ca362bec687b1ac2d))
+## [0.10.0] — 2026-07-18
+
+### Dependencies
+
+- **deps**: bump npm dependencies ([`adc7c19`](https://github.com/gfriloux/pgpilot/commit/adc7c19b462c7de8d0afaffbd0671437a1634bed))
+- **deps**: bump Rust dependencies ([`19d527a`](https://github.com/gfriloux/pgpilot/commit/19d527a609d85c62fa92853419816730dce66d29))
+
+### Documentation
+
+- track steering documents in git ([`aca4da2`](https://github.com/gfriloux/pgpilot/commit/aca4da2132577e6bf456d2dac1dc2766a006c2bf))
+- **plans**: track version plans in git + add plans/README index ([`f77f1e0`](https://github.com/gfriloux/pgpilot/commit/f77f1e01cf04a09216779e4cf7f54730f4d4a123))
+- **plans**: scaffold v0.10.0 plan (drop AppImage + Renovate) ([`ff25846`](https://github.com/gfriloux/pgpilot/commit/ff258465fbb09fd8f74395683638fd472f83bea5))
+- **plans**: add v0.10.0 manual tests + fix phase0 note ([`1616218`](https://github.com/gfriloux/pgpilot/commit/16162185da6fb1934c89541cc9bac5dd8ab67845))
 
 ### Features
 
