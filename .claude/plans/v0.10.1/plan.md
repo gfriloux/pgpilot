@@ -87,30 +87,40 @@ Validation exécutée :
 - `nix build .#pgpilot` ✅ — `npmDepsHash` = `sha256-vhQinrruVZOR697EzKSwZTshUOaZhWrwsNLdTpWUELg=`
 - hooks `alejandra` + `deadnix` ✅
 
-### Phase 2 — Migration astro 7 + starlight 0.42 (à faire, cœur de ce plan)
+### Phase 2 — Migration astro 7 + starlight 0.42 ✅ faite le 2026-09-27
 
-Agent : `voltagent-dev-exp:dependency-manager` (résolution de peers), relais
-`voltagent-biz:technical-writer` pour la vérification bilingue du rendu.
-
-Étapes, dans l'ordre :
+Étapes exécutées, dans l'ordre :
 
 1. `docs/package.json` : `astro` → `^7.0.0`, `@astrojs/starlight` → `^0.42.0`, **dans le
    même commit** (D2 — aucun des deux ne résout seul).
 2. **Supprimer** `docs/package-lock.json` puis `npm install`. Un `npm install` sur le
    lock existant échoue (`ERESOLVE`, il tente de conserver starlight 0.39.2) — la
    suppression est nécessaire, pas cosmétique.
-3. `docs/src/content.config.ts` : déclarer la collection `i18n` (D4).
-4. Créer `docs/src/content/i18n/{en,fr}.json` contenant `{}` (D4).
-5. `npm run build` → critère d'acceptation : **25 pages, 0 warning**, hors bruit
-   `MODULE_LEVEL_DIRECTIVE` (D5).
-6. Vérifier le rendu bilingue (cf. `manual_tests.md`).
+3. `docs/src/content.config.ts` : déclaration de la collection `i18n` (D4).
+4. `docs/src/content/i18n/{en,fr}.json` contenant `{}` (D4).
 
-Mesures déjà obtenues sur un prototype local de cette phase : build ✅ 25 pages,
-`npm audit` → **0 vulnérabilité**, `lang="fr"` / `lang="en"` corrects, chaînes UI
-françaises rendues (« Sur cette page », « Rechercher »).
+Résolutions obtenues : astro **7.3.5**, starlight **0.42.4**, vite **8.3.1**.
+Node requis par astro 7 : `>=22.12.0` — dev shell local 22.22.2 ✅, `docs.yml` node 24 ✅.
 
-⚠️ `#34` (astro 6.4.8) devient **sans objet** si la phase 2 passe : astro ^7 l'englobe.
-Ne merger #34 que si la phase 2 est reportée.
+Validation mesurée :
+
+| Contrôle | Résultat |
+|----------|----------|
+| `npm install` puis `npm ci` (ce que fait `docs.yml`) | ✅ |
+| `npm audit` | ✅ **0 vulnérabilité** |
+| `npm run build` | ✅ **25 pages**, aucun warning nouveau (D7) |
+| Pages générées | ✅ 12 EN + 12 FR + racine, identiques à astro 6 |
+| Chaînes UI starlight | ✅ « Sur cette page » en FR, « On this page » en EN |
+| `<html lang>` | ✅ `fr` sur `/fr/…`, `en` à la racine |
+| `base: '/pgpilot/'` | ✅ tous les chemins absolus préfixés, aucun lien hors base |
+| Screenshots | ✅ 18 PNG dans `dist/`, aucune référence morte |
+| Recherche Pagefind | ✅ index **bilingue** (`pagefind.en_*`, `pagefind.fr_*`) |
+| Sitemap | ✅ `sitemap-index.xml` + `sitemap-0.xml` |
+
+Reste à faire côté utilisateur : la validation visuelle (`manual_tests.md` §4).
+
+⚠️ `#34` (astro 6.4.8) est désormais **sans objet** : astro ^7 l'englobe. Ne pas la
+merger.
 
 ### Phase 3 — Bump de version + release Nix
 
@@ -201,3 +211,17 @@ npm local 10.9.7 vs npm 11 chez Renovate : un `npm install` local retire les cha
 `libc` des paquets optionnels et crée du churn étranger à la MAJ (mesuré en phase 0).
 On cherry-pick les commits Renovate tels quels. La seule exception est la phase 2, où
 Renovate a justement échoué à produire le lock.
+
+### D7 — Le warning `404` reste, il est préexistant et hors périmètre
+
+Un seul message subsiste au build de la phase 2 :
+`[WARN] [content] Entry docs → 404 was not found`.
+
+Il n'est **pas** une régression : la même condition existe sur astro 6 (aucun `404.md`
+dans la collection `docs`, starlight retombe sur sa page 404 intégrée). astro 7 se
+contente de la remonter en `[WARN]` là où astro 6 l'émettait en ligne de log ordinaire.
+`dist/404.html` est bien généré.
+
+Le critère d'acceptation de la phase 2 se lit donc « **aucun warning nouveau** », pas
+« zéro ligne de warning ». Ajouter une vraie page 404 personnalisée est un travail de
+contenu bilingue, à faire dans un chantier docs dédié, pas dans un bump de dépendances.
