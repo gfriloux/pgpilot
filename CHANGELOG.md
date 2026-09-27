@@ -3,11 +3,25 @@
 All notable changes to pgpilot are documented here.
 Releases follow [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [0.10.1] — 2026-09-27
 
 ### Bug Fixes
 
 - **ci**: commit docs/package-lock.json so npm ci works ([`871d21d`](https://github.com/gfriloux/pgpilot/commit/871d21d801d30e5230f2181ca362bec687b1ac2d))
+
+### Dependencies
+
+- **deps**: migrate docs to astro 7 + starlight 0.42 ([`bba0d4c`](https://github.com/gfriloux/pgpilot/commit/bba0d4cc6dc907b3fc3f2bc8b256e3eecc8e3439))
+- **deps**: Update Rust dependencies ([`0ccbaea`](https://github.com/gfriloux/pgpilot/commit/0ccbaeae8713280538cdf4611436e7e38d763a1e))
+- **deps**: Update dependency prettier to v3.9.9 ([`62c78c9`](https://github.com/gfriloux/pgpilot/commit/62c78c9d4a30232813e52a9b7230099623389f1b))
+- **deps**: Update dependency @tauri-apps/plugin-dialog to v2.8.0 ([`26f7631`](https://github.com/gfriloux/pgpilot/commit/26f7631b962ac5ce5c4f14c61c47770e961ce316))
+- **deps**: Update dependency @vitejs/plugin-react to v6.1.1 ([`5e4b78d`](https://github.com/gfriloux/pgpilot/commit/5e4b78db931ea67464bb9bb888fe04dd07ca971a))
+- **deps**: Update tauri monorepo to v2.12.0 ([`1a425e4`](https://github.com/gfriloux/pgpilot/commit/1a425e482e4cf848552a4b6a2a669a09720636b1))
+- **deps**: Update react monorepo to v19.3.0 ([`fd2dfd2`](https://github.com/gfriloux/pgpilot/commit/fd2dfd2a2dea94d4e101f78d4c7006ada3584192))
+
+### Documentation
+
+- **plans**: add v0.10.1 plan — Renovate wave #2 + astro 7 migration ([`d745e16`](https://github.com/gfriloux/pgpilot/commit/d745e16724fef8b557f54c54ce89aba875f7aae1))
 ## [0.10.0] — 2026-07-18
 
 ### Dependencies
@@ -21,6 +35,7 @@ Releases follow [Semantic Versioning](https://semver.org/).
 - **plans**: track version plans in git + add plans/README index ([`f77f1e0`](https://github.com/gfriloux/pgpilot/commit/f77f1e01cf04a09216779e4cf7f54730f4d4a123))
 - **plans**: scaffold v0.10.0 plan (drop AppImage + Renovate) ([`ff25846`](https://github.com/gfriloux/pgpilot/commit/ff258465fbb09fd8f74395683638fd472f83bea5))
 - **plans**: add v0.10.0 manual tests + fix phase0 note ([`1616218`](https://github.com/gfriloux/pgpilot/commit/16162185da6fb1934c89541cc9bac5dd8ab67845))
+## [0.9.1] — 2026-05-31
 
 ### Features
 
