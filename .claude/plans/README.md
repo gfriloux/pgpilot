@@ -42,4 +42,5 @@ under their minor's plan.
 | `v0.9.0` | `28f31e7` | 2026-05-23 | Quality & security hardening | [`v0.9.0/`](v0.9.0/plan.md) |
 | `v0.9.1` | `b105370` | 2026-05-31 | AppImage EGL crash fix | [`v0.9.1/`](v0.9.1/plan.md) |
 | `v0.10.0` | `6dc18c5` | 2026-07-17 | Drop the non-functional AppImage + consolidate 10 Renovate dependency PRs | [`v0.10.0/`](v0.10.0/plan.md) |
-| `v0.10.1` | _pending_ | 2026-09-27 | Second Renovate wave (6 PRs, incl. the coupled Tauri npm↔Rust bump) + docs migration astro 6→7 / starlight 0.39→0.42 | [`v0.10.1/`](v0.10.1/plan.md) |
+| `v0.10.1` | `b02c31c` | 2026-09-27 | Second Renovate wave (6 PRs, incl. the coupled Tauri npm↔Rust bump) + docs migration astro 6→7 / starlight 0.39→0.42 | [`v0.10.1/`](v0.10.1/plan.md) |
+| `v0.10.2` | _pending_ | 2026-11-28 | Nix fixes for nixpkgs 26.11 (aws-lc, EGL, E2E Chromium) + TLS advisory lock updates | [`v0.10.2/`](v0.10.2/plan.md) |
