@@ -1,6 +1,6 @@
 {
   "productName": "PGPilot",
-  "version": "0.10.1",
+  "version": "0.10.2",
   "identifier": "me.friloux.pgpilot",
   "build": {
     "frontendDist": "../dist",

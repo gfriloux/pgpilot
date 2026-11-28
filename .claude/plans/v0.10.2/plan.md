@@ -75,7 +75,7 @@ Détail de chaque correctif dans les sections « Correctif » en fin de document
 ### Phase 3 — Bump de version + release Nix
 
 1. `just release 0.10.2` : 5 fichiers + `app/package-lock.json` + recalcul de
-   `npmDepsHash` (attendu inchangé, le lock npm ne bouge pas).
+   `npmDepsHash` (il change : le lock npm porte le numéro de version).
 2. `cargo build` pour répercuter la version dans `Cargo.lock`.
 3. `nix build`, puis `env -u LD_LIBRARY_PATH ./result/bin/pgpilot-app` (PROCEDURE §7b).
 4. `nix flake check` (PROCEDURE §7c).
