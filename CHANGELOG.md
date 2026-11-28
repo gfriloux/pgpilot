@@ -3,6 +3,17 @@
 All notable changes to pgpilot are documented here.
 Releases follow [Semantic Versioning](https://semver.org/).
 
+## [0.10.2] — 2026-11-28
+
+### Bug Fixes
+
+- **nix**: provide aws-lc for nixpkgs 26.11 cargo hook ([`a87ba7a`](https://github.com/gfriloux/pgpilot/commit/a87ba7a0e3080d2500833f67f2308075aa2cb6a2))
+- **ui**: launch nix-store chromium without inherited LD_LIBRARY_PATH ([`e24e1e4`](https://github.com/gfriloux/pgpilot/commit/e24e1e447d6c04d3870e60c36eb10ee2ba24f913))
+- **deps**: update TLS stack and url/cookie/tokio/rustix for RustSec advisories ([`5940c43`](https://github.com/gfriloux/pgpilot/commit/5940c433b956b4d5451e4a441f951e69ad152efb))
+
+### Documentation
+
+- **plans**: add v0.10.2 plan and move post-release fixes into it ([`7189280`](https://github.com/gfriloux/pgpilot/commit/7189280cac022d4cd288ed7786c0a4f39eb42d7f))
 ## [0.10.1] — 2026-09-27
 
 ### Bug Fixes
