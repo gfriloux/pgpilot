@@ -254,3 +254,27 @@ où la copie embarquée continue d'être utilisée : le build reste valide des d
 mais on resterait sur les copies embarquées, à rebours de la direction de nixpkgs.
 
 **Hors périmètre.** La mise à jour de `flake.lock` : changement séparé.
+
+## Correctif post-release — E2E : Chromium du store et `LD_LIBRARY_PATH` (2026-11-28)
+
+Branche `fix/e2e-chromium-glibc`.
+
+**Symptôme.** `just e2e` échoue sur tous les tests quand il est lancé depuis un
+environnement qui exporte un `LD_LIBRARY_PATH` étranger (observé : le lanceur Nix de
+Claude Code y ajoute une `alsa-lib` liée à glibc 2.43) :
+
+```
+chromium: .../glibc-2.42-61/lib/libm.so.6: version `GLIBC_2.43' not found
+```
+
+**Cause.** `playwright.config.ts` choisit un Chromium dans `/nix/store`, donc issu d'un
+nixpkgs quelconque, puis le lance avec le `LD_LIBRARY_PATH` hérité. Chromium charge
+alors des bibliothèques liées à une autre glibc que la sienne. Le dev shell injecte
+lui-même les bibliothèques du nixpkgs épinglé : le même défaut pouvait survenir sans
+aucun lanceur externe.
+
+**Correctif.** Un Chromium du store est lancé sans `LD_LIBRARY_PATH` : il apporte ses
+propres chemins. Le navigateur téléchargé (hors NixOS, CI GitHub) n'est pas concerné.
+
+**Vérification.** `just ci` dans l'environnement fautif : 92 tests E2E passés, contre
+un échec complet avant.
