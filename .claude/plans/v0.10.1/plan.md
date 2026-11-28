@@ -278,3 +278,29 @@ propres chemins. Le navigateur téléchargé (hors NixOS, CI GitHub) n'est pas c
 
 **Vérification.** `just ci` dans l'environnement fautif : 92 tests E2E passés, contre
 un échec complet avant.
+
+## Correctif post-release — fenêtre vide, `EGL_BAD_PARAMETER` (2026-11-28)
+
+Branche `chore/flake-update`.
+
+**Symptôme.** Le binaire issu de `nix build` ouvre une fenêtre vide et affiche
+`Could not create default EGL display: EGL_BAD_PARAMETER. Aborting...`.
+
+**Cause.** `flake.lock` épinglait nixpkgs au 2026-04-30 (glibc 2.42). Sur un système
+plus récent (glibc 2.44, Mesa 26.2.6), WebKitGTK doit charger le pilote EGL de
+`/run/opengl-driver`, compilé pour une glibc plus récente que celle du processus : le
+chargement échoue. Ce n'est pas propre à Tauri ; toute application qui utilise le GPU
+charge ce pilote.
+
+**Correctif.** `nix flake update nixpkgs` : 2026-04-30 → 2026-11-24. Le correctif
+`aws-lc` ci-dessus en est un prérequis.
+
+**Vérification.** `nix build`, `nix flake check` et `just ci` verts (92 tests E2E).
+Binaire lancé : plus d'erreur EGL, interface affichée, connexion à une room de chat
+confirmée par l'utilisateur sur un build équivalent.
+
+**À retenir.** Le même symptôme réapparaît si on lance le binaire avec un
+`LD_LIBRARY_PATH` hérité d'un dev shell plus ancien (les bibliothèques de ce chemin
+passent avant celles du paquet). Tester avec `env -u LD_LIBRARY_PATH`, et relancer
+toute session ouverte depuis l'ancien dev shell. Un `flake.lock` qui prend du retard
+sur le système de l'utilisateur recréera le problème.
