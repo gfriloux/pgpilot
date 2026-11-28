@@ -82,6 +82,10 @@ in
       librsvg
       dbus
       openssl
+      # Since nixpkgs 26.11, rustPlatform.cargoSetupHook exports
+      # AWS_LC_SYS_USE_SYSTEM=1: aws-lc-sys (pulled in by rustls) no longer
+      # builds its vendored copy and fails without a system AWS-LC.
+      aws-lc
       nettle
       gmp
     ];

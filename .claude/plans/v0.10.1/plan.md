@@ -225,3 +225,32 @@ contente de la remonter en `[WARN]` là où astro 6 l'émettait en ligne de log 
 Le critère d'acceptation de la phase 2 se lit donc « **aucun warning nouveau** », pas
 « zéro ligne de warning ». Ajouter une vraie page 404 personnalisée est un travail de
 contenu bilingue, à faire dans un chantier docs dédié, pas dans un bump de dépendances.
+
+---
+
+## Correctif post-release — build Nix sur nixpkgs 26.11 (2026-11-28)
+
+Branche `fix/nix-aws-lc`. Destiné à un patch v0.10.2 (bump et tag par l'utilisateur).
+
+**Symptôme.** `nix build` échoue dès que le paquet est évalué avec un nixpkgs récent
+(par exemple `inputs.pgpilot.inputs.nixpkgs.follows`), alors qu'il passe avec le
+`flake.lock` du dépôt (nixpkgs du 2026-04-30) :
+
+```
+error: failed to run custom build command for `aws-lc-sys v0.45.0`
+AWS_LC_SYS_USE_SYSTEM=1 requires a system-installed AWS-LC, but none was found.
+```
+
+**Cause.** Depuis nixpkgs 26.11, `rustPlatform.cargoSetupHook` force plusieurs
+bibliothèques C à venir de nixpkgs plutôt que de la copie embarquée des crates
+(notes de version `rl-2611`), et exporte pour cela `AWS_LC_SYS_USE_SYSTEM=1`.
+`aws-lc-sys` arrive par `rustls` ; le paquet ne fournissait pas `aws-lc`.
+
+**Correctif.** `aws-lc` ajouté aux `buildInputs` de `packages/pgpilot/default.nix`.
+Le paquet existe aussi dans le nixpkgs épinglé, où la variable n'est pas exportée et
+où la copie embarquée continue d'être utilisée : le build reste valide des deux côtés.
+
+**Écarté.** `dontCargoUseSystemLibs = true;` (retrait prévu par nixpkgs) : une ligne,
+mais on resterait sur les copies embarquées, à rebours de la direction de nixpkgs.
+
+**Hors périmètre.** La mise à jour de `flake.lock` : changement séparé.
