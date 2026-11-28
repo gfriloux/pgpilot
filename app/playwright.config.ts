@@ -39,6 +39,30 @@ function resolveChromiumExecutable(): string | undefined {
 
 const chromiumExecutable = resolveChromiumExecutable();
 
+/**
+ * A Chromium from the Nix store carries its own library paths.  An inherited
+ * LD_LIBRARY_PATH (dev shell, or any wrapper the tests are started from) makes
+ * it load libraries built against another glibc and die at launch with
+ * "version `GLIBC_x.y' not found".  Start it without that variable.
+ */
+function envWithoutLdLibraryPath(): Record<string, string> {
+  const env: Record<string, string> = {};
+  for (const [key, value] of Object.entries(process.env)) {
+    if (key !== 'LD_LIBRARY_PATH' && value !== undefined) env[key] = value;
+  }
+  return env;
+}
+
+const launchOptions =
+  chromiumExecutable === undefined
+    ? undefined
+    : {
+        executablePath: chromiumExecutable,
+        ...(chromiumExecutable.startsWith('/nix/store/')
+          ? { env: envWithoutLdLibraryPath() }
+          : {}),
+      };
+
 export default defineConfig({
   testDir: './tests/e2e',
   timeout: 15_000,
@@ -52,9 +76,7 @@ export default defineConfig({
       name: 'chromium',
       use: {
         browserName: 'chromium',
-        ...(chromiumExecutable !== undefined
-          ? { launchOptions: { executablePath: chromiumExecutable } }
-          : {}),
+        ...(launchOptions !== undefined ? { launchOptions } : {}),
       },
     },
   ],
